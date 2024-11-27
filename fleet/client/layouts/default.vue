@@ -17,26 +17,28 @@
         <div class="flex items-center space-x-4 cursor-pointer" @click="showUserPanel">
           <i class="pi pi-user text-xl"/>
           <div>
-            <div class="text-l">{{ userFullName }}</div>
-            <div class="text-sm text-gray-500 leading-3">{{ userRole }}</div>
+            <div class="text-sm font-bold">{{ userFullName }}</div>
+            <div class="text-xs text-gray-500 leading-3">{{ userRole }}</div>
           </div>
         </div>
       </div>
 
-      <OverlayPanel ref="userPanel" appendTo="body">
+      <Popover ref="userPanel" appendTo="body">
         <div class="flex flex-col">
           <div class="flex items-center p-2 space-x-2 rounded hover:bg-gray-200 transition duration-300 cursor-pointer" @click="logout">
             <i class="pi pi-power-off text-red-400"/>
             <div>Abmelden</div>
           </div>
         </div>
-      </OverlayPanel>
+      </Popover>
     </header>
 
     <!-- Page -->
     <main class="flex-grow p-8">
       <NuxtPage />
     </main>
+
+    <Toast />
   </div>
 </template>
 

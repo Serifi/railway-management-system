@@ -4,6 +4,4 @@ export default {
     "./pages/**/*.vue",
     "./plugins/**/*.{js,ts}",
   ],
-  theme: { },
-  plugins: [],
 }

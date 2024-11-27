@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
 
 export const useEmployeeStore = defineStore('employee', {
     state: () => ({
@@ -52,5 +52,28 @@ export const useEmployeeStore = defineStore('employee', {
                 role: "Employee",
             },
         ],
+        roles: [
+            { label: 'Mitarbeiter:in', value: 'Mitarbeiter' },
+            { label: 'Administrator:in', value: 'Administrator' },
+        ],
+        departments: [
+            { label: 'Wartung', value: 'Wartung' },
+            { label: 'Bordpersonal', value: 'Bordpersonal' },
+        ],
     }),
-});
+    actions: {
+        createEmployee(employee) {
+            this.employees.push(employee)
+        },
+
+        editEmployee(employee) {
+            const index = this.employees.findIndex(e => e.ssn === employee.ssn)
+            if (index !== -1) this.employees[index] = { ...employee }
+        },
+
+        deleteEmployee(ssn) {
+            const index = this.employees.findIndex(employee => employee.ssn === ssn)
+            if (index !== -1) this.employees.splice(index, 1)
+        },
+    },
+})

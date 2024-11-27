@@ -3,9 +3,9 @@
   <div class="flex justify-between mb-4">
     <IconField>
       <InputIcon class="pi pi-search"/>
-      <InputText v-model="searchQuery" :placeholder="searchPlaceholder" />
+      <InputText v-model="searchQuery" placeholder="Suchen..." />
     </IconField>
-    <ScotButton label="Mitarbeiter:in hinzufügen" icon="pi pi-plus" variant="blue" @click="emitCreate"/>
+    <ScotButton label="Erstellen" icon="pi pi-plus" variant="blue" @click="emitCreate"/>
   </div>
 
   <div v-for="item in paginatedItems" :key="getKey(item)"
@@ -22,15 +22,17 @@
 
     <div v-if="hover === getKey(item)" class="flex flex-col justify-center space-y-2">
       <ScotButton label="Bearbeiten" icon="pi pi-pencil" variant="green" @click="emitEdit(item)"/>
-      <ScotButton label="Löschen" icon="pi pi-trash" variant="red" @click="emitDelete(item)"/>
+      <ScotButton label="Löschen" icon="pi pi-trash" variant="red" @click="confirmDeletion($event, item)"/>
     </div>
   </div>
+  <ConfirmPopup/>
 
   <Paginator :rows="rowsPerPage" :totalRecords="filteredItems.length" :first="firstRecord" @page="onPageChange" class="mt-4"/>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useConfirm } from "primevue/useconfirm"
 
 const hover = ref(null)
 const emits = defineEmits(['create', 'edit', 'delete'])
@@ -42,10 +44,6 @@ const props = defineProps({
   rowsPerPage: {
     type: Number,
     default: 10
-  },
-  searchPlaceholder: {
-    type: String,
-    default: 'Suche...'
   },
   getKey: {
     type: Function,
@@ -76,5 +74,38 @@ const paginatedItems = computed(() => {
 
 const emitCreate = () => emits('create')
 const emitEdit = (item) => emits('edit', item)
-const emitDelete = (item) => emits('delete', item)
+
+const confirm = useConfirm()
+const confirmDeletion = (event, item) => {
+  confirm.require({
+    target: event.currentTarget,
+    message: 'Sicher, dass Sie dieses Element löschen möchten?',
+    icon: 'pi pi-info-circle',
+    rejectProps: {
+      label: 'Abbrechen',
+      severity: 'secondary',
+      outlined: true
+    },
+    acceptProps: {
+      label: 'Löschen',
+      severity: 'danger'
+    },
+    accept: () => {
+      console.log(item)
+      emits('delete', item)
+    }
+  })
+}
 </script>
+
+<style>
+.p-confirm-popup-accept,
+.p-confirm-popup-reject {
+  padding: 4px;
+  margin: 4px;
+}
+
+.p-confirm-popup-accept{
+  background-color: #FF9999 !important;
+}
+</style>

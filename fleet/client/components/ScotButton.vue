@@ -1,7 +1,7 @@
 <template>
   <button @click="handleClick" :class="buttonClasses" type="button">
     <div class="flex items-center space-x-2">
-      <i :class="icon" />
+      <i :class="icon" class="!text-[12px]"/>
       <span class="text-l font-bold">{{ label }}</span>
     </div>
   </button>
