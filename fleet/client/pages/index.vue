@@ -5,7 +5,7 @@
       <div class="flex items-center text-3xl font-bold text-center">
         <img src="@/assets/images/icon.png" class="me-4" alt="Icon"> Scotty
       </div>
-      <div class="w-1/2">
+      <div class="w-full lg:w-1/2">
         <div class="flex-col space-y-8">
           <div class="flex flex-col space-y-2">
             <label for="username" class="font-bold">Benutzername</label>
@@ -16,14 +16,14 @@
             <Password id="password" v-model="password" placeholder="Text einfügen..." toggleMask :feedback="false"/>
           </div>
           <Message v-if="wrongCredentials" severity="error" :closable="false">
-            <div class="text-sm">Oops! Es scheint, dass der Benutzername oder das Passwort falsch ist.</div>
+            <div class="text-sm">Oops! Es scheint, dass Benutzername / Passwort falsch ist.</div>
           </Message>
-          <Button @click="login" :disabled="disableButton" class="w-full">
+          <button @click="login" :disabled="disableButton" type="button" class="w-full create-primary-button">
             <div class="flex items-center space-x-2 mx-auto">
-              <i class="pi pi-user text-white"/>
-              <div class="text-white text-l font-bold">Anmeldung</div>
+              <i class="pi pi-user"/>
+              <div class="text-l font-bold">Anmeldung</div>
             </div>
-          </Button>
+          </button>
         </div>
       </div>
     </div>
@@ -57,5 +57,9 @@ watch([username, password], () => disableButton.value = !username.value || !pass
 <style>
 .p-password .p-password-input {
   width: 100% !important;
+}
+
+.error-button{
+  color: red !important;
 }
 </style>

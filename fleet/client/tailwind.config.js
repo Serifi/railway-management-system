@@ -4,12 +4,6 @@ export default {
     "./pages/**/*.vue",
     "./plugins/**/*.{js,ts}",
   ],
-  theme: {
-    extend: {
-      colors: {
-        plantGreen: '#9ACB9A'
-      }
-    },
-  },
+  theme: { },
   plugins: [],
 }
