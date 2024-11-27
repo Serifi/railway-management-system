@@ -27,7 +27,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useCarriageStore } from '@/stores/carriage'
-import List from '@/components/List.vue'
+import List from '~/components/ScotList.vue'
 
 const carriageStore = useCarriageStore()
 const carriages = computed(() => carriageStore.carriages)

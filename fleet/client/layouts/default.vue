@@ -34,7 +34,7 @@
     </header>
 
     <!-- Page -->
-    <main class="flex-grow">
+    <main class="flex-grow p-8">
       <NuxtPage />
     </main>
   </div>
@@ -44,7 +44,7 @@
 import { ref, computed } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useRouter } from "vue-router"
-import Navigation from '@/components/Navigation.vue'
+import Navigation from '~/components/ScotNavigation.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
