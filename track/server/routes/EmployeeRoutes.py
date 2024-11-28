@@ -143,10 +143,14 @@ def update_employee(ssn):
     if not employee:
         return jsonify({"message": f"Mitarbeiter mit SSN {ssn} nicht gefunden"}), 404
 
-    if 'firstName' in data or 'lastName' in data:
+    if 'firstName' in data or 'lastName' in data or 'username' in data:
         new_first_name = data.get('firstName', employee.firstName)
         new_last_name = data.get('lastName', employee.lastName)
-        new_username = f"{new_first_name.lower()}.{new_last_name.lower()}"
+
+        if 'username' in data and data['username']:
+            new_username = data['username']
+        else:
+            new_username = f"{new_first_name.lower()}.{new_last_name.lower()}"
 
         existing_user = session.query(Employee).filter(
             Employee.username == new_username,
