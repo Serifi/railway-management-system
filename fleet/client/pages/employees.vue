@@ -17,7 +17,7 @@
 
   <ScotDialog :visible="editDialogVisible" type="edit" header="Mitarbeiter:in bearbeiten"
               @update:visible="editDialogVisible = $event" @action="editEmployee" @cancel="toggleEditDialog">
-    <ScotEmployee />
+    <ScotEmployee :employee="employee" :disabledFields="['ssn']"/>
   </ScotDialog>
 </template>
 
