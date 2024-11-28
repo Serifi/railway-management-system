@@ -91,7 +91,6 @@ const confirmDeletion = (event, item) => {
       severity: 'danger'
     },
     accept: () => {
-      console.log(item)
       emits('delete', item)
     }
   })

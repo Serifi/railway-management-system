@@ -4,8 +4,8 @@
 
     <template #footer>
       <ScotButton label="Abbrechen" icon="pi pi-times" variant="gray" @click="emitCancel"/>
-      <ScotButton v-if="type === 'create'" :label="header" icon="pi pi-plus" variant="blue" @click="emitAction"/>
-      <ScotButton v-else-if="type === 'edit'" :label="header" icon="pi pi-pencil" variant="green" @click="emitAction"/>
+      <ScotButton v-if="type === 'create'" :label="header" icon="pi pi-plus" variant="blue" :disabled="disableAction" @click="emitAction"/>
+      <ScotButton v-else-if="type === 'edit'" :label="header" icon="pi pi-pencil" variant="green" :disabled="disableAction" @click="emitAction"/>
     </template>
   </Dialog>
 </template>
@@ -25,6 +25,10 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  disableAction: {
+    type: Boolean,
+    default: false
+  }
 })
 
 const emits = defineEmits(["update:visible", "action", "cancel"]);

@@ -10,14 +10,14 @@
     </template>
   </List>
 
-  <ScotDialog :visible="createDialogVisible" type="create" header="Mitarbeiter:in erstellen"
+  <ScotDialog :visible="createDialogVisible" type="create" header="Mitarbeiter:in erstellen" :disable-action="disableAction"
               @update:visible="createDialogVisible = $event" @action="createEmployee" @cancel="toggleCreateDialog">
-    <ScotEmployee />
+    <ScotEmployee @update:employee="updateEmployee"/>
   </ScotDialog>
 
-  <ScotDialog :visible="editDialogVisible" type="edit" header="Mitarbeiter:in bearbeiten"
+  <ScotDialog :visible="editDialogVisible" type="edit" header="Mitarbeiter:in bearbeiten" :disable-action="disableAction"
               @update:visible="editDialogVisible = $event" @action="editEmployee" @cancel="toggleEditDialog">
-    <ScotEmployee :employee="employee" :disabledFields="['ssn']"/>
+    <ScotEmployee :employee="employee" :disabledFields="['ssn']" @update:employee="updateEmployee"/>
   </ScotDialog>
 </template>
 
@@ -35,31 +35,38 @@ const editDialogVisible = ref(false)
 const employeeStore = useEmployeeStore()
 const employees = computed(() => employeeStore.employees)
 const employee = ref(null)
+const disableAction = ref(false)
+
+function updateEmployee(currentEmployee) {
+  employee.value = currentEmployee
+  disableAction.value = employee.value === null
+}
 
 function toggleCreateDialog() {
   createDialogVisible.value = !createDialogVisible.value
+  if (createDialogVisible.value) disableAction.value = true
 }
 
 function createEmployee() {
-
-
-
-  employeeStore.createEmployee(null)
+  employeeStore.createEmployee(employee.value)
   toggleCreateDialog()
+  toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Aktion wurde erfolgreich abgeschlossen', life: 3000 })
 }
 
 function toggleEditDialog(currentEmployee) {
   employee.value = currentEmployee
   editDialogVisible.value = !editDialogVisible.value
+  if (editDialogVisible.value) disableAction.value = false
 }
 
 function editEmployee() {
-  employeeStore.editEmployee(employee)
+  employeeStore.editEmployee(employee.value)
   toggleEditDialog(null)
+  toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Aktion wurde erfolgreich abgeschlossen', life: 3000 })
 }
 
 function deleteEmployee(currentEmployee) {
-  employeeStore.deleteEmployee(currentEmployee.ssn)
+  employeeStore.deleteEmployee(currentEmployee.value.ssn)
   toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Aktion wurde erfolgreich abgeschlossen', life: 3000 })
 }
 
