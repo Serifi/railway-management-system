@@ -1,7 +1,6 @@
 from sqlite3 import IntegrityError
 
 from flask import Blueprint, jsonify, request
-from models.Employee import Employee, Session
 from models.Department import Department
 from models.Role import Role
 import re
@@ -10,7 +9,6 @@ employee_blueprint = Blueprint('employee_routes', __name__)
 
 from flask import Blueprint, jsonify, request
 from models.Employee import Employee, Session
-from passlib.hash import bcrypt
 
 employee_blueprint = Blueprint('employee_routes', __name__)
 
