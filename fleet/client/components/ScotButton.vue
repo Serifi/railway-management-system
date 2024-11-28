@@ -1,5 +1,5 @@
 <template>
-  <button @click="handleClick" :class="buttonClasses" type="button">
+  <button @click="handleClick" :class="buttonClasses" :disabled="disabled" type="button">
     <div class="flex items-center space-x-2">
       <i :class="icon" class="!text-[12px]"/>
       <span class="text-l font-bold">{{ label }}</span>
@@ -29,6 +29,10 @@ const props = defineProps({
       'yellow',
       'gray'
     ].includes(value)
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
   }
 })
 
@@ -67,6 +71,11 @@ button {
   align-items: center;
   justify-content: center;
   text-align: center;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .blue-button {
