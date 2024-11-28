@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, create_engine, Enum, UniqueConstraint
 from sqlalchemy.orm import declarative_base, sessionmaker, validates
-from passlib.hash import bcrypt
 import re
 import os
 
@@ -39,13 +38,6 @@ class Employee(Base):
         if not self.firstName or not self.lastName:
             raise ValueError("Vorname und Nachname müssen gesetzt sein, um einen Benutzernamen zu generieren")
         self.username = f"{self.firstName.lower()}.{self.lastName.lower()}"
-
-    @validates('password')
-    def hash_password(self, key, value):
-        return bcrypt.hash(value)
-
-    def verify_password(self, plain_password):
-        return bcrypt.verify(plain_password, self.password)
 
 DATABASE_URL = f"sqlite:///{os.path.abspath('server/db/track.db')}"
 engine = create_engine(DATABASE_URL, echo=True)

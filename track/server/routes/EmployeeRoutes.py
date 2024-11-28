@@ -8,6 +8,34 @@ import re
 
 employee_blueprint = Blueprint('employee_routes', __name__)
 
+from flask import Blueprint, jsonify, request
+from models.Employee import Employee, Session
+from passlib.hash import bcrypt  # Um das gehashte Passwort zu überprüfen
+
+employee_blueprint = Blueprint('employee_routes', __name__)
+
+# Login-Endpoint
+@employee_blueprint.route('/login', methods=['POST'])
+def login_employee():
+    data = request.get_json()
+
+    if not data or not data.get('username') or not data.get('password'):
+        return jsonify({"message": "Benutzername und Passwort sind erforderlich"}), 400
+
+    username = data['username']
+    password = data['password']
+
+    session = Session()
+    employee = session.query(Employee).filter(Employee.username == username).first()
+
+    if not employee:
+        return jsonify({"message": "Benutzername oder Passwort falsch"}), 401
+
+    if employee.password != password:
+        return jsonify({"message": "Benutzername oder Passwort falsch"}), 401
+
+    return jsonify({"message": "Erfolgreich eingeloggt"}), 200
+
 @employee_blueprint.route('/', methods=['GET'])
 def get_employees():
     session = Session()
@@ -100,7 +128,6 @@ def create_employee():
         session.rollback()
         return jsonify({"message": "Fehler beim Erstellen des Mitarbeiters, möglicherweise aufgrund einer doppelten SSN oder eines doppelten Benutzernamens."}), 500
 
-
 @employee_blueprint.route('/<int:ssn>', methods=['PUT'])
 def update_employee(ssn):
     data = request.get_json()
@@ -156,8 +183,6 @@ def update_employee(ssn):
         'role': employee.role.value,
         'username': employee.username
     }), 200
-
-
 
 @employee_blueprint.route('/<int:ssn>', methods=['DELETE'])
 def delete_employee(ssn):
