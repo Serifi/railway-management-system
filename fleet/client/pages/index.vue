@@ -1,11 +1,11 @@
 <template>
   <div class="flex items-center justify-center min-h-screen">
-    <img src="@/assets/images/login.png" class="min-h-screen w-1/2 object-cover hidden lg:block" alt="Scotty">
+    <img src="@/assets/images/login.png" class="min-h-screen w-1/2 object-cover hidden lg:block brightness-75" alt="Scotty">
     <div class="flex flex-col items-center space-y-8 lg:w-1/2">
       <div class="flex items-center text-3xl font-bold text-center">
         <img src="@/assets/images/icon.png" class="me-4" alt="Icon"> Scotty
       </div>
-      <div class="w-1/2">
+      <div class="w-full lg:w-1/2">
         <div class="flex-col space-y-8">
           <div class="flex flex-col space-y-2">
             <label for="username" class="font-bold">Benutzername</label>
@@ -16,14 +16,9 @@
             <Password id="password" v-model="password" placeholder="Text einfügen..." toggleMask :feedback="false"/>
           </div>
           <Message v-if="wrongCredentials" severity="error" :closable="false">
-            <div class="text-sm">Oops! Es scheint, dass der Benutzername oder das Passwort falsch ist.</div>
+            <div class="text-sm">Oops! Es scheint, dass Benutzername / Passwort falsch ist.</div>
           </Message>
-          <Button @click="login" :disabled="disableButton" class="w-full">
-            <div class="flex items-center space-x-2 mx-auto">
-              <i class="pi pi-user text-white"/>
-              <div class="text-white text-l font-bold">Anmeldung</div>
-            </div>
-          </Button>
+          <ScotButton label="Anmelden" icon="pi pi-user" variant="blue" @click="login" class="w-full"/>
         </div>
       </div>
     </div>
