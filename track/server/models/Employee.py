@@ -11,7 +11,7 @@ Base = declarative_base()
 class Employee(Base):
     __tablename__ = 'employee'
 
-    ssn = Column(Integer, primary_key=True)
+    ssn = Column(String, primary_key=True)
     firstName = Column(String, nullable=False)
     lastName = Column(String, nullable=False)
     password = Column(String, nullable=False)

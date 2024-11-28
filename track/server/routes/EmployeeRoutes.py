@@ -12,7 +12,6 @@ from models.Employee import Employee, Session
 
 employee_blueprint = Blueprint('employee_routes', __name__)
 
-# Login-Endpoint
 @employee_blueprint.route('/login', methods=['POST'])
 def login_employee():
     data = request.get_json()
