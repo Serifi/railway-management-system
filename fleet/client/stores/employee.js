@@ -17,7 +17,7 @@ export const useEmployeeStore = defineStore('employee', {
                 lastName: "Smith",
                 password: "123456",
                 department: "Maintenance",
-                role: "Administrator",
+                role: "Admin",
             },
             {
                 ssn: "3000241112",
@@ -41,7 +41,7 @@ export const useEmployeeStore = defineStore('employee', {
                 lastName: "Smith",
                 password: "123456",
                 department: "Maintenance",
-                role: "Administrator",
+                role: "Admin",
             },
             {
                 ssn: "3000241162",
@@ -53,12 +53,12 @@ export const useEmployeeStore = defineStore('employee', {
             },
         ],
         roles: [
-            { label: 'Mitarbeiter:in', value: 'Mitarbeiter' },
-            { label: 'Administrator:in', value: 'Administrator' },
+            { label: 'Mitarbeiter:in', value: 'Employee' },
+            { label: 'Administrator:in', value: 'Admin' },
         ],
         departments: [
-            { label: 'Wartung', value: 'Wartung' },
-            { label: 'Bordpersonal', value: 'Bordpersonal' },
+            { label: 'Wartung', value: 'Maintenance' },
+            { label: 'Bordpersonal', value: 'Crew' },
         ],
     }),
     actions: {
