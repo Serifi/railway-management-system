@@ -10,21 +10,15 @@
     </template>
   </List>
 
-  <Dialog v-model:visible="createDialogVisible" header="Mitarbeiter:in erstellen" class="w-2/3">
-    <ScotEmployee/>
+  <ScotDialog :visible="createDialogVisible" type="create" header="Mitarbeiter:in erstellen"
+              @update:visible="createDialogVisible = $event" @action="createEmployee" @cancel="toggleCreateDialog">
+    <ScotEmployee />
+  </ScotDialog>
 
-    <template #footer>
-      <ScotButton label="Abbrechen" icon="pi pi-times" variant="gray" @click="toggleCreateDialog"/>
-      <ScotButton label="Erstellen" icon="pi pi-plus" variant="blue" @click="createEmployee"/>
-    </template>
-  </Dialog>
-
-  <Dialog v-model:visible="editDialogVisible" header="Mitarbeiter:in bearbeiten" class="w-2/3">
-    <template #footer>
-      <ScotButton label="Abbrechen" icon="pi pi-times" variant="gray" @click="toggleEditDialog"/>
-      <ScotButton label="Bearbeiten" icon="pi pi-pencil" variant="green" @click="editEmployee"/>
-    </template>
-  </Dialog>
+  <ScotDialog :visible="editDialogVisible" type="edit" header="Mitarbeiter:in bearbeiten"
+              @update:visible="editDialogVisible = $event" @action="editEmployee" @cancel="toggleEditDialog">
+    <ScotEmployee />
+  </ScotDialog>
 </template>
 
 <script setup>
@@ -33,6 +27,7 @@ import { useEmployeeStore } from '@/stores/employee'
 import { useToast } from 'primevue/usetoast'
 import List from '~/components/ScotList.vue'
 import ScotEmployee from '~/components/ScotEmployee.vue'
+import ScotDialog from "~/components/ScotDialog.vue";
 
 const toast = useToast()
 const createDialogVisible = ref(false)

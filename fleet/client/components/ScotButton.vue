@@ -72,7 +72,6 @@ button {
 .blue-button {
   background-color: #EFF6FF;
   color: #3076A7;
-  border: 1px solid transparent;
 }
 
 .blue-button:hover {
@@ -82,7 +81,6 @@ button {
 .yellow-button {
   background-color: #FFF4CC;
   color: #B8941C;
-  border: 1px solid transparent;
 }
 
 .yellow-button:hover {
@@ -92,7 +90,6 @@ button {
 .red-button {
   background-color: #FFEFF6;
   color: #C23B6E;
-  border: 1px solid transparent;
 }
 
 .red-button:hover {
@@ -101,8 +98,7 @@ button {
 
 .green-button {
   background-color: #F0F0F0;
-  color: #7A7A7A; /* Gray text */
-  border: 1px solid transparent;
+  color: #7A7A7A;
 }
 
 .green-button:hover {
@@ -117,7 +113,10 @@ button {
 
 .gray-button:hover {
   background-color: #F3F3F3;
-  color: black;
   border-color: black;
+}
+
+.dialog button {
+  border: 1px solid currentColor;
 }
 </style>

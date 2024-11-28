@@ -9,7 +9,7 @@ export const useUserStore = defineStore('user', {
             role: ""
         },
         dummyUsers: [
-            { username: "argjent", password: "password", ssn: "0000241102", firstName: "Argjent", lastName: "Serifi", role: "Admin" }
+            { username: "argjent", password: " ", ssn: "0000241102", firstName: "Argjent", lastName: "Serifi", role: "Admin" }
         ]
     }),
     getters: {
