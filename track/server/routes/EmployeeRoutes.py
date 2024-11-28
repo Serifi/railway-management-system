@@ -10,7 +10,7 @@ employee_blueprint = Blueprint('employee_routes', __name__)
 
 from flask import Blueprint, jsonify, request
 from models.Employee import Employee, Session
-from passlib.hash import bcrypt  # Um das gehashte Passwort zu überprüfen
+from passlib.hash import bcrypt
 
 employee_blueprint = Blueprint('employee_routes', __name__)
 
