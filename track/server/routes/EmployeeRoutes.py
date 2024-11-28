@@ -90,6 +90,7 @@ def create_employee():
         }), 400
 
     session = Session()
+
     existing_ssn = session.query(Employee).filter(Employee.ssn == data['ssn']).first()
     if existing_ssn:
         return jsonify({"message": "SSN ist nicht eindeutig"}), 400
@@ -98,10 +99,14 @@ def create_employee():
     if not re.match(ssn_pattern, str(data['ssn'])):
         return jsonify({"message": "SSN entspricht nicht den oesterreichischen Richtlinien"}), 400
 
-    username = f"{data['firstName'].lower()}.{data['lastName'].lower()}"
+    if 'username' in data and data['username']:
+        username = data['username']
+    else:
+        username = f"{data['firstName'].lower()}.{data['lastName'].lower()}"
+
     existing_user = session.query(Employee).filter(Employee.username == username).first()
     if existing_user:
-        return jsonify({"message": "Username ist nicht eindeutig"}), 400
+        return jsonify({"message": f"Username '{username}' ist nicht eindeutig"}), 400
 
     new_employee = Employee(
         ssn=data['ssn'],
@@ -126,7 +131,7 @@ def create_employee():
         }), 201
     except IntegrityError:
         session.rollback()
-        return jsonify({"message": "Fehler beim Erstellen des Mitarbeiters, möglicherweise aufgrund einer doppelten SSN oder eines doppelten Benutzernamens."}), 500
+        return jsonify({"message": "Fehler beim Erstellen des Mitarbeiters."}), 500
 
 @employee_blueprint.route('/<int:ssn>', methods=['PUT'])
 def update_employee(ssn):
