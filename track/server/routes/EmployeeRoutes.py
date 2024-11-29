@@ -1,7 +1,6 @@
 from sqlite3 import IntegrityError
 
 from flask import Blueprint, jsonify, request
-from models.Employee import Employee, Session
 from models.Department import Department
 from models.Role import Role
 import re
@@ -10,11 +9,9 @@ employee_blueprint = Blueprint('employee_routes', __name__)
 
 from flask import Blueprint, jsonify, request
 from models.Employee import Employee, Session
-from passlib.hash import bcrypt  # Um das gehashte Passwort zu überprüfen
 
 employee_blueprint = Blueprint('employee_routes', __name__)
 
-# Login-Endpoint
 @employee_blueprint.route('/login', methods=['POST'])
 def login_employee():
     data = request.get_json()
