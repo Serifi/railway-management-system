@@ -14,7 +14,6 @@ Base.metadata.create_all(engine)
 
 carriage_blueprint = Blueprint('carriage_routes', __name__)
 
-
 @carriage_blueprint.route('/', methods=['GET'])
 def get_all_carriages():
     session = Session()

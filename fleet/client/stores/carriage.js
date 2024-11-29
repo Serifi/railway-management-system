@@ -1,34 +1,50 @@
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
+import axios from 'axios'
 
 export const useCarriageStore = defineStore('carriage', {
     state: () => ({
-        carriages: [
-            {
-                carriageID: "001",
-                type: "Railcar",
-                trackGauge: 1000,
-                maxTractiveForce: 20000,
-            },
-            {
-                carriageID: "002",
-                type: "PassengerCar",
-                trackGauge: 1000,
-                numberOfSeats: 100,
-                maxWeight: 50000,
-            },
-            {
-                carriageID: "003",
-                type: "Railcar",
-                trackGauge: 1425,
-                maxTractiveForce: 15000,
-            },
-            {
-                carriageID: "004",
-                type: "PassengerCar",
-                trackGauge: 1425,
-                numberOfSeats: 50,
-                maxWeight: 25000,
-            },
+        carriages: [],
+        trackGauges: [
+            { label: '1435 mm', value: '1435' },
+            { label: '1000 mm', value: '1000' }
         ],
+        carriageTypes: [
+            { label: 'Railcar', value: 'Railcar' },
+            { label: 'PassengerCar', value: 'PassengerCar' }
+        ]
     }),
-});
+    actions: {
+        async getCarriages() {
+            try {
+                const response = await axios.get('http://127.0.0.1:5000/fleet/carriages')
+                this.carriages = response.data
+            } catch (error) {
+                console.error('Error fetching carriages:', error)
+            }
+        },
+        async createCarriage(carriage) {
+            try {
+                await axios.post('http://127.0.0.1:5000/fleet/carriages', carriage)
+                await this.getCarriages()
+            } catch (error) {
+                console.error('Error creating carriage:', error.response?.data || error)
+            }
+        },
+        async editCarriage(carriage) {
+            try {
+                await axios.put(`http://127.0.0.1:5000/fleet/carriages/${carriage.carriageID}`, carriage)
+                await this.getCarriages()
+            } catch (error) {
+                console.error('Error editing carriage:', error.response?.data || error)
+            }
+        },
+        async deleteCarriage(carriageID) {
+            try {
+                await axios.delete(`http://127.0.0.1:5000/fleet/carriages/${carriageID}`)
+                await this.getCarriages()
+            } catch (error) {
+                console.error('Error deleting carriage:', error.response?.data || error)
+            }
+        }
+    }
+})

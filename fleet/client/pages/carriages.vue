@@ -1,89 +1,87 @@
 <template>
   <List :items="carriages" :getKey="getCarriageKey" :rowsPerPage="5"
-        @create="toggleCreateCarriageDialog" @edit="toggleEditCarriageDialog" @delete="deleteCarriage">
+        @create="toggleCreateDialog" @edit="toggleEditDialog" @delete="deleteCarriage">
     <template #title="{ item }">
-      {{ `Carriage ${item.carriageID} (${item.type})` }}
+      {{ item.type }} #{{ item.carriageID }}
     </template>
     <template #description="{ item }">
-      <template v-if="item.type === 'PassengerCar'">
+      <span v-if="item.type === 'Railcar'">
+        Spurweite: {{ item.trackGauge }} mm<br/>
+        Maximale Zugkraft: {{ item.maxTractiveForce }} kN
+      </span>
+      <span v-else-if="item.type === 'PassengerCar'">
+        Spurweite: {{ item.trackGauge }} mm<br/>
         Sitzplätze: {{ item.numberOfSeats }}<br/>
-        Spurweite: {{ item.trackGauge }} mm<br/>
-        Maximalgewicht: {{ item.maxWeight }} kg
-      </template>
-      <template v-if="item.type === 'Railcar'">
-        Spurweite: {{ item.trackGauge }} mm<br/>
-        Maximale Zugkraft: {{ item.maxTractiveForce }} N
-      </template>
+        Maximales Gewicht: {{ item.maxWeight }} kg
+      </span>
     </template>
   </List>
+
+  <ScotDialog :visible="createDialogVisible" type="create" header="Wagen erstellen" :disable-action="disableAction"
+              @update:visible="createDialogVisible = $event" @action="createCarriage" @cancel="toggleCreateDialog">
+    <ScotCarriage @update:carriage="updateCarriage"/>
+  </ScotDialog>
+
+  <ScotDialog :visible="editDialogVisible" type="edit" header="Wagen bearbeiten" :disable-action="disableAction"
+              @update:visible="editDialogVisible = $event" @action="editCarriage" @cancel="toggleEditDialog">
+    <ScotCarriage :carriage="carriage" @update:carriage="updateCarriage" :disabledFields="['type', 'trackGauge']"/>
+  </ScotDialog>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useCarriageStore } from '@/stores/carriage'
 import { useToast } from 'primevue/usetoast'
 import List from '~/components/ScotList.vue'
+import ScotCarriage from '~/components/ScotCarriage.vue'
+import ScotDialog from "~/components/ScotDialog.vue"
 
 const toast = useToast()
+const createDialogVisible = ref(false)
+const editDialogVisible = ref(false)
 const carriageStore = useCarriageStore()
 const carriages = computed(() => carriageStore.carriages)
 const carriage = ref(null)
-const createCarriageDialogVisible = ref(false)
-const editCarriageDialogVisible = ref(false)
+const disableAction = ref(false)
 
-function getCarriageKey(carriage) {
-  return carriage.carriageID;
+function updateCarriage(currentCarriage) {
+  carriage.value = currentCarriage
+  disableAction.value = carriage.value === null
 }
 
-function toggleCreateCarriageDialog() {
-  createCarriageDialogVisible.value = !createCarriageDialogVisible.value;
-
-}
-
-function toggleEditCarriageDialog(currentCarriage) {
-  carriage.value = currentCarriage;
-  editCarriageDialogVisible.value = !editCarriageDialogVisible.value;
+function toggleCreateDialog() {
+  createDialogVisible.value = !createDialogVisible.value
+  if (createDialogVisible.value) disableAction.value = true
 }
 
 function createCarriage() {
-  if (carriage.value) {
-    carriageStore.carriages.push({ ...carriage.value });
-    toggleCreateCarriageDialog();
-    toast.add({
-      severity: 'success',
-      summary: 'Erfolgreich',
-      detail: 'Wagen wurde erfolgreich erstellt.',
-      life: 3000,
-    });
-  }
+  carriageStore.createCarriage(carriage.value)
+  toggleCreateDialog()
+  toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Aktion wurde erfolgreich abgeschlossen', life: 3000 })
+}
+
+async function toggleEditDialog(currentCarriage) {
+  carriage.value = currentCarriage
+  editDialogVisible.value = !editDialogVisible.value
+  if (editDialogVisible.value) disableAction.value = false
 }
 
 function editCarriage() {
-  if (carriage.value) {
-    const index = carriageStore.carriages.findIndex(c => c.carriageID === carriage.value.carriageID);
-    if (index !== -1) {
-      carriageStore.carriages[index] = { ...carriage.value };
-    }
-    toggleEditCarriageDialog();
-    toast.add({
-      severity: 'success',
-      summary: 'Erfolgreich',
-      detail: 'Wagen wurde erfolgreich bearbeitet.',
-      life: 3000,
-    });
-  }
+  carriageStore.editCarriage(carriage.value)
+  toggleEditDialog(null)
+  toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Aktion wurde erfolgreich abgeschlossen', life: 3000 })
 }
 
 function deleteCarriage(currentCarriage) {
-  const index = carriageStore.carriages.findIndex(c => c.carriageID === currentCarriage.carriageID);
-  if (index !== -1) {
-    carriageStore.carriages.splice(index, 1);
-    toast.add({
-      severity: 'success',
-      summary: 'Erfolgreich',
-      detail: 'Wagen wurde erfolgreich gelöscht.',
-      life: 3000,
-    });
-  }
+  carriageStore.deleteCarriage(currentCarriage.carriageID)
+  toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Aktion wurde erfolgreich abgeschlossen', life: 3000 })
 }
+
+function getCarriageKey(carriage) {
+  return carriage.carriageID
+}
+
+onMounted(() => {
+  carriageStore.getCarriages()
+})
 </script>
