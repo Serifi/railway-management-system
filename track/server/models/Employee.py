@@ -39,7 +39,7 @@ class Employee(Base):
             raise ValueError("Vorname und Nachname müssen gesetzt sein, um einen Benutzernamen zu generieren")
         self.username = f"{self.firstName.lower()}.{self.lastName.lower()}"
 
-DATABASE_URL = f"sqlite:///{os.path.abspath('server/db/track.db')}"
+DATABASE_URL = f"sqlite:///{os.path.abspath('server/db/fleet.db')}"
 engine = create_engine(DATABASE_URL, echo=True)
 
 Base.metadata.create_all(engine)
