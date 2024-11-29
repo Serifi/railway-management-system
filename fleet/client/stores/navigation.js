@@ -12,7 +12,7 @@ export const useNavigationStore = defineStore('navigation', {
     }),
     getters: {
         getNavItems: (state) => {
-            return state.navItems.filter((item) => item.roles.includes(useUserStore().getUser.role))
+            return state.navItems.filter((item) => item.roles.includes(useUserStore().getUserRole))
         },
     },
 })

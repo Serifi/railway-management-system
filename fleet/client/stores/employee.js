@@ -1,57 +1,10 @@
 import { defineStore } from 'pinia'
+import axios from "axios"
+import bcrypt from 'bcryptjs'
 
 export const useEmployeeStore = defineStore('employee', {
     state: () => ({
-        employees: [
-            {
-                ssn: "1000241102",
-                firstName: "John",
-                lastName: "Doe",
-                password: "123456",
-                department: "Crew",
-                role: "Employee",
-            },
-            {
-                ssn: "2000241102",
-                firstName: "Dane",
-                lastName: "Smith",
-                password: "123456",
-                department: "Maintenance",
-                role: "Admin",
-            },
-            {
-                ssn: "3000241112",
-                firstName: "Max",
-                lastName: "Muster",
-                password: "123456",
-                department: "Maintenance",
-                role: "Employee",
-            },
-            {
-                ssn: "1000241122",
-                firstName: "John",
-                lastName: "Doe",
-                password: "123456",
-                department: "Crew",
-                role: "Employee",
-            },
-            {
-                ssn: "2000241142",
-                firstName: "Dane",
-                lastName: "Smith",
-                password: "123456",
-                department: "Maintenance",
-                role: "Admin",
-            },
-            {
-                ssn: "3000241162",
-                firstName: "Max",
-                lastName: "Muster",
-                password: "123456",
-                department: "Maintenance",
-                role: "Employee",
-            },
-        ],
+        employees: [],
         roles: [
             { label: 'Mitarbeiter:in', value: 'Employee' },
             { label: 'Administrator:in', value: 'Admin' },
@@ -62,18 +15,42 @@ export const useEmployeeStore = defineStore('employee', {
         ],
     }),
     actions: {
-        createEmployee(employee) {
-            this.employees.push(employee)
+        async getEmployees() {
+            try {
+                const response = await axios.get('http://127.0.0.1:5000/employees')
+                this.employees = response.data
+            } catch (error) {
+                console.error('Error fetching employees:', error)
+            }
         },
 
-        editEmployee(employee) {
-            const index = this.employees.findIndex(e => e.ssn === employee.ssn)
-            if (index !== -1) this.employees[index] = { ...employee }
+        async createEmployee(employee) {
+            try {
+                const password = await bcrypt.hash(employee.password, 12)
+                await axios.post('http://127.0.0.1:5000/employees', { ...employee, password: password })
+                await this.getEmployees()
+            } catch (error) {
+                console.error('Error creating employee:', error.response?.data || error)
+            }
         },
 
-        deleteEmployee(ssn) {
-            const index = this.employees.findIndex(employee => employee.ssn === ssn)
-            if (index !== -1) this.employees.splice(index, 1)
+        async editEmployee(employee) {
+            try {
+                const password = await bcrypt.hash(employee.password, 12)
+                await axios.put(`http://127.0.0.1:5000/employees/${employee.ssn}`, { ...employee, password: password })
+                await this.getEmployees()
+            } catch (error) {
+                console.error('Error editing employee:', error.response?.data || error)
+            }
+        },
+
+        async deleteEmployee(ssn) {
+            try {
+                await axios.delete(`http://127.0.0.1:5000/employees/${ssn}`)
+                await this.getEmployees()
+            } catch (error) {
+                console.error('Error deleting employee:', error.response?.data || error)
+            }
         },
     },
 })

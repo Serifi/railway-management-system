@@ -19,6 +19,7 @@
     "@primevue/nuxt-module": "^4.2.2",
     "@primevue/themes": "^4.2.2",
     "axios": "^1.6.5",
+    "bcryptjs": "^2.4.3",
     "pinia": "^2.2.6",
     "primeicons": "^7.0.0",
     "primevue": "^4.2.2",

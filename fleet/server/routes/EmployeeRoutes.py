@@ -10,9 +10,7 @@ employee_blueprint = Blueprint('employee_routes', __name__)
 
 from flask import Blueprint, jsonify, request
 from models.Employee import Employee, Session
-from passlib.hash import bcrypt  # Um das gehashte Passwort zu überprüfen
-
-employee_blueprint = Blueprint('employee_routes', __name__)
+from passlib.hash import bcrypt
 
 # Login-Endpoint
 @employee_blueprint.route('/login', methods=['POST'])
@@ -54,13 +52,13 @@ def get_employees():
     ]
     return jsonify(employees_list)
 
-@employee_blueprint.route('/<int:ssn>', methods=['GET'])
-def get_employee_by_ssn(ssn):
+@employee_blueprint.route('/<string:username>', methods=['GET'])
+def get_employee_by_username(username):
     session = Session()
-    employee = session.query(Employee).filter(Employee.ssn == ssn).first()
+    employee = session.query(Employee).filter(Employee.username == username).first()
 
     if not employee:
-        return jsonify({"message": f"Mitarbeiter mit SSN {ssn} nicht gefunden"}), 404
+        return jsonify({"message": f"Mitarbeiter mit Benutzername {username} nicht gefunden"}), 404
 
     return jsonify({
         "ssn": employee.ssn,

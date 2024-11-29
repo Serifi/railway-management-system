@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-import {ref, computed} from 'vue'
+import {ref, computed, onMounted} from 'vue'
 import { useEmployeeStore } from '@/stores/employee'
 import { useToast } from 'primevue/usetoast'
 import List from '~/components/ScotList.vue'
@@ -53,7 +53,7 @@ function createEmployee() {
   toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Aktion wurde erfolgreich abgeschlossen', life: 3000 })
 }
 
-function toggleEditDialog(currentEmployee) {
+async function toggleEditDialog(currentEmployee) {
   employee.value = currentEmployee
   editDialogVisible.value = !editDialogVisible.value
   if (editDialogVisible.value) disableAction.value = false
@@ -66,11 +66,15 @@ function editEmployee() {
 }
 
 function deleteEmployee(currentEmployee) {
-  employeeStore.deleteEmployee(currentEmployee.value.ssn)
+  employeeStore.deleteEmployee(currentEmployee.ssn)
   toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Aktion wurde erfolgreich abgeschlossen', life: 3000 })
 }
 
 function getEmployeeKey(employee) {
   return employee.ssn
 }
+
+onMounted(() => {
+  employeeStore.getEmployees()
+})
 </script>

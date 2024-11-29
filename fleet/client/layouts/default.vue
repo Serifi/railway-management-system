@@ -4,7 +4,7 @@
     <header class="flex items-center justify-between py-4 border-b">
       <!-- Left: Icon and Scotty -->
       <div class="flex items-center space-x-4 me-4">
-        <img src="../assets/images/icon.png" alt="Icon" class="w-8 h-8">
+        <img src="../assets/images/icon.png" alt="Icon" class="w-12 h-12">
         <span class="text-xl font-bold">Scotty</span>
       </div>
 
@@ -53,11 +53,11 @@ const userStore = useUserStore()
 const userPanel = ref(null)
 
 const userFullName = computed(() => userStore.getFullName)
-const userRole = computed(() => userStore.user.role)
+const userRole = computed(() => userStore.getUserRole)
 
 function showUserPanel() { userPanel.value.toggle(event) }
 function logout(){
+  userStore.logout()
   router.push('/')
 }
-
 </script>
