@@ -1,35 +1,40 @@
 import { defineStore } from 'pinia'
+import axios from "axios"
+import bcrypt from "bcryptjs"
 
 export const useUserStore = defineStore('user', {
     state: () => ({
-        user: {
-            ssn: "",
-            firstName: "",
-            lastName: "",
-            role: ""
-        },
-        dummyUsers: [
-            { username: "argjent", password: " ", ssn: "0000241102", firstName: "Argjent", lastName: "Serifi", role: "Admin" }
-        ]
+        user: null,
     }),
     getters: {
-        getUser: (state) => state.user,
-        getFullName: (state) => `${state.user.firstName} ${state.user.lastName}`,
-        getDummyUsers: (state) => state.dummyUsers
+        getSSN: (state) => state.user ? state.user.ssn : '',
+        getFullName: (state) => state.user ? `${state.user.firstName} ${state.user.lastName}` : "",
+        getUserRole: (state) => state.user ? state.user.role : 'Guest'
     },
     actions: {
-        authenticate(username, password) {
-            const user = this.dummyUsers.find(u => u.username === username && u.password === password)
-            if (user) {
-                this.user = {
-                    ssn: user.ssn,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    role: user.role
-                }
+        async login(username, password) {
+            try {
+                //const hashedPassword = await bcrypt.hash(password, 12)
+                await axios.post(`http://127.0.0.1:5000/employees/login`, { username: username, password: password })
+                this.user = await this.getEmployee(username)
                 return true
+            } catch (error) {
+                console.error("Login failed:", error)
+                this.user = null
+                return false
             }
-            return false
-        }
+        },
+        logout() {
+            this.user = null
+        },
+        async getEmployee(username) {
+            try {
+                const response = await axios.get(`http://127.0.0.1:5000/employees/${username}`)
+                return response.data
+            } catch (error) {
+                console.error(`Error fetching employee with username ${username}:`, error)
+                throw error
+            }
+        },
     }
 })
