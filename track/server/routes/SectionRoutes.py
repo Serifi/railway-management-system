@@ -2,7 +2,6 @@ from flask import Blueprint, jsonify, request
 from models.Section import Section
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models.TrainStation import TrainStation
 import os
 
 DATABASE_URL = f"sqlite:///{os.path.abspath('server/db/track.db')}"
@@ -24,7 +23,7 @@ def get_sections():
             'maxSpeed': section.maxSpeed,
             'trackGauge': section.trackGauge,
             'startStationID': section.startStationID,
-            'endStationID': section.startStationID
+            'endStationID': section.endStationID
         }
         for section in sections
     ]
@@ -46,41 +45,25 @@ def get_section_by_id(section_id):
         'maxSpeed': section.maxSpeed,
         'trackGauge': section.trackGauge,
         'startStationID': section.startStationID,
-        'endStationID': section.startStationID
+        'endStationID': section.endStationID
     })
 
 @section_blueprint.route('/', methods=['POST'])
 def create_section():
     session = Session()
     data = request.get_json()
+    new_section = Section()
 
-    if not data or not all(key in data for key in ['usageFee', 'length', 'maxSpeed', 'trackGauge', 'startStationID', 'startStationID']):
-        return jsonify({"message": "Fehlende Daten: 'usageFee', 'length', 'maxSpeed', 'trackGauge', 'startStationID', 'startStationID' werden benötigt"}), 400
+    try:
+        new_section.usageFee = new_section.validate_usage_fee(data['usageFee'])
+        new_section.length = new_section.validate_length(data['length'])
+        new_section.maxSpeed = new_section.validate_max_speed(data['maxSpeed'])
+        new_section.trackGauge = new_section.validate_track_gauge(data['trackGauge'])
+        new_section.startStationID = new_section.validate_stations('startStationID', data['startStationID'], session)
+        new_section.endStationID = new_section.validate_stations('endStationID', data['endStationID'], session)
+    except ValueError as e:
+        return jsonify({"message": str(e)}), 400
 
-    if data['trackGauge'] not in ['1000', '1435']:
-        return jsonify({"message": "Ungültiger Wert für 'trackGauge'. Erlaubte Werte: '1000' oder '1435'"}), 400
-
-    if data['startStationID'] == data['endStationID']:
-        return jsonify({"message": "Der Startbahnhof und Endbahnhof dürfen nicht identisch sein"}), 400
-
-    start_station = session.query(TrainStation).filter(TrainStation.stationID == data['startStationID']).first()
-    end_station = session.query(TrainStation).filter(TrainStation.stationID == data['endStationID']).first()
-
-    if not start_station:
-        return jsonify({"message": f"Startbahnhof mit ID {data['startStationID']} existiert nicht"}), 400
-    if not end_station:
-        return jsonify({"message": f"Endbahnhof mit ID {data['endStationID']} existiert nicht"}), 400
-
-    new_section = Section(
-        usageFee=data['usageFee'],
-        length=data['length'],
-        maxSpeed=data['maxSpeed'],
-        trackGauge=data['trackGauge'],
-        startStationID=data['startStationID'],
-        endStationID=data['endStationID']
-    )
-
-    session = Session()
     session.add(new_section)
     session.commit()
 
@@ -94,57 +77,57 @@ def create_section():
         'endStationID': new_section.endStationID
     }), 201
 
+"""
 @section_blueprint.route('/<int:section_id>', methods=['PUT'])
 def update_section(section_id):
-    data = request.get_json()
-
-    if not data or not all(key in data for key in ['usageFee', 'length', 'maxSpeed', 'trackGauge', 'startStationID', 'endStationID']):
-        return jsonify({"message": "Fehlende Daten: 'usageFee', 'length', 'maxSpeed', 'trackGauge', 'startStationID', 'endStationID' werden benötigt"}), 400
-
-    if data['trackGauge'] not in ['1000', '1435']:
-        return jsonify({"message": "Ungültiger Wert für 'trackGauge'. Erlaubte Werte: '1000' oder '1435'"}), 400
-
-    if data['startStationID'] == data['endStationID']:
-        return jsonify({"message": "Der Startbahnhof und Endbahnhof dürfen nicht identisch sein"}), 400
-
     session = Session()
     section = session.query(Section).filter(Section.sectionID == section_id).first()
-
-    start_station = session.query(TrainStation).filter(TrainStation.stationID == data['startStationID']).first()
-    end_station = session.query(TrainStation).filter(TrainStation.stationID == data['endStationID']).first()
-
-    if not start_station:
-        return jsonify({"message": f"Startbahnhof mit ID {data['startStationID']} existiert nicht"}), 400
-    if not end_station:
-        return jsonify({"message": f"Endbahnhof mit ID {data['endStationID']} existiert nicht"}), 400
 
     if not section:
         return jsonify({"message": f"Section mit ID {section_id} nicht gefunden"}), 404
 
-    if 'usageFee' in data:
-        section.usageFee = data['usageFee']
-    if 'length' in data:
-        section.length = data['length']
-    if 'maxSpeed' in data:
-        section.maxSpeed = data['maxSpeed']
-    if 'trackGauge' in data:
-        section.trackGauge = data['trackGauge']
-    if 'startStationID' in data:
-        section.startStationID = data['startStationID']
-    if 'endStationID' in data:
-        section.endStationID = data['endStationID']
+    data = request.get_json()
 
-    session.commit()
+    # Vor dem Commit: Überprüfen, ob Start- und Endbahnhof nicht identisch sind
+    if 'startStationID' in data and 'endStationID' in data:
+        if data['startStationID'] == data['endStationID']:
+            return jsonify({"message": "Start- und Endbahnhof dürfen nicht identisch sein"}), 400
 
-    return jsonify({
-        'sectionID': section.sectionID,
-        'usageFee': section.usageFee,
-        'length': section.length,
-        'maxSpeed': section.maxSpeed,
-        'trackGauge': section.trackGauge,
-        'startStationID': section.startStationID,
-        'endStationID': section.endStationID
-    }), 200
+    try:
+        # Validierung und Aktualisierung der Werte
+        if 'usageFee' in data:
+            section.usageFee = section.validate_usage_fee(data['usageFee'])
+        if 'length' in data:
+            section.length = section.validate_length(data['length'])
+        if 'maxSpeed' in data:
+            section.maxSpeed = section.validate_max_speed(data['maxSpeed'])
+        if 'trackGauge' in data:
+            section.trackGauge = section.validate_track_gauge(data['trackGauge'])
+        if 'startStationID' in data:
+            section.startStationID = section.validate_stations('startStationID', data['startStationID'], session)
+        if 'endStationID' in data:
+            section.endStationID = section.validate_stations('endStationID', data['endStationID'], session)
+
+        # Sicherstellen, dass es keinen Constraint-Verstoß gibt, bevor Änderungen commitet werden
+        session.flush()  # Stellt sicher, dass alle Änderungen im Arbeitsspeicher sind, ohne sie in die DB zu schreiben
+
+        session.commit()  # Jetzt Commit durchführen
+
+        # Rückgabe der aktualisierten Sektion als JSON
+        return jsonify({
+            'sectionID': section.sectionID,
+            'usageFee': section.usageFee,
+            'length': section.length,
+            'maxSpeed': section.maxSpeed,
+            'trackGauge': section.trackGauge,
+            'startStationID': section.startStationID,
+            'endStationID': section.endStationID
+        }), 200
+
+    except ValueError as e:
+        session.rollback()  # Rollback bei Fehler
+        return jsonify({"message": str(e)}), 400
+"""
 
 @section_blueprint.route('/<int:section_id>', methods=['DELETE'])
 def delete_section(section_id):

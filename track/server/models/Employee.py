@@ -40,7 +40,5 @@ class Employee(Base):
 
 DATABASE_URL = f"sqlite:///{os.path.abspath('server/db/track.db')}"
 engine = create_engine(DATABASE_URL, echo=True)
-
 Base.metadata.create_all(engine)
-
 Session = sessionmaker(bind=engine)
