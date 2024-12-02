@@ -80,37 +80,6 @@ def create_warning():
         'endDate': new_warning.endDate.strftime('%Y-%m-%d')
     }), 201
 
-"""
-@warning_blueprint.route('/<int:warning_id>', methods=['PUT'])
-def update_warning(warning_id):
-    data = request.get_json()
-
-    session = Session()
-    warning = session.query(Warning).filter(Warning.warningID == warning_id).first()
-
-    if not warning:
-        return jsonify({"message": f"Warning mit ID {warning_id} nicht gefunden"}), 404
-
-    if 'warningName' in data:
-        warning.warningName = data['warningName']
-    if 'description' in data:
-        warning.description = data['description']
-    if 'startDate' in data:
-        warning.startDate = datetime.strptime(data['startDate'], '%Y-%m-%d').date()
-    if 'endDate' in data:
-        warning.endDate = datetime.strptime(data['endDate'], '%Y-%m-%d').date()
-
-    session.commit()
-
-    return jsonify({
-        'warningID': warning.warningID,
-        'warningName': warning.warningName,
-        'description': warning.description,
-        'startDate': warning.startDate.strftime('%Y-%m-%d'),
-        'endDate': warning.endDate.strftime('%Y-%m-%d')
-    }), 200
-"""
-
 @warning_blueprint.route('/<int:warning_id>', methods=['DELETE'])
 def delete_warning(warning_id):
     session = Session()
