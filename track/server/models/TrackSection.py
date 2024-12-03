@@ -5,5 +5,6 @@ track_section = Table(
     'track_section',
     Base.metadata,
     Column('trackID', Integer, ForeignKey('track.trackID'), primary_key=True),
-    Column('sectionID', Integer, ForeignKey('section.sectionID'), primary_key=True)
+    Column('sectionID', Integer, ForeignKey('section.sectionID'), primary_key=True),
+    Column('sequence', Integer, nullable=False)
 )
