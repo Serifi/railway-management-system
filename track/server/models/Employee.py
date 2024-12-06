@@ -5,11 +5,10 @@ import os
 
 from models.Role import Role
 from models.Department import Department
-
-Base = declarative_base()
+from models.Base import Base
 
 class Employee(Base):
-    __tablename__ = 'employee'
+    __tablename__ = 'Employee'
 
     ssn = Column(String, primary_key=True)
     firstName = Column(String, nullable=False)
@@ -39,9 +38,7 @@ class Employee(Base):
             raise ValueError("Vorname und Nachname müssen gesetzt sein, um einen Benutzernamen zu generieren")
         self.username = f"{self.firstName.lower()}.{self.lastName.lower()}"
 
-DATABASE_URL = f"sqlite:///{os.path.abspath('server/db/fleet.db')}"
+DATABASE_URL = f"sqlite:///{os.path.abspath('server/db/track.db')}"
 engine = create_engine(DATABASE_URL, echo=True)
-
 Base.metadata.create_all(engine)
-
 Session = sessionmaker(bind=engine)

@@ -1,5 +1,14 @@
 from flask import Blueprint, jsonify, request
-from models.TrainStation import TrainStation, Session
+from models.TrainStation import TrainStation
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+import os
+
+Base = declarative_base()
+DATABASE_URL = f"sqlite:///{os.path.abspath('server/db/track.db')}"
+engine = create_engine(DATABASE_URL, echo=True)
+Base.metadata.create_all(engine)
+Session = sessionmaker(bind=engine)
 
 trainstation_blueprint = Blueprint('trainstation_routes', __name__)
 
