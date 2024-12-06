@@ -1,26 +1,25 @@
 <template>
   <div class="grid grid-cols-2 gap-4">
-    <div class="flex flex-col col-span-2">
-      <label for="ssn" class="mb-1">Sozialversicherungsnummer</label>
+    <div class="flex flex-col space-y-1 col-span-2">
+      <label for="ssn">Sozialversicherungsnummer</label>
       <div class="flex flex-col lg:flex-row justify-between space-y-2 lg:space-y-0">
         <InputOtp id="ssn1" v-model="ssn1" :length="4" integerOnly :disabled="isDisabled('ssn')"/>
         <InputOtp id="ssn2" v-model="ssn2" :length="6" integerOnly :disabled="isDisabled('ssn')"/>
       </div>
     </div>
 
-    <div class="flex flex-col col-span-2 lg:col-span-1">
-      <label for="firstName" class="mb-1">Vorname</label>
-      <InputText id="firstName" v-model="employee.firstName" placeholder="Text eingeben..." :disabled="isDisabled('firstName')"
-      />
+    <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
+      <label for="firstName">Vorname</label>
+      <InputText id="firstName" v-model="employee.firstName" placeholder="Text eingeben..." :disabled="isDisabled('firstName')"/>
     </div>
 
-    <div class="flex flex-col col-span-2 lg:col-span-1">
-      <label for="lastName" class="mb-1">Nachname</label>
+    <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
+      <label for="lastName">Nachname</label>
       <InputText id="lastName" v-model="employee.lastName" placeholder="Text eingeben..." :disabled="isDisabled('lastName')"/>
     </div>
 
-    <div class="flex flex-col col-span-2">
-      <label for="password" class="mb-1">Passwort</label>
+    <div class="flex flex-col space-y-1 col-span-2">
+      <label for="password">Passwort</label>
       <div class="flex items-center space-x-2">
         <Password id="password" v-model="employee.password" toggleMask placeholder="Text eingeben..." class="flex-1" :disabled="isDisabled('password')">
           <template #header>
@@ -38,13 +37,13 @@
       </div>
     </div>
 
-    <div class="flex flex-col col-span-2 lg:col-span-1">
-      <label for="role" class="mb-1">Rolle</label>
+    <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
+      <label for="role">Rolle</label>
       <Select id="role" v-model="employee.role" :options="roles" optionLabel="label" optionValue="value" placeholder="Auswahl treffen..." :disabled="isDisabled('role')"/>
     </div>
 
-    <div class="flex flex-col col-span-2 lg:col-span-1">
-      <label for="department" class="mb-1">Abteilung</label>
+    <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
+      <label for="department">Abteilung</label>
       <Select id="department" v-model="employee.department" :options="departments" optionLabel="label" optionValue="value" placeholder="Auswahl treffen..." :disabled="isDisabled('department')"/>
     </div>
   </div>

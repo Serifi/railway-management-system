@@ -8,6 +8,19 @@
       Abteilung: {{ item.department }}<br/>
       Rolle: {{ item.role }}
     </template>
+    <template #filters="{ filters }">
+      <div class="p-4 space-y-4">
+        <div class="flex flex-col space-y-1">
+          <label for="department">Abteilung</label>
+          <Select id="department" v-model="filters.department" :options="departments" optionLabel="label" optionValue="value" placeholder="Auswahl treffen..." showClear/>
+        </div>
+
+        <div class="flex flex-col space-y-1">
+          <label for="role">Rolle</label>
+          <Select id="role" v-model="filters.role" :options="roles" optionLabel="label" optionValue="value" placeholder="Auswahl treffen..." showClear/>
+        </div>
+      </div>
+    </template>
   </List>
 
   <ScotDialog :visible="createDialogVisible" type="create" header="Mitarbeiter:in erstellen" :disable-action="disableAction"
@@ -27,13 +40,15 @@ import { useEmployeeStore } from '@/stores/employee'
 import { useToast } from 'primevue/usetoast'
 import List from '~/components/ScotList.vue'
 import ScotEmployee from '~/components/ScotEmployee.vue'
-import ScotDialog from "~/components/ScotDialog.vue";
+import ScotDialog from "~/components/ScotDialog.vue"
 
 const toast = useToast()
 const createDialogVisible = ref(false)
 const editDialogVisible = ref(false)
 const employeeStore = useEmployeeStore()
 const employees = computed(() => employeeStore.employees)
+const departments = computed(() => employeeStore.departments)
+const roles = computed(() => employeeStore.roles)
 const employee = ref(null)
 const disableAction = ref(false)
 
