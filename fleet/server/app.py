@@ -1,12 +1,14 @@
 from flask import Flask
-from routes.EmployeeRoutes import employee_blueprint
-from routes.CarriageRoutes import carriage_blueprint
+from routes.employee_routes import employee_blueprint
+from routes.carriage_routes import carriage_blueprint
+from routes.train_routes import train_blueprint
 from flask_cors import CORS
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 app.register_blueprint(employee_blueprint, url_prefix='/employees')
 app.register_blueprint(carriage_blueprint, url_prefix='/fleet/carriages')
+app.register_blueprint(train_blueprint, url_prefix='/fleet/trains')
 CORS(app)
 
 @app.after_request
