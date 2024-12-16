@@ -1,0 +1,161 @@
+<template>
+  <div class="grid grid-cols-2 gap-4">
+    <div class="flex flex-col">
+      <label for="usageFee">Preis (€)</label>
+      <InputText
+        id="usageFee"
+        v-model.number="sectionData.usageFee"
+        placeholder="Preis eingeben..."
+        type="number"
+      />
+    </div>
+
+    <div class="flex flex-col">
+      <label for="length">Distanz (km)</label>
+      <InputText
+        id="length"
+        v-model.number="sectionData.length"
+        placeholder="Distanz eingeben..."
+        type="number"
+      />
+    </div>
+
+    <div class="flex flex-col">
+      <label for="maxSpeed">Max. Geschwindigkeit (km/h)</label>
+      <InputText
+        id="maxSpeed"
+        v-model.number="sectionData.maxSpeed"
+        placeholder="km/h eingeben..."
+        type="number"
+      />
+    </div>
+
+    <div class="flex flex-col">
+      <label for="trackGauge">Spurweite</label>
+      <Dropdown
+        id="trackGauge"
+        v-model="sectionData.trackGauge"
+        :options="trackGaugeOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Spurweite wählen"
+      />
+    </div>
+
+    <div class="flex flex-col">
+      <label>Startbahnhof</label>
+      <Dropdown
+        v-model="sectionData.startStationID"
+        :options="trainStations"
+        optionLabel="stationName"
+        optionValue="stationID"
+        placeholder="Startbahnhof wählen"
+      />
+    </div>
+
+    <div class="flex flex-col">
+      <label>Endbahnhof</label>
+      <Dropdown
+        v-model="sectionData.endStationID"
+        :options="trainStations"
+        optionLabel="stationName"
+        optionValue="stationID"
+        placeholder="Endbahnhof wählen"
+      />
+    </div>
+
+    <div class="flex flex-col col-span-2">
+      <label>Warnungen</label>
+      <MultiSelect
+        v-model="sectionData.warningIDs"
+        :options="warnings"
+        optionLabel="warningName"
+        optionValue="warningID"
+        placeholder="Warnungen auswählen"
+      />
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, watch, onMounted } from 'vue'
+
+const props = defineProps({
+  section: {
+    type: Object,
+    default: () => ({
+      usageFee: 0,
+      length: 0,
+      maxSpeed: 0,
+      trackGauge: '',
+      startStationID: null,
+      endStationID: null,
+      warningIDs: []
+    })
+  },
+  trainStations: {
+    type: Array,
+    required: true
+  },
+  warnings: {
+    type: Array,
+    required: true
+  }
+})
+
+const emits = defineEmits(['update:section'])
+
+const sectionData = ref({
+  usageFee: 0,
+  length: 0,
+  maxSpeed: 0,
+  trackGauge: '',
+  startStationID: null,
+  endStationID: null,
+  warningIDs: []
+})
+
+const trackGaugeOptions = [
+  { label: '1000mm', value: '1000' },
+  { label: '1435mm', value: '1435' }
+]
+
+onMounted(() => {
+  if (props.section) {
+    initializeSectionData()
+  }
+})
+
+watch(
+  () => props.section,
+  () => initializeSectionData(),
+  { deep: true }
+)
+
+function initializeSectionData() {
+  sectionData.value = {
+    usageFee: Number(props.section.usageFee) || 0,
+    length: Number(props.section.length) || 0,
+    maxSpeed: Number(props.section.maxSpeed) || 0,
+    trackGauge: props.section.trackGauge || '',
+    startStationID: props.section.startStationID || null,
+    endStationID: props.section.endStationID || null,
+    warningIDs: props.section.warnings
+      ? props.section.warnings.map((w) => w.warningID)
+      : []
+  }
+}
+
+watch(
+  () => sectionData.value,
+  (updatedSection) => {
+    emits('update:section', {
+      ...updatedSection,
+      warnings: updatedSection.warningIDs.map((id) =>
+          props.warnings.find((w) => w.warningID === id)
+      )
+    })
+  },
+    {deep: true}
+)
+</script>
