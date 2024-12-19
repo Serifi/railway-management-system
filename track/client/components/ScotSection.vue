@@ -38,7 +38,7 @@
         :options="trackGaugeOptions"
         optionLabel="label"
         optionValue="value"
-        placeholder="Spurweite wählen"
+        placeholder="Spurweite wählen..."
       />
     </div>
 
@@ -49,7 +49,7 @@
         :options="trainStations"
         optionLabel="stationName"
         optionValue="stationID"
-        placeholder="Startbahnhof wählen"
+        placeholder="Startbahnhof wählen..."
       />
     </div>
 
@@ -60,25 +60,28 @@
         :options="trainStations"
         optionLabel="stationName"
         optionValue="stationID"
-        placeholder="Endbahnhof wählen"
+        placeholder="Endbahnhof wählen..."
       />
     </div>
 
     <div class="flex flex-col col-span-2">
-      <label>Warnungen</label>
+      <label>Warnungen auswählen</label>
       <MultiSelect
         v-model="sectionData.warningIDs"
         :options="warnings"
-        optionLabel="warningName"
+        optionLabel="description"
         optionValue="warningID"
-        placeholder="Warnungen auswählen"
+        placeholder="Warnungen auswählen..."
+        :filter="true"
+        appendTo="body"
+        panel-style="z-index: 9999"
       />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue';
 
 const props = defineProps({
   section: {
@@ -90,7 +93,7 @@ const props = defineProps({
       trackGauge: '',
       startStationID: null,
       endStationID: null,
-      warningIDs: []
+      warnings: []
     })
   },
   trainStations: {
@@ -101,61 +104,40 @@ const props = defineProps({
     type: Array,
     required: true
   }
-})
+});
 
-const emits = defineEmits(['update:section'])
-
-const sectionData = ref({
-  usageFee: 0,
-  length: 0,
-  maxSpeed: 0,
-  trackGauge: '',
-  startStationID: null,
-  endStationID: null,
-  warningIDs: []
-})
-
-const trackGaugeOptions = [
-  { label: '1000mm', value: '1000' },
-  { label: '1435mm', value: '1435' }
-]
+const emits = defineEmits(['update:section']);
+const sectionData = ref({});
 
 onMounted(() => {
-  if (props.section) {
-    initializeSectionData()
-  }
-})
+  initializeSectionData();
+});
 
 watch(
   () => props.section,
-  () => initializeSectionData(),
-  { deep: true }
-)
+  initializeSectionData,
+  { deep: true, immediate: true }
+);
 
 function initializeSectionData() {
-  sectionData.value = {
-    usageFee: Number(props.section.usageFee) || 0,
-    length: Number(props.section.length) || 0,
-    maxSpeed: Number(props.section.maxSpeed) || 0,
-    trackGauge: props.section.trackGauge || '',
-    startStationID: props.section.startStationID || null,
-    endStationID: props.section.endStationID || null,
-    warningIDs: props.section.warnings
-      ? props.section.warnings.map((w) => w.warningID)
-      : []
-  }
+  sectionData.value = { ...props.section };
 }
 
 watch(
-  () => sectionData.value,
+  sectionData,
   (updatedSection) => {
     emits('update:section', {
       ...updatedSection,
       warnings: updatedSection.warningIDs.map((id) =>
-          props.warnings.find((w) => w.warningID === id)
+        props.warnings.find((w) => w.warningID === id)
       )
-    })
+    });
   },
-    {deep: true}
-)
+  { deep: true }
+);
+
+const trackGaugeOptions = [
+  { label: '1000mm', value: '1000' },
+  { label: '1435mm', value: '1435' }
+];
 </script>

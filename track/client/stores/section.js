@@ -24,9 +24,9 @@ export const useSectionStore = defineStore('sectionStore', {
             }
         },
 
-        async editSection(section) {
+        async editSection(sectionID, sectionData) {
             try {
-                await axios.put(`http://127.0.0.1:5000/track/sections/${section.sectionID}`, section);
+                await axios.put(`http://127.0.0.1:5000/track/sections/${sectionID}`, sectionData);
                 await this.getSections();
             } catch (error) {
                 console.error('Fehler beim Bearbeiten des Abschnitts:', error.response?.data || error);

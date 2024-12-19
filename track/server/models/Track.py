@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import validates
 from models.Base import Base
 from models.Section import Section
 
@@ -7,22 +8,28 @@ class Track(Base):
     trackID = Column(Integer, primary_key=True)
     trackName = Column(String, nullable=False)
 
+    @validates('trackName')
+    def validate_name(self, key, value):
+        if not value or not value.strip():
+            raise ValueError("Der Streckenname darf nicht leer sein.")
+        return value.strip()
+
     def validate_section_sequence(self, section_ids, session):
         if len(section_ids) < 1:
-            raise ValueError("Es muss mindestens eine Section angegeben werden, um eine Strecke zu bilden.")
+            raise ValueError("Es muss mindestens ein Abschnitt angegeben werden, um eine Strecke zu bilden.")
 
         sections = session.query(Section).filter(Section.sectionID.in_(section_ids)).all()
 
         if len(sections) != len(section_ids):
             missing_ids = set(section_ids) - {s.sectionID for s in sections}
-            raise ValueError(f"Folgende Sections existieren nicht: {missing_ids}")
+            raise ValueError(f"Folgende Abschnitte existieren nicht: {missing_ids}")
 
         start_stations = {s.startStationID for s in sections}
         end_stations = {s.endStationID for s in sections}
 
         valid_start_stations = start_stations - end_stations
         if len(valid_start_stations) != 1:
-            raise ValueError("Die Sections bilden keine gültige durchgängige Strecke. Kein eindeutiger Startpunkt gefunden.")
+            raise ValueError("Die Abschnitte bilden keine gültige durchgängige Strecke. Kein eindeutiger Startpunkt gefunden.")
 
         valid_end_stations = end_stations - start_stations
         if len(valid_end_stations) != 1:

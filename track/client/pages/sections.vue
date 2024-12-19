@@ -95,6 +95,7 @@ onMounted(() => {
   sectionStore.getSections();
   stationStore.getTrainStations();
   warningStore.getWarnings();
+  console.log(warnings.value)
 });
 
 const sectionsWithStationNames = computed(() => {
@@ -129,6 +130,11 @@ function toggleCreateDialog() {
 
 function toggleEditDialog(currentSection) {
   editDialogVisible.value = true;
+
+  const warningIDs = currentSection.warnings
+    ? currentSection.warnings.map((warning) => warning.warningID)
+    : [];
+
   section.value = {
     sectionID: currentSection.sectionID,
     usageFee: currentSection.usageFee,
@@ -137,9 +143,7 @@ function toggleEditDialog(currentSection) {
     trackGauge: currentSection.trackGauge,
     startStationID: currentSection.startStationID,
     endStationID: currentSection.endStationID,
-    warningIDs: currentSection.warnings
-      ? currentSection.warnings.map((w) => w.warningID)
-      : []
+    warningIDs: warningIDs
   };
 }
 
@@ -193,7 +197,14 @@ async function saveSection() {
         life: 3000
       });
     } else {
-      await sectionStore.editSection(section.value);
+      const { sectionID, ...sectionData } = section.value;
+
+      if (!sectionID) {
+        console.error("Fehler: sectionID ist undefined!");
+        return;
+      }
+
+      await sectionStore.editSection(sectionID, sectionData);
       toast.add({
         severity: 'success',
         summary: 'Erfolg',
