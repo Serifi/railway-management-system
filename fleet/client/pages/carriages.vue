@@ -1,6 +1,6 @@
 <template>
-  <List :items="carriages" :getKey="getCarriageKey" :rowsPerPage="5"
-        @create="toggleCreateDialog" @edit="toggleEditDialog" @delete="deleteCarriage">
+  <ScotList :items="carriages" :getKey="getCarriageKey" :rowsPerPage="5"
+            @create="toggleCreateDialog" @edit="toggleEditDialog" @delete="deleteCarriage">
     <template #title="{ item }">
       {{ item.type }} #{{ item.carriageID }}
     </template>
@@ -15,7 +15,39 @@
         Maximales Gewicht: {{ item.maxWeight }} kg
       </span>
     </template>
-  </List>
+    <template #filters="{ filters }">
+      <span v-if="initializeFilters(filters)"/>
+
+      <div class="p-4 space-y-4">
+        <div class="flex flex-col space-y-1">
+          <label for="type">Typ</label>
+          <SelectButton id="type" v-model="filters.type" :options="carriageTypes" optionLabel="label" optionValue="value" @change="onTypeChange(filters)"/>
+        </div>
+
+        <div class="flex flex-col space-y-1">
+          <label for="trackGauge">Spurweite</label>
+          <SelectButton id="trackGauge" v-model="filters.trackGauge"  :options="trackGauges" optionLabel="label" optionValue="value"/>
+        </div>
+
+        <div class="flex flex-col space-y-1" v-if="filters.type === 'Railcar'">
+          <label>Maximale Zugkraft</label>
+          <InputNumber v-model="filters.maxTractiveForce.from" suffix="kN" placeholder="von" />
+          <InputNumber v-model="filters.maxTractiveForce.to" suffix="kN" placeholder="bis" />
+        </div>
+        <div class="flex flex-col space-y-1" v-if="filters.type === 'PassengerCar'">
+          <label>Maximales Gewicht</label>
+          <InputNumber v-model="filters.maxWeight.from" suffix="t" placeholder="von" />
+          <InputNumber v-model="filters.maxWeight.to" suffix="t" placeholder="bis" />
+        </div>
+
+        <div class="flex flex-col space-y-1" v-if="filters.type === 'PassengerCar'">
+          <label>Sitzplätze</label>
+          <InputNumber v-model="filters.numberOfSeats.from" placeholder="von" />
+          <InputNumber v-model="filters.numberOfSeats.to" placeholder="bis" />
+        </div>
+      </div>
+    </template>
+  </ScotList>
 
   <ScotDialog :visible="createDialogVisible" type="create" header="Wagen erstellen" :disable-action="disableAction"
               @update:visible="createDialogVisible = $event" @action="createCarriage" @cancel="toggleCreateDialog">
@@ -32,17 +64,42 @@
 import { ref, computed, onMounted } from 'vue'
 import { useCarriageStore } from '@/stores/carriage'
 import { useToast } from 'primevue/usetoast'
-import List from '~/components/ScotList.vue'
+import ScotList from '~/components/ScotList.vue'
 import ScotCarriage from '~/components/ScotCarriage.vue'
 import ScotDialog from "~/components/ScotDialog.vue"
 
-const toast = useToast()
+const toast = useToast();
 const createDialogVisible = ref(false)
 const editDialogVisible = ref(false)
 const carriageStore = useCarriageStore()
 const carriages = computed(() => carriageStore.carriages)
 const carriage = ref(null)
 const disableAction = ref(false)
+const trackGauges = computed(() => carriageStore.trackGauges)
+const carriageTypes = computed(() => carriageStore.carriageTypes)
+
+function initializeFilters(filters) {
+  if (!filters.maxTractiveForce) {
+    filters.maxTractiveForce = { from: null, to: null }
+  }
+  if (!filters.maxWeight) {
+    filters.maxWeight = { from: null, to: null }
+  }
+  if (!filters.numberOfSeats) {
+    filters.numberOfSeats = { from: null, to: null }
+  }
+  return false
+}
+
+function onTypeChange(filters) {
+  if (filters.type !== 'Railcar') {
+    filters.maxTractiveForce = { from: null, to: null }
+  }
+  if (filters.type !== 'PassengerCar') {
+    filters.maxWeight = { from: null, to: null }
+    filters.numberOfSeats = { from: null, to: null }
+  }
+}
 
 function updateCarriage(currentCarriage) {
   carriage.value = currentCarriage
@@ -83,5 +140,17 @@ function getCarriageKey(carriage) {
 
 onMounted(() => {
   carriageStore.getCarriages()
-})
+});
 </script>
+
+<style>
+.p-confirm-popup-accept,
+.p-confirm-popup-reject {
+  padding: 4px;
+  margin: 4px;
+}
+
+.p-confirm-popup-accept{
+  background-color: #FF9999 !important;
+}
+</style>
