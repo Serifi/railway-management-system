@@ -1,12 +1,20 @@
 <template>
-  <List :items="employees" :getKey="getEmployeeKey" :rowsPerPage="5"
-        @create="toggleCreateDialog" @edit="toggleEditDialog" @delete="deleteEmployee">
+  <List
+    :items="employees"
+    :getKey="getEmployeeKey"
+    pageType="Mitarbeiter"
+    @create="toggleCreateDialog"
+    @edit="toggleEditDialog"
+    @delete="deleteEmployee"
+  >
     <template #title="{ item }">
       {{ `${item.firstName} ${item.lastName}` }}
     </template>
     <template #description="{ item }">
-      Abteilung: {{ item.department }}<br/>
-      Rolle: {{ item.role }}
+      <div>
+        <p>Abteilung: {{ item.department }}</p>
+        <p>Rolle: {{ item.role }}</p>
+      </div>
     </template>
   </List>
 

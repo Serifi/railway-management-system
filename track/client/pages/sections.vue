@@ -95,7 +95,6 @@ onMounted(() => {
   sectionStore.getSections();
   stationStore.getTrainStations();
   warningStore.getWarnings();
-  console.log(warnings.value)
 });
 
 const sectionsWithStationNames = computed(() => {

@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs"
 
 export const useUserStore = defineStore('user', {
     state: () => ({
-        user: {firstName: 'Kadir', lastName: 'Demir', password: '1234', username: 'kadir.demir', ssn: 1234310119, role: 'Employee', department: 'Crew'},
+        user: {firstName: 'Kadir', lastName: 'Demir', password: '1234', username: 'kadir.demir', ssn: 1234310119, role: 'Admin', department: 'Crew'},
     }),
     getters: {
         getSSN: (state) => state.user ? state.user.ssn : '',
