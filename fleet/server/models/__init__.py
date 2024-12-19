@@ -1,0 +1,8 @@
+from sqlalchemy.orm import declarative_base
+
+Base = declarative_base()
+
+from .carriage import Carriage, Railcar, PassengerCar
+from .train import Train, TrainPassengerCars
+from .employee import Employee
+from .maintenance import Maintenance

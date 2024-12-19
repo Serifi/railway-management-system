@@ -1,18 +1,18 @@
 from flask import Flask, Blueprint, request, jsonify
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from models.Carriage import Carriage, Railcar, PassengerCar
+from models.carriage import Carriage, Railcar, PassengerCar
 import os
+
+carriage_blueprint = Blueprint('carriage_routes', __name__)
 
 DATABASE_URL = f"sqlite:///{os.path.abspath('server/db/fleet.db')}"
 engine = create_engine(DATABASE_URL, echo=True)
 Session = sessionmaker(bind=engine)
-Base = declarative_base()
+
+from models import Base
 
 Base.metadata.create_all(engine)
-
-carriage_blueprint = Blueprint('carriage_routes', __name__)
 
 @carriage_blueprint.route('/', methods=['GET'])
 def get_all_carriages():

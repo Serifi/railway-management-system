@@ -1,16 +1,17 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, DateTime
-from sqlalchemy.orm import relationship, declarative_base
+# models/maintenance.py
 
-Base = declarative_base()
+from sqlalchemy import Column, Integer, String, ForeignKey, TIMESTAMP
+from sqlalchemy.orm import relationship
+from . import Base  # Importiere die gemeinsame Base
 
 class Maintenance(Base):
     __tablename__ = 'maintenance'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    maintenanceID = Column(Integer, primary_key=True, autoincrement=True)
+    employeeSSN = Column(String, ForeignKey('employee.ssn'), nullable=False)
     trainID = Column(Integer, ForeignKey('train.trainID'), nullable=False)
-    employeeID = Column(String, ForeignKey('employee.ssn'), nullable=False)
-    timeID = Column(Integer, ForeignKey('time.id'), nullable=False)
+    from_time = Column(TIMESTAMP, nullable=False)
+    to_time = Column(TIMESTAMP, nullable=False)
 
-    train = relationship("Train", backref="maintenances")
     employee = relationship("Employee", backref="maintenances")
-    time = relationship("Time", backref="maintenances")
+    train = relationship("Train", backref="maintenances")

@@ -1,86 +1,84 @@
-# routes/train_routes.py
-from flask import Blueprint, jsonify, request
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
-from database import SessionLocal
-from models.train import Train, TrainPassengerCars, TrainType
-from models.railcar import Railcar
-from models.passenger_car import PassengerCar
+from sqlalchemy.exc import IntegrityError  # Korrigierter Import
+from flask import Blueprint, request, jsonify
+from sqlalchemy.orm import sessionmaker, joinedload
+from models import Base, Train, TrainPassengerCars
+from models.carriage import Railcar, PassengerCar
+from sqlalchemy import create_engine
+import os
 
+# Blueprint für Train-Routen
 train_blueprint = Blueprint('train_routes', __name__)
 
-# Erstellen eines neuen Zuges
+# Datenbank-URL und Engine
+DATABASE_URL = f"sqlite:///{os.path.abspath('server/db/fleet.db')}"
+engine = create_engine(DATABASE_URL, echo=True)
+Session = sessionmaker(bind=engine)
+
+# Stelle sicher, dass alle Modelle importiert werden
+import models
+
+# Erstelle Tabellen (falls noch nicht vorhanden)
+Base.metadata.create_all(engine)
+
+# POST-Route zum Erstellen eines neuen Zuges
 @train_blueprint.route('/', methods=['POST'])
 def create_train():
-    data = request.get_json()
-
-    required_fields = ['name', 'railcarID', 'passengerCarIDs']
-    if not data or not all(field in data for field in required_fields):
-        return jsonify({"message": f"Fehlende Daten: {', '.join(required_fields)} werden benötigt"}), 400
-
-    name = data['name'].strip()
-    railcar_id = data['railcarID']
-    passenger_car_ids = data['passengerCarIDs']
-
-    if not passenger_car_ids or not isinstance(passenger_car_ids, list):
-        return jsonify({"message": "Es muss mindestens ein PassengerCarID angegeben werden"}), 400
-
-    session = SessionLocal()
-
+    session = Session()
     try:
-        # Überprüfen, ob der Railcar existiert
-        railcar = session.query(Railcar).filter(Railcar.carriageID == railcar_id).first()
+        data = request.get_json()
+
+        # Validierung der Eingabedaten
+        if not data or 'name' not in data or 'railcarID' not in data or 'passengerCarIDs' not in data:
+            return jsonify({"message": "Name, railcarID und passengerCarIDs sind erforderlich"}), 400
+
+        # Railcar überprüfen
+        railcar = session.query(Railcar).filter_by(carriageID=data['railcarID']).first()
         if not railcar:
-            return jsonify({"message": f"Railcar mit carriageID {railcar_id} existiert nicht"}), 404
+            return jsonify({"message": "Ungültige railcarID"}), 404
 
-        # Überprüfen, ob der Railcar bereits einem Zug zugeordnet ist
-        existing_train = session.query(Train).filter(Train.railcarID == railcar_id).first()
+        # Prüfen, ob Railcar bereits einem anderen Zug zugeordnet ist
+        existing_train = session.query(Train).filter(Train.railcarID == data['railcarID']).first()
         if existing_train:
-            return jsonify({"message": f"Railcar mit carriageID {railcar_id} ist bereits einem Zug zugeordnet"}), 400
+            return jsonify({"message": "Dieser Railcar ist bereits einem Zug zugeordnet"}), 400
 
-        # Überprüfen, ob alle PassengerCars existieren und nicht bereits einem Zug zugeordnet sind (optional)
+        # PassengerCars überprüfen
+        passenger_car_ids = data['passengerCarIDs']
+        if not passenger_car_ids:
+            return jsonify({"message": "Es muss mindestens ein PassengerCarID angegeben werden"}), 400
+
         passenger_cars = session.query(PassengerCar).filter(PassengerCar.carriageID.in_(passenger_car_ids)).all()
         if len(passenger_cars) != len(passenger_car_ids):
-            return jsonify({"message": "Einige PassengerCarIDs existieren nicht"}), 404
+            return jsonify({"message": "Einige PassengerCar-IDs sind ungültig"}), 404
 
-        # Optional: Überprüfen, ob PassengerCars bereits einem Zug zugeordnet sind
-        # Dies hängt von Ihrer Geschäftslogik ab
-
-        # Erstellen des neuen Zuges
-        new_train = Train(
-            name=name,
-            railcarID=railcar_id
-        )
+        # Train erstellen
+        new_train = Train(name=data['name'], railcarID=data['railcarID'])
         session.add(new_train)
-        session.commit()  # Commit erforderlich, um trainID zu erhalten
-
-        # Hinzufügen der PassengerCars zur Assoziationstabelle
-        for pc_id in passenger_car_ids:
-            association = TrainPassengerCars(trainID=new_train.trainID, passengerCarID=pc_id)
-            session.add(association)
-
         session.commit()
 
-        # Laden der Beziehungen für die Antwort
-        session.refresh(new_train)
+        # Verknüpfungen in der Zwischentabelle hinzufügen
+        for pc in passenger_cars:
+            session.execute(
+                TrainPassengerCars.insert().values(trainID=new_train.trainID, passengerCarID=pc.carriageID)
+            )
+        session.commit()
 
         return jsonify({
-            'trainID': new_train.trainID,
-            'name': new_train.name,
-            'railcarID': new_train.railcarID,
-            'passengerCarIDs': passenger_car_ids
+            "trainID": new_train.trainID,
+            "name": new_train.name,
+            "railcarID": new_train.railcarID,
+            "passengerCarIDs": passenger_car_ids
         }), 201
 
-    except IntegrityError as e:
+    except IntegrityError:
         session.rollback()
-        return jsonify({"message": "Fehler beim Erstellen des Zuges."}), 500
+        return jsonify({"message": "Datenbankfehler: Duplizierte oder ungültige Daten"}), 400
     finally:
         session.close()
 
-# Abrufen aller Züge
+# GET-Route zum Abrufen aller Züge
 @train_blueprint.route('/', methods=['GET'])
 def get_trains():
-    session = SessionLocal()
+    session = Session()
     try:
         trains = session.query(Train).options(
             joinedload(Train.railcar),
@@ -89,7 +87,7 @@ def get_trains():
 
         trains_list = []
         for train in trains:
-            passenger_car_ids = [pc.passengerCarID for pc in train.passenger_cars]
+            passenger_car_ids = [pc.carriageID for pc in train.passenger_cars]
             trains_list.append({
                 "trainID": train.trainID,
                 "name": train.name,
@@ -101,10 +99,10 @@ def get_trains():
     finally:
         session.close()
 
-# Abrufen eines Zuges nach trainID
+# GET-Route zum Abrufen eines Zuges nach trainID
 @train_blueprint.route('/<int:trainID>', methods=['GET'])
 def get_train_by_id(trainID):
-    session = SessionLocal()
+    session = Session()
     try:
         train = session.query(Train).options(
             joinedload(Train.railcar),
@@ -114,7 +112,7 @@ def get_train_by_id(trainID):
         if not train:
             return jsonify({"message": f"Zug mit ID {trainID} nicht gefunden"}), 404
 
-        passenger_car_ids = [pc.passengerCarID for pc in train.passenger_cars]
+        passenger_car_ids = [pc.carriageID for pc in train.passenger_cars]
 
         return jsonify({
             "trainID": train.trainID,
@@ -125,11 +123,11 @@ def get_train_by_id(trainID):
     finally:
         session.close()
 
-# Aktualisieren eines Zuges
+# PUT-Route zum Aktualisieren eines Zuges
 @train_blueprint.route('/<int:trainID>', methods=['PUT'])
 def update_train(trainID):
     data = request.get_json()
-    session = SessionLocal()
+    session = Session()
 
     try:
         train = session.query(Train).filter(Train.trainID == trainID).first()
@@ -172,18 +170,18 @@ def update_train(trainID):
                 return jsonify({"message": "Einige PassengerCarIDs existieren nicht"}), 404
 
             # Entfernen bestehender Assoziationen
-            session.query(TrainPassengerCars).filter(TrainPassengerCars.trainID == trainID).delete()
+            session.query(TrainPassengerCars).filter(TrainPassengerCars.c.trainID == trainID).delete()
 
             # Hinzufügen neuer Assoziationen
-            for pc_id in new_passenger_car_ids:
-                association = TrainPassengerCars(trainID=trainID, passengerCarID=pc_id)
-                session.add(association)
-
+            for pc in passenger_cars:
+                session.execute(
+                    TrainPassengerCars.insert().values(trainID=trainID, passengerCarID=pc.carriageID)
+                )
         session.commit()
 
         # Laden der aktualisierten Beziehungen
         session.refresh(train)
-        updated_passenger_car_ids = [pc.passengerCarID for pc in train.passenger_cars]
+        updated_passenger_car_ids = [pc.carriageID for pc in train.passenger_cars]
 
         return jsonify({
             "trainID": train.trainID,
@@ -192,16 +190,16 @@ def update_train(trainID):
             "passengerCarIDs": updated_passenger_car_ids
         }), 200
 
-    except IntegrityError as e:
+    except IntegrityError:
         session.rollback()
         return jsonify({"message": "Fehler beim Aktualisieren des Zuges."}), 500
     finally:
         session.close()
 
-# Löschen eines Zuges
+# DELETE-Route zum Löschen eines Zuges
 @train_blueprint.route('/<int:trainID>', methods=['DELETE'])
 def delete_train(trainID):
-    session = SessionLocal()
+    session = Session()
     try:
         train = session.query(Train).filter(Train.trainID == trainID).first()
 
@@ -212,7 +210,7 @@ def delete_train(trainID):
         session.commit()
 
         return jsonify({"message": f"Zug mit ID {trainID} wurde erfolgreich gelöscht"}), 200
-    except IntegrityError as e:
+    except IntegrityError:
         session.rollback()
         return jsonify({"message": "Fehler beim Löschen des Zuges."}), 500
     finally:

@@ -1,16 +1,13 @@
 from sqlite3 import IntegrityError
 
 from flask import Blueprint, jsonify, request
-from models.Employee import Employee, Session
-from models.Department import Department
-from models.Role import Role
+from models.employee import Employee, Session
+from models.department import Department
+from models.role import Role
+from passlib.hash import bcrypt
 import re
 
 employee_blueprint = Blueprint('employee_routes', __name__)
-
-from flask import Blueprint, jsonify, request
-from models.Employee import Employee, Session
-from passlib.hash import bcrypt
 
 # Login-Endpoint
 @employee_blueprint.route('/login', methods=['POST'])
