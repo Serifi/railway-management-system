@@ -3,10 +3,9 @@ from sqlalchemy.orm import declarative_base, sessionmaker, validates
 import re
 import os
 
-from models.Role import Role
-from models.Department import Department
-
-Base = declarative_base()
+from models.role import Role
+from models.department import Department
+from . import Base
 
 class Employee(Base):
     __tablename__ = 'employee'
