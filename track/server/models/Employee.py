@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, create_engine, Enum, UniqueConstraint
-from sqlalchemy.orm import declarative_base, sessionmaker, validates
+from sqlalchemy import Column, String, create_engine, Enum, UniqueConstraint
+from sqlalchemy.orm import sessionmaker, validates
 import re
 import os
 

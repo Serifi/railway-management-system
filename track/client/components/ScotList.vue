@@ -1,16 +1,33 @@
-<!-- ScotList.vue -->
 <template>
   <div class="flex justify-between mb-4">
     <IconField>
-      <InputIcon class="pi pi-search"/>
-      <InputText v-model="searchQuery" placeholder="Suchen..." />
+      <InputIcon class="pi pi-search" />
+      <InputText
+        v-model="searchQuery"
+        :placeholder="`${pagePlaceholder} suchen...`"
+      />
     </IconField>
-    <ScotButton label="Erstellen" icon="pi pi-plus" variant="blue" @click="emitCreate"/>
+
+    <div class="flex space-x-2">
+      <ScotButton
+        v-if="showWarningButton"
+        label="Warnung erstellen"
+        icon="pi pi-plus"
+        variant="yellow"
+        @click="emitCreateWarning"
+      />
+      <ScotButton
+        :label="`${pagePlaceholder} erstellen`"
+        icon="pi pi-plus"
+        variant="blue"
+        @click="emitCreate"
+      />
+    </div>
   </div>
 
   <div v-for="item in paginatedItems" :key="getKey(item)"
-      class="flex p-6 rounded transition-colors duration-200 border-b"
-      @mouseover="hover = getKey(item)" @mouseleave="hover = null">
+       class="flex p-6 rounded transition-colors duration-200 border-b"
+       @mouseover="hover = getKey(item)" @mouseleave="hover = null">
     <div class="flex flex-col space-y-4 flex-grow">
       <div class="text-lg font-bold">
         <slot name="title" :item="item">{{ item.title }}</slot>
@@ -21,13 +38,20 @@
     </div>
 
     <div v-if="hover === getKey(item)" class="flex flex-col justify-center space-y-2">
-      <ScotButton label="Bearbeiten" icon="pi pi-pencil" variant="green" @click="emitEdit(item)"/>
-      <ScotButton label="Löschen" icon="pi pi-trash" variant="red" @click="confirmDeletion($event, item)"/>
+      <ScotButton label="Bearbeiten" icon="pi pi-pencil" variant="green" @click="emitEdit(item)" />
+      <ScotButton label="Löschen" icon="pi pi-trash" variant="red" @click="confirmDeletion($event, item)" />
     </div>
   </div>
-  <ConfirmPopup/>
 
-  <Paginator :rows="rowsPerPage" :totalRecords="filteredItems.length" :first="firstRecord" @page="onPageChange" class="mt-4"/>
+  <ConfirmPopup />
+
+  <Paginator
+    :rows="rowsPerPage"
+    :totalRecords="filteredItems.length"
+    :first="firstRecord"
+    @page="onPageChange"
+    class="mt-4"
+  />
 </template>
 
 <script setup>
@@ -35,7 +59,8 @@ import { ref, computed } from 'vue'
 import { useConfirm } from "primevue/useconfirm"
 
 const hover = ref(null)
-const emits = defineEmits(['create', 'edit', 'delete'])
+
+const emits = defineEmits(['create', 'createWarning', 'edit', 'delete'])
 const props = defineProps({
   items: {
     type: Array,
@@ -48,23 +73,31 @@ const props = defineProps({
   getKey: {
     type: Function,
     required: true
+  },
+  pageType: {
+    type: String,
+    required: true,
+    validator: value => ['Abschnitt', 'Strecke', 'Bahnhof', 'Mitarbeiter'].includes(value)
+  },
+  showWarningButton: {
+    type: Boolean,
+    default: false
   }
 })
 
-const searchQuery = ref('')
-watch(searchQuery, () => currentPage.value = 0)
+const pagePlaceholder = computed(() => props.pageType)
 
+const searchQuery = ref('')
 const filteredItems = computed(() => {
   if (!searchQuery.value) return props.items
   return props.items.filter(item =>
-      Object.values(item).some(val =>
-          String(val).toLowerCase().includes(searchQuery.value.toLowerCase())
-      )
+    Object.values(item).some(val =>
+      String(val).toLowerCase().includes(searchQuery.value.toLowerCase())
+    )
   )
 })
 
 const currentPage = ref(0)
-const onPageChange = (event) => currentPage.value = event.page
 const firstRecord = computed(() => currentPage.value * props.rowsPerPage)
 const paginatedItems = computed(() => {
   const start = firstRecord.value
@@ -73,6 +106,7 @@ const paginatedItems = computed(() => {
 })
 
 const emitCreate = () => emits('create')
+const emitCreateWarning = () => emits('createWarning')
 const emitEdit = (item) => emits('edit', item)
 
 const confirm = useConfirm()
@@ -90,11 +124,11 @@ const confirmDeletion = (event, item) => {
       label: 'Löschen',
       severity: 'danger'
     },
-    accept: () => {
-      emits('delete', item)
-    }
+    accept: () => emits('delete', item)
   })
 }
+
+const onPageChange = (event) => currentPage.value = event.page
 </script>
 
 <style>
@@ -104,7 +138,7 @@ const confirmDeletion = (event, item) => {
   margin: 4px;
 }
 
-.p-confirm-popup-accept{
+.p-confirm-popup-accept {
   background-color: #FF9999 !important;
 }
 </style>
