@@ -16,6 +16,7 @@
         id="startDate"
         v-model="warningData.startDate"
         showTime
+        hourFormat="24"
         dateFormat="yy-mm-dd"
         placeholder="Startdatum wählen"
       />
@@ -27,6 +28,7 @@
         id="endDate"
         v-model="warningData.endDate"
         showTime
+        hourFormat="24"
         dateFormat="yy-mm-dd"
         placeholder="Enddatum wählen"
       />
@@ -55,17 +57,20 @@ const emits = defineEmits(['update:warning']);
 
 const warningData = ref({ ...props.warning });
 
+function formatDateTime(date) {
+  if (!date) return null;
+  const isoString = date.toISOString();
+  const [datePart, timePart] = isoString.split('T');
+  const time = timePart.split('.')[0];
+  return `${datePart} ${time}`;
+}
+
 watch(warningData, (updatedWarning) => {
   const formattedWarning = {
     ...updatedWarning,
-    startDate: updatedWarning.startDate
-      ? updatedWarning.startDate.toISOString().split('T')[0]
-      : null,
-    endDate: updatedWarning.endDate
-      ? updatedWarning.endDate.toISOString().split('T')[0]
-      : null
+    startDate: formatDateTime(updatedWarning.startDate),
+    endDate: formatDateTime(updatedWarning.endDate)
   };
-
   emits('update:warning', formattedWarning);
 }, { deep: true });
 </script>

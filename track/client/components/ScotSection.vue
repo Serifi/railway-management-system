@@ -69,7 +69,7 @@
       <MultiSelect
         v-model="sectionData.warningIDs"
         :options="warnings"
-        optionLabel="description"
+        optionLabel="warningName"
         optionValue="warningID"
         placeholder="Warnungen auswählen..."
         :filter="true"
