@@ -80,15 +80,19 @@ const getTitle = (item) => {
 };
 
 const filteredItems = computed(() =>
-    props.items
-        .filter(item => {
+    props.items.filter(item => {
           const matchesSearch = !searchQuery.value ||
               Object.values(item).some(val => String(val).toLowerCase().includes(searchQuery.value.toLowerCase()))
 
           let matchesFilter = true;
           for (const key in filters) {
             const filter = filters[key];
-            if (typeof filter === 'string' || typeof filter === 'number') {
+            if (key === 'status') {
+              if (filter && ((filter === 'aktiv' && !item.active) || (filter === 'inaktiv' && item.active))) {
+                matchesFilter = false
+                break
+              }
+            } else if (typeof filter === 'string' || typeof filter === 'number') {
               if (filter && item[key] !== filter) {
                 matchesFilter = false
                 break;
