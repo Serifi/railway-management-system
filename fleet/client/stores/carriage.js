@@ -13,6 +13,21 @@ export const useCarriageStore = defineStore('carriage', {
             { label: 'Personenwagen', value: 'PassengerCar' }
         ]
     }),
+    getters: {
+        carriagesWithStatus: (state) => {
+            const trains = useTrainStore().trains
+            return state.carriages.map(carriage => {
+                const isActive = trains.some(train =>
+                    train.railcarID === carriage.carriageID ||
+                    (train.passengerCarIDs && train.passengerCarIDs.includes(carriage.carriageID))
+                )
+                return {
+                    ...carriage,
+                    active: isActive
+                }
+            })
+        }
+    },
     actions: {
         async getCarriages() {
             try {

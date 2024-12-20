@@ -3,6 +3,7 @@
             @create="toggleCreateDialog" @edit="toggleEditDialog" @delete="deleteCarriage">
     <template #title="{ item }">
       {{ item.type }} #{{ item.carriageID }}
+      <Tag :severity="item.active ? 'danger' : 'success'" :value="item.active ? 'aktiv' : 'inaktiv'" class="ml-2"/>
     </template>
     <template #description="{ item }">
       <span v-if="item.type === 'Railcar'">
@@ -19,6 +20,11 @@
       <span v-if="initializeFilters(filters)"/>
 
       <div class="p-4 space-y-4">
+        <div class="flex flex-col space-y-1">
+          <label for="status">Status</label>
+          <SelectButton id="status" v-model="filters.status" :options="statusOptions" optionLabel="label" optionValue="value"/>
+        </div>
+
         <div class="flex flex-col space-y-1">
           <label for="type">Typ</label>
           <SelectButton id="type" v-model="filters.type" :options="carriageTypes" optionLabel="label" optionValue="value" @change="onTypeChange(filters)"/>
@@ -72,11 +78,16 @@ const toast = useToast();
 const createDialogVisible = ref(false)
 const editDialogVisible = ref(false)
 const carriageStore = useCarriageStore()
-const carriages = computed(() => carriageStore.carriages)
+const carriages = computed(() => carriageStore.carriagesWithStatus)
 const carriage = ref(null)
 const disableAction = ref(false)
 const trackGauges = computed(() => carriageStore.trackGauges)
 const carriageTypes = computed(() => carriageStore.carriageTypes)
+
+const statusOptions = [
+  { label: 'Aktiv', value: 'aktiv' },
+  { label: 'Inaktiv', value: 'inaktiv' }
+]
 
 function initializeFilters(filters) {
   if (!filters.maxTractiveForce) {
