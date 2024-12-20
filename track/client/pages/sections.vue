@@ -35,6 +35,7 @@
       v-model:section="section"
       :trainStations="stations"
       :warnings="warnings"
+      :errorMessage="errorMessage"
     />
   </ScotDialog>
 
@@ -46,7 +47,7 @@
     @action="createWarning"
     @cancel="toggleWarningDialog"
   >
-    <ScotWarning v-model:warning="newWarning" />
+    <ScotWarning v-model:warning="newWarning" :errorMessage="errorMessage" />
   </ScotDialog>
 </template>
 
@@ -58,6 +59,7 @@ import { useTrainStationStore } from '@/stores/train-station.js';
 import { useWarningStore } from '@/stores/warning.js';
 import List from '~/components/ScotList.vue';
 import ScotSection from '~/components/ScotSection.vue';
+import ScotWarning from '~/components/ScotWarning.vue';
 import ScotDialog from '~/components/ScotDialog.vue';
 
 const toast = useToast();
@@ -90,6 +92,7 @@ const createDialogVisible = ref(false);
 const editDialogVisible = ref(false);
 const warningDialogVisible = ref(false);
 const disableAction = ref(false);
+const errorMessage = ref(''); // Neue Fehlermeldung
 
 onMounted(() => {
   sectionStore.getSections();
@@ -116,6 +119,7 @@ function getStationName(id) {
 
 function toggleCreateDialog() {
   createDialogVisible.value = true;
+  errorMessage.value = '';
   section.value = {
     usageFee: 0,
     length: 0,
@@ -129,6 +133,7 @@ function toggleCreateDialog() {
 
 function toggleEditDialog(currentSection) {
   editDialogVisible.value = true;
+  errorMessage.value = '';
 
   const warningIDs = currentSection.warnings
     ? currentSection.warnings.map((warning) => warning.warningID)
@@ -149,11 +154,12 @@ function toggleEditDialog(currentSection) {
 function closeDialog() {
   createDialogVisible.value = false;
   editDialogVisible.value = false;
-  section.value = null;
+  errorMessage.value = '';
 }
 
 function toggleWarningDialog() {
   warningDialogVisible.value = !warningDialogVisible.value;
+  errorMessage.value = '';
 }
 
 async function createWarning() {
@@ -175,13 +181,7 @@ async function createWarning() {
       endDate: ''
     };
   } catch (error) {
-    console.error('Fehler beim Erstellen der Warnung:', error.response?.data || error);
-    toast.add({
-      severity: 'error',
-      summary: 'Fehler',
-      detail: 'Warnung konnte nicht erstellt werden',
-      life: 3000
-    });
+    errorMessage.value = error.response?.data?.message || 'Ein unbekannter Fehler ist aufgetreten.';
   }
 }
 
@@ -213,13 +213,7 @@ async function saveSection() {
     }
     closeDialog();
   } catch (error) {
-    console.error('Fehler beim Speichern der Section:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Fehler',
-      detail: 'Fehler beim Speichern des Abschnitts',
-      life: 3000
-    });
+    errorMessage.value = error.response?.data?.message || 'Ein unbekannter Fehler ist aufgetreten.';
   }
 }
 

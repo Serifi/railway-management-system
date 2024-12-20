@@ -77,6 +77,10 @@
         panel-style="z-index: 9999"
       />
     </div>
+
+    <div v-if="errorMessage" class="error-message col-span-2">
+      {{ errorMessage }}
+    </div>
   </div>
 </template>
 
@@ -93,7 +97,7 @@ const props = defineProps({
       trackGauge: '',
       startStationID: null,
       endStationID: null,
-      warnings: []
+      warningIDs: []
     })
   },
   trainStations: {
@@ -103,6 +107,10 @@ const props = defineProps({
   warnings: {
     type: Array,
     required: true
+  },
+  errorMessage: {
+    type: String,
+    default: ''
   }
 });
 
@@ -141,3 +149,16 @@ const trackGaugeOptions = [
   { label: '1435mm', value: '1435' }
 ];
 </script>
+
+<style scoped>
+label {
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+}
+</style>
