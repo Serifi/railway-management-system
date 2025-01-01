@@ -169,12 +169,7 @@ onMounted(async () => {
 
 .wagon {
   position: relative;
-  margin-right: 0px;
   flex: 0 0 auto;
-}
-
-.wagon:last-child {
-  margin-right: 0;
 }
 
 .wagon-image {

@@ -1,8 +1,6 @@
-# models/maintenance.py
-
 from sqlalchemy import Column, Integer, String, ForeignKey, TIMESTAMP
 from sqlalchemy.orm import relationship
-from . import Base  # Importiere die gemeinsame Base
+from . import Base
 
 class Maintenance(Base):
     __tablename__ = 'maintenance'
