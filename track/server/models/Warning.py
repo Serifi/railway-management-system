@@ -20,11 +20,19 @@ class Warning(Base):
 
     @validates('startDate', 'endDate')
     def validate_dates(self, key, value):
+        if not value:
+            raise ValueError(f"{key} darf nicht leer sein.")
+
         if not isinstance(value, datetime):
-            raise ValueError(f"{key} muss ein gültiges Datum im Format 'YYYY-MM-DD HH:MM:SS' sein")
+            raise ValueError("Die Daten müssen ein gültiges Format haben: 'YYYY-MM-DD HH:MM:SS'.")
+
+        if key == 'startDate' and not value:
+            raise ValueError("Das Startdatum darf nicht leer sein.")
 
         if key == 'endDate':
+            if not value:
+                raise ValueError("Das Enddatum darf nicht leer sein.")
             if self.startDate and value <= self.startDate:
-                raise ValueError("Das Enddatum muss nach dem Startdatum liegen")
+                raise ValueError("Das Enddatum muss nach dem Startdatum liegen.")
 
         return value

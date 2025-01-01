@@ -33,6 +33,10 @@
         placeholder="Enddatum wählen"
       />
     </div>
+
+    <div v-if="errorMessage" class="error-message col-span-2">
+      {{ errorMessage }}
+    </div>
   </div>
 </template>
 
@@ -51,8 +55,13 @@ const props = defineProps({
       startDate: null,
       endDate: null
     })
+  },
+  errorMessage: {
+    type: String,
+    default: ''
   }
 });
+
 const emits = defineEmits(['update:warning']);
 
 const warningData = ref({ ...props.warning });
@@ -79,5 +88,11 @@ watch(warningData, (updatedWarning) => {
 label {
   font-weight: bold;
   margin-bottom: 0.25rem;
+}
+
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
 }
 </style>

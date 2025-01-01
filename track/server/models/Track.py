@@ -33,7 +33,7 @@ class Track(Base):
 
         valid_end_stations = end_stations - start_stations
         if len(valid_end_stations) != 1:
-            raise ValueError("Die Sections bilden keine gültige durchgängige Strecke. Kein eindeutiger Endpunkt gefunden.")
+            raise ValueError("Die Abschnitte bilden keine gültige durchgängige Strecke. Kein eindeutiger Endpunkt gefunden.")
 
         connected_stations = set()
         for section in sections:
