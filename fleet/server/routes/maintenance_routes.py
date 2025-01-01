@@ -1,156 +1,197 @@
-import os
+# maintenance_routes.py
+
 from flask import Blueprint, request, jsonify
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
+from . import SessionLocal
+from models.maintenance import Maintenance
+from models.employee import Employee, Department
+from models.train import Train
 from datetime import datetime
-from models import Base, Maintenance, Employee, Train
 
-maintenance_blueprint = Blueprint('maintenance_blueprint', __name__)
+maintenance_blueprint = Blueprint('maintenance_routes', __name__)
 
-DATABASE_URL = f"sqlite:///{os.path.abspath('server/db/fleet.db')}"
-engine = create_engine(DATABASE_URL, echo=False)
-Session = sessionmaker(bind=engine)
-Base.metadata.create_all(engine)
+def serialize_maintenance(maintenance):
+    """Serialize a Maintenance object into a dictionary."""
+    return {
+        "maintenanceID": maintenance.maintenanceID,
+        "employeeSSN": maintenance.employeeSSN,
+        "trainID": maintenance.trainID,
+        "from_time": maintenance.from_time.isoformat(),
+        "to_time": maintenance.to_time.isoformat()
+    }
 
-@maintenance_blueprint.route('/', methods=['POST'])
-def create_maintenance():
-    session = Session()
+def parse_iso_datetime(date_str):
+    """Parse an ISO formatted datetime string."""
     try:
-        data = request.get_json()
-        for f in ['employeeSSN', 'trainID', 'from_time', 'to_time']:
-            if f not in data:
-                return jsonify({"message": f"{f} required"}), 400
-
-        emp = session.query(Employee).filter_by(ssn=data['employeeSSN']).first()
-        if not emp:
-            return jsonify({"message": "Employee not found"}), 404
-
-        train = session.query(Train).filter_by(trainID=data['trainID']).first()
-        if not train:
-            return jsonify({"message": "Train not found"}), 404
-
-        from_t = datetime.fromisoformat(data['from_time'])
-        to_t = datetime.fromisoformat(data['to_time'])
-        if from_t >= to_t:
-            return jsonify({"message": "from_time must be < to_time"}), 400
-
-        # Overlap check for this employee
-        overlap = session.query(Maintenance).filter(
-            Maintenance.employeeSSN == data['employeeSSN'],
-            Maintenance.from_time < to_t,
-            Maintenance.to_time > from_t
-        ).first()
-        if overlap:
-            return jsonify({"message": "Employee already assigned in overlapping time"}), 400
-
-        m = Maintenance(employeeSSN=emp.ssn, trainID=train.trainID, from_time=from_t, to_time=to_t)
-        session.add(m)
-        session.commit()
-        return jsonify({"message": "Maintenance created"}), 201
-    except IntegrityError:
-        session.rollback()
-        return jsonify({"message": "DB error"}), 400
+        return datetime.fromisoformat(date_str)
     except ValueError:
-        return jsonify({"message": "Invalid date format"}), 400
-    finally:
-        session.close()
+        return None
 
 @maintenance_blueprint.route('/', methods=['GET'])
 def get_maintenances():
-    session = Session()
-    try:
-        ms = session.query(Maintenance).all()
-        out = []
-        for i in ms:
-            out.append({
-                "maintenanceID": i.maintenanceID,
-                "employeeSSN": i.employeeSSN,
-                "trainID": i.trainID,
-                "from_time": i.from_time.isoformat(),
-                "to_time": i.to_time.isoformat()
-            })
-        return jsonify(out), 200
-    finally:
-        session.close()
+    """Retrieve all maintenance records."""
+    with SessionLocal() as session:
+        maintenances = session.query(Maintenance).all()
+        serialized = [serialize_maintenance(m) for m in maintenances]
+        return jsonify(serialized), 200
 
-@maintenance_blueprint.route('/<int:maintenanceID>', methods=['GET'])
-def get_maintenance_by_id(maintenanceID):
-    session = Session()
-    try:
-        m = session.query(Maintenance).filter_by(maintenanceID=maintenanceID).first()
-        if not m:
-            return jsonify({"message": "Maintenance not found"}), 404
-        return jsonify({
-            "maintenanceID": m.maintenanceID,
-            "employeeSSN": m.employeeSSN,
-            "trainID": m.trainID,
-            "from_time": m.from_time.isoformat(),
-            "to_time": m.to_time.isoformat()
-        }), 200
-    finally:
-        session.close()
+@maintenance_blueprint.route('/<int:maintenance_id>', methods=['GET'])
+def get_maintenance_by_id(maintenance_id):
+    """Retrieve a maintenance record by ID."""
+    with SessionLocal() as session:
+        maintenance = session.query(Maintenance).filter_by(maintenanceID=maintenance_id).first()
+        if not maintenance:
+            return jsonify({"message": f"Maintenance with ID {maintenance_id} not found"}), 404
 
-@maintenance_blueprint.route('/<int:maintenanceID>', methods=['PUT'])
-def update_maintenance(maintenanceID):
-    session = Session()
-    try:
-        data = request.get_json()
-        m = session.query(Maintenance).filter_by(maintenanceID=maintenanceID).first()
-        if not m:
-            return jsonify({"message": "Maintenance not found"}), 404
+        return jsonify(serialize_maintenance(maintenance)), 200
 
-        if 'employeeSSN' in data:
-            e = session.query(Employee).filter_by(ssn=data['employeeSSN']).first()
-            if not e:
+@maintenance_blueprint.route('/', methods=['POST'])
+def create_maintenance():
+    """Create a new maintenance record with validations."""
+    data = request.get_json()
+    required_fields = {'employeeSSN', 'trainID', 'from_time', 'to_time'}
+
+    if not data or not required_fields.issubset(data):
+        missing = required_fields - data.keys()
+        return jsonify({"message": f"Missing required fields: {', '.join(missing)}"}), 400
+
+    employee_ssn = data['employeeSSN']
+    train_id = data['trainID']
+    from_time_str = data['from_time']
+    to_time_str = data['to_time']
+
+    from_time = parse_iso_datetime(from_time_str)
+    to_time = parse_iso_datetime(to_time_str)
+
+    if not from_time or not to_time:
+        return jsonify({"message": "Invalid date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)"}), 400
+
+    if from_time >= to_time:
+        return jsonify({"message": "from_time must be strictly before to_time"}), 400
+
+    with SessionLocal() as session:
+        try:
+            # Validate Employee existence and department
+            employee = session.query(Employee).filter_by(ssn=employee_ssn).first()
+            if not employee:
                 return jsonify({"message": "Employee not found"}), 404
-            m.employeeSSN = e.ssn
 
-        if 'trainID' in data:
-            t = session.query(Train).filter_by(trainID=data['trainID']).first()
-            if not t:
+            if employee.department != Department.Maintenance:
+                return jsonify({"message": "Only Maintenance department employees can perform maintenances"}), 400
+
+            # Validate Train existence
+            train = session.query(Train).filter_by(trainID=train_id).first()
+            if not train:
                 return jsonify({"message": "Train not found"}), 404
-            m.trainID = t.trainID
 
-        if 'from_time' in data:
-            m.from_time = datetime.fromisoformat(data['from_time'])
-        if 'to_time' in data:
-            m.to_time = datetime.fromisoformat(data['to_time'])
-        if m.from_time >= m.to_time:
-            return jsonify({"message": "from_time must be < to_time"}), 400
+            # Check for overlapping maintenances for this employee
+            overlap = session.query(Maintenance).filter(
+                Maintenance.employeeSSN == employee_ssn,
+                Maintenance.from_time < to_time,
+                Maintenance.to_time > from_time
+            ).first()
 
-        # Overlap check again
-        overlap = session.query(Maintenance).filter(
-            Maintenance.maintenanceID != maintenanceID,
-            Maintenance.employeeSSN == m.employeeSSN,
-            Maintenance.from_time < m.to_time,
-            Maintenance.to_time > m.from_time
-        ).first()
-        if overlap:
-            return jsonify({"message": "Employee overlap"}), 400
+            if overlap:
+                return jsonify({"message": "Employee already assigned to overlapping maintenance time"}), 400
 
-        session.commit()
-        return jsonify({"message": "Maintenance updated"}), 200
-    except IntegrityError:
-        session.rollback()
-        return jsonify({"message": "DB error"}), 400
-    except ValueError:
-        return jsonify({"message": "Invalid date format"}), 400
-    finally:
-        session.close()
+            # Create Maintenance
+            maintenance = Maintenance(
+                employeeSSN=employee_ssn,
+                trainID=train_id,
+                from_time=from_time,
+                to_time=to_time
+            )
+            session.add(maintenance)
+            session.commit()
 
-@maintenance_blueprint.route('/<int:maintenanceID>', methods=['DELETE'])
-def delete_maintenance(maintenanceID):
-    session = Session()
-    try:
-        m = session.query(Maintenance).filter_by(maintenanceID=maintenanceID).first()
-        if not m:
-            return jsonify({"message": "Maintenance not found"}), 404
-        session.delete(m)
-        session.commit()
-        return jsonify({"message": "Maintenance deleted"}), 200
-    except IntegrityError:
-        session.rollback()
-        return jsonify({"message": "Error deleting maintenance"}), 400
-    finally:
-        session.close()
+            return jsonify({"message": "Maintenance created successfully"}), 201
+
+        except IntegrityError:
+            session.rollback()
+            return jsonify({"message": "Integrity error occurred while creating maintenance"}), 400
+
+@maintenance_blueprint.route('/<int:maintenance_id>', methods=['PUT'])
+def update_maintenance(maintenance_id):
+    """Update an existing maintenance record with validations."""
+    data = request.get_json()
+    if not data:
+        return jsonify({"message": "No data provided for update"}), 400
+
+    with SessionLocal() as session:
+        try:
+            maintenance = session.query(Maintenance).filter_by(maintenanceID=maintenance_id).first()
+            if not maintenance:
+                return jsonify({"message": f"Maintenance with ID {maintenance_id} not found"}), 404
+
+            # Update employeeSSN if provided
+            if 'employeeSSN' in data:
+                new_ssn = data['employeeSSN']
+                employee = session.query(Employee).filter_by(ssn=new_ssn).first()
+                if not employee:
+                    return jsonify({"message": "Employee not found"}), 404
+                if employee.department != Department.Maintenance:
+                    return jsonify({"message": "Only Maintenance department employees can perform maintenances"}), 400
+                maintenance.employeeSSN = new_ssn
+
+            # Update trainID if provided
+            if 'trainID' in data:
+                new_train_id = data['trainID']
+                train = session.query(Train).filter_by(trainID=new_train_id).first()
+                if not train:
+                    return jsonify({"message": "Train not found"}), 404
+                maintenance.trainID = new_train_id
+
+            # Update from_time and to_time if provided
+            from_time = maintenance.from_time
+            to_time = maintenance.to_time
+
+            if 'from_time' in data:
+                parsed_from_time = parse_iso_datetime(data['from_time'])
+                if not parsed_from_time:
+                    return jsonify({"message": "Invalid date format for from_time"}), 400
+                from_time = parsed_from_time
+                maintenance.from_time = from_time
+
+            if 'to_time' in data:
+                parsed_to_time = parse_iso_datetime(data['to_time'])
+                if not parsed_to_time:
+                    return jsonify({"message": "Invalid date format for to_time"}), 400
+                to_time = parsed_to_time
+                maintenance.to_time = to_time
+
+            if from_time >= to_time:
+                return jsonify({"message": "from_time must be strictly before to_time"}), 400
+
+            # Check for overlapping maintenances for this employee excluding current maintenance
+            overlap = session.query(Maintenance).filter(
+                Maintenance.maintenanceID != maintenance_id,
+                Maintenance.employeeSSN == maintenance.employeeSSN,
+                Maintenance.from_time < to_time,
+                Maintenance.to_time > from_time
+            ).first()
+
+            if overlap:
+                return jsonify({"message": "Employee already assigned to overlapping maintenance time"}), 400
+
+            session.commit()
+            return jsonify({"message": "Maintenance updated successfully"}), 200
+
+        except IntegrityError:
+            session.rollback()
+            return jsonify({"message": "Integrity error occurred while updating maintenance"}), 400
+
+@maintenance_blueprint.route('/<int:maintenance_id>', methods=['DELETE'])
+def delete_maintenance(maintenance_id):
+    """Delete a maintenance record."""
+    with SessionLocal() as session:
+        maintenance = session.query(Maintenance).filter_by(maintenanceID=maintenance_id).first()
+        if not maintenance:
+            return jsonify({"message": f"Maintenance with ID {maintenance_id} not found"}), 404
+
+        try:
+            session.delete(maintenance)
+            session.commit()
+            return jsonify({"message": "Maintenance deleted successfully"}), 200
+        except IntegrityError:
+            session.rollback()
+            return jsonify({"message": "Integrity error occurred while deleting maintenance"}), 400

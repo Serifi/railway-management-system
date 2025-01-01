@@ -1,153 +1,149 @@
-import os
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import IntegrityError
+# employee_routes.py
 from flask import Blueprint, jsonify, request
-from models import Base
-from models.employee import Base, Employee, Department, Role
-import re
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
+from . import SessionLocal
+from models.employee import Employee, Department, Role
 
 employee_blueprint = Blueprint('employee_routes', __name__)
 
-DATABASE_URL = f"sqlite:///{os.path.abspath('server/db/fleet.db')}"
-engine = create_engine(DATABASE_URL, echo=False)
-Session = sessionmaker(bind=engine)
-Base.metadata.create_all(engine)
-
-@employee_blueprint.route('/login', methods=['POST'])
-def login_employee():
-    data = request.get_json()
-    if not data or not data.get('username') or not data.get('password'):
-        return jsonify({"message": "Username and password required"}), 400
-
-    session = Session()
-    emp = session.query(Employee).filter_by(username=data['username']).first()
-    if not emp or emp.password != data['password']:
-        return jsonify({"message": "Wrong username or password"}), 401
-    return jsonify({"message": "Logged in"}), 200
-
-@employee_blueprint.route('/', methods=['GET'])
-def get_employees():
-    session = Session()
-    emps = session.query(Employee).all()
-    out = []
-    for e in emps:
-        out.append({
-            "ssn": e.ssn,
-            "firstName": e.firstName,
-            "lastName": e.lastName,
-            "department": e.department.value,
-            "role": e.role.value,
-            "username": e.username
-        })
-    return jsonify(out), 200
-
-@employee_blueprint.route('/<string:username>', methods=['GET'])
-def get_employee_by_username(username):
-    session = Session()
-    emp = session.query(Employee).filter_by(username=username).first()
-    if not emp:
-        return jsonify({"message": f"Employee {username} not found"}), 404
-    return jsonify({
+def serialize_employee(emp):
+    """Serialize an Employee object into a dictionary."""
+    return {
         "ssn": emp.ssn,
         "firstName": emp.firstName,
         "lastName": emp.lastName,
-        "password": emp.password,
-        "department": emp.department.value,
-        "role": emp.role.value,
+        "department": emp.department.value if emp.department else None,
+        "role": emp.role.value if emp.role else None,
         "username": emp.username
-    }), 200
+    }
+
+@employee_blueprint.route('/login', methods=['POST'])
+def login_employee():
+    """Authenticate an employee."""
+    data = request.get_json()
+    if not data or not data.get('username') or not data.get('password'):
+        return jsonify({"message": "Username and password are required"}), 400
+
+    with SessionLocal() as session:
+        emp = session.query(Employee).filter_by(username=data['username']).first()
+        if not emp or emp.password != data['password']:
+            return jsonify({"message": "Incorrect username or password"}), 401
+        return jsonify({"message": "Logged in successfully"}), 200
+
+@employee_blueprint.route('/', methods=['GET'])
+def get_employees():
+    """Retrieve all employees."""
+    with SessionLocal() as session:
+        emps = session.query(Employee).all()
+        serialized = [serialize_employee(emp) for emp in emps]
+        return jsonify(serialized), 200
+
+@employee_blueprint.route('/<string:username>', methods=['GET'])
+def get_employee_by_username(username):
+    """Retrieve an employee by username."""
+    with SessionLocal() as session:
+        emp = session.query(Employee).filter_by(username=username).first()
+        if not emp:
+            return jsonify({"message": f"Employee '{username}' not found"}), 404
+        return jsonify(serialize_employee(emp)), 200
 
 @employee_blueprint.route('/', methods=['POST'])
 def create_employee():
+    """Create a new employee."""
     data = request.get_json()
-    for field in ['ssn','firstName','lastName','password','department','role']:
-        if field not in data:
-            return jsonify({"message": f"{field} required"}), 400
+    required_fields = {'ssn', 'firstName', 'lastName', 'password', 'department', 'role'}
 
-    # Validate department, role
-    try:
-        dept = Department[data['department']]
-        rol = Role[data['role']]
-    except KeyError:
-        return jsonify({"message": "Invalid department or role"}), 400
+    if not data or not required_fields.issubset(data):
+        missing = required_fields - data.keys()
+        return jsonify({"message": f"Missing required fields: {', '.join(missing)}"}), 400
 
-    session = Session()
-    if session.query(Employee).filter_by(ssn=data['ssn']).first():
-        return jsonify({"message": "SSN not unique"}), 400
+    with SessionLocal() as session:
+        try:
+            # Validate and assign department and role
+            department = Department[data['department']]
+            role = Role[data['role']]
 
-    ssn_pattern = r"^\d{4}(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])\d{2}$"
-    if not re.match(ssn_pattern, data['ssn']):
-        return jsonify({"message": "SSN invalid"}), 400
+            # Create Employee instance
+            emp = Employee(
+                ssn=data['ssn'],
+                firstName=data['firstName'],
+                lastName=data['lastName'],
+                password=data['password'],
+                department=department,
+                role=role,
+                username=data.get('username')  # Auto-generated if None
+            )
+            session.add(emp)
+            session.commit()
+            return jsonify({"message": "Employee created successfully"}), 201
+        except KeyError:
+            session.rollback()
+            return jsonify({"message": "Invalid department or role"}), 400
+        except ValueError as ve:
+            session.rollback()
+            return jsonify({"message": str(ve)}), 400
+        except IntegrityError:
+            session.rollback()
+            return jsonify({"message": "SSN or username must be unique"}), 400
 
-    if data.get('username'):
-        uname = data['username']
-    else:
-        uname = f"{data['firstName'].lower()}.{data['lastName'].lower()}"
-
-    if session.query(Employee).filter_by(username=uname).first():
-        return jsonify({"message": "Username not unique"}), 400
-
-    e = Employee(
-        ssn=data['ssn'],
-        firstName=data['firstName'],
-        lastName=data['lastName'],
-        password=data['password'],
-        department=dept,
-        role=rol,
-        username=uname
-    )
-    try:
-        session.add(e)
-        session.commit()
-        return jsonify({"message": "Employee created"}), 201
-    except IntegrityError:
-        session.rollback()
-        return jsonify({"message": "Error creating employee"}), 500
-
-@employee_blueprint.route('/<int:ssn>', methods=['PUT'])
+@employee_blueprint.route('/<string:ssn>', methods=['PUT'])
 def update_employee(ssn):
+    """Update an existing employee."""
     data = request.get_json()
-    session = Session()
-    e = session.query(Employee).filter_by(ssn=str(ssn)).first()
-    if not e:
-        return jsonify({"message": "Employee not found"}), 404
+    if not data:
+        return jsonify({"message": "No data provided for update"}), 400
 
-    if 'firstName' in data: e.firstName = data['firstName']
-    if 'lastName' in data: e.lastName = data['lastName']
-    if 'password' in data: e.password = data['password']
-
-    if 'department' in data:
+    with SessionLocal() as session:
         try:
-            e.department = Department[data['department']]
-        except KeyError:
-            return jsonify({"message": "Invalid department"}), 400
+            emp = session.query(Employee).filter_by(ssn=ssn).first()
+            if not emp:
+                return jsonify({"message": f"Employee with SSN '{ssn}' not found"}), 404
 
-    if 'role' in data:
-        try:
-            e.role = Role[data['role']]
-        except KeyError:
-            return jsonify({"message": "Invalid role"}), 400
+            # Update general fields
+            for field in ['firstName', 'lastName', 'password', 'username']:
+                if field in data:
+                    setattr(emp, field, data[field])
 
-    if 'username' in data and data['username']:
-        new_uname = data['username']
-    else:
-        new_uname = f"{e.firstName.lower()}.{e.lastName.lower()}"
-    check = session.query(Employee).filter(Employee.username==new_uname, Employee.ssn!=str(ssn)).first()
-    if check:
-        return jsonify({"message": "Username not unique"}), 400
-    e.username = new_uname
+            # Update department if provided
+            if 'department' in data:
+                try:
+                    emp.department = Department[data['department']]
+                except KeyError:
+                    return jsonify({"message": "Invalid department"}), 400
 
-    session.commit()
-    return jsonify({"message": "Employee updated"}), 200
+            # Update role if provided
+            if 'role' in data:
+                try:
+                    emp.role = Role[data['role']]
+                except KeyError:
+                    return jsonify({"message": "Invalid role"}), 400
 
-@employee_blueprint.route('/<int:ssn>', methods=['DELETE'])
+            session.commit()
+            return jsonify({"message": "Employee updated successfully"}), 200
+        except IntegrityError:
+            session.rollback()
+            return jsonify({"message": "Username must be unique"}), 400
+        except ValueError as ve:
+            session.rollback()
+            return jsonify({"message": str(ve)}), 400
+
+@employee_blueprint.route('/<string:ssn>', methods=['DELETE'])
 def delete_employee(ssn):
-    session = Session()
-    e = session.query(Employee).filter_by(ssn=str(ssn)).first()
-    if not e:
-        return jsonify({"message": "Employee not found"}), 404
+    """Delete an employee."""
+    with SessionLocal() as session:
+        emp = session.query(Employee).options(joinedload(Employee.maintenances)).filter_by(ssn=ssn).first()
+        if not emp:
+            return jsonify({"message": f"Employee with SSN '{ssn}' not found"}), 404
 
-    session.delete(e)
-    session.commit()
-    return jsonify({"message": "Employee deleted"}), 200
+        # Check for existing maintenances
+        if emp.maintenances:
+            return jsonify({"message": "Cannot delete employee with existing maintenances"}), 400
+
+        try:
+            session.delete(emp)
+            session.commit()
+            return jsonify({"message": "Employee deleted successfully"}), 200
+        except IntegrityError:
+            session.rollback()
+            return jsonify({"message": "Integrity error occurred while deleting the employee"}), 400

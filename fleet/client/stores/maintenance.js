@@ -12,7 +12,7 @@ export const useMaintenanceStore = defineStore('maintenance', {
         async getMaintenances() {
             this.maintenancesLoading = true
             try {
-                const response = await axios.get('http://127.0.0.1:5000/fleet/maintenance')
+                const response = await axios.get('http://127.0.0.1:5000/fleet/maintenances')
                 this.maintenances = response.data
             } catch (error) {
                 console.error('Error fetching maintenances:', error)
@@ -22,7 +22,7 @@ export const useMaintenanceStore = defineStore('maintenance', {
         },
         async createMaintenance(maintenance) {
             try {
-                await axios.post('http://127.0.0.1:5000/fleet/maintenance', maintenance)
+                await axios.post('http://127.0.0.1:5000/fleet/maintenances', maintenance)
                 await this.getMaintenances()
             } catch (error) {
                 console.error('Error creating maintenance:', error.response?.data || error)
@@ -31,7 +31,7 @@ export const useMaintenanceStore = defineStore('maintenance', {
         },
         async editMaintenance(maintenance) {
             try {
-                await axios.put(`http://127.0.0.1:5000/fleet/maintenance/${maintenance.maintenanceID}`, maintenance)
+                await axios.put(`http://127.0.0.1:5000/fleet/maintenances/${maintenance.maintenanceID}`, maintenance)
                 await this.getMaintenances()
             } catch (error) {
                 console.error('Error editing maintenance:', error.response?.data || error)
@@ -40,7 +40,7 @@ export const useMaintenanceStore = defineStore('maintenance', {
         },
         async deleteMaintenance(maintenanceID) {
             try {
-                await axios.delete(`http://127.0.0.1:5000/fleet/maintenance/${maintenanceID}`)
+                await axios.delete(`http://127.0.0.1:5000/fleet/maintenances/${maintenanceID}`)
                 await this.getMaintenances()
             } catch (error) {
                 console.error('Error deleting maintenance:', error.response?.data || error)

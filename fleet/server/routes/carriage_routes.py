@@ -1,151 +1,180 @@
-import os
+# carriage_routes.py
 from flask import Blueprint, request, jsonify
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
+from . import SessionLocal
 from models.carriage import Carriage, Railcar, PassengerCar
-from models.train import TrainPassengerCars, Train
-from models import Base
+from models.train import TrainPassengerCar, Train
 
 carriage_blueprint = Blueprint('carriage_routes', __name__)
 
-DATABASE_URL = f"sqlite:///{os.path.abspath('server/db/fleet.db')}"
-engine = create_engine(DATABASE_URL, echo=False)
-Session = sessionmaker(bind=engine)
-Base.metadata.create_all(engine)
+def is_carriage_assigned(session, carriage_id):
+    """Check if a carriage is assigned to any train."""
+    return (
+            session.query(Train)
+            .filter_by(railcarID=carriage_id)
+            .exists()
+            .scalar()
+            or session.query(TrainPassengerCar)
+            .filter_by(passengerCarID=carriage_id)
+            .exists()
+            .scalar()
+    )
+
+def serialize_carriage(carriage):
+    """Serialize a carriage object based on its type."""
+    serialized = {
+        "carriageID": carriage.carriageID,
+        "trackGauge": carriage.trackGauge,
+        "type": carriage.type
+    }
+
+    if carriage.type == "Railcar" and carriage.railcar_detail:
+        serialized["maxTractiveForce"] = carriage.railcar_detail.maxTractiveForce
+    elif carriage.type == "PassengerCar" and carriage.passenger_car_detail:
+        serialized.update({
+            "numberOfSeats": carriage.passenger_car_detail.numberOfSeats,
+            "maxWeight": carriage.passenger_car_detail.maxWeight
+        })
+    else:
+        serialized["message"] = "Invalid carriage type or incomplete data"
+
+    return serialized
 
 @carriage_blueprint.route('/', methods=['GET'])
 def get_all_carriages():
-    session = Session()
-    railcars = session.query(Railcar).all()
-    p_cars = session.query(PassengerCar).all()
-
-    # Combine results
-    railcar_list = [{
-        "carriageID": r.carriageID,
-        "trackGauge": r.carriage.trackGauge,
-        "type": "Railcar",
-        "maxTractiveForce": r.maxTractiveForce
-    } for r in railcars]
-
-    p_car_list = [{
-        "carriageID": p.carriageID,
-        "trackGauge": p.carriage.trackGauge,
-        "type": "PassengerCar",
-        "numberOfSeats": p.numberOfSeats,
-        "maxWeight": p.maxWeight
-    } for p in p_cars]
-
-    return jsonify(railcar_list + p_car_list), 200
+    """Retrieve all carriages (Railcars and Passenger Cars)."""
+    with SessionLocal() as session:
+        carriages = session.query(Carriage).outerjoin(Railcar).outerjoin(PassengerCar).all()
+        serialized = [serialize_carriage(c) for c in carriages]
+        return jsonify(serialized), 200
 
 @carriage_blueprint.route('/<int:carriage_id>', methods=['GET'])
 def get_carriage_by_id(carriage_id):
-    session = Session()
-    r = session.query(Railcar).filter_by(carriageID=carriage_id).first()
-    p = session.query(PassengerCar).filter_by(carriageID=carriage_id).first()
+    """Retrieve a single carriage by ID."""
+    with SessionLocal() as session:
+        carriage = session.query(Carriage).options(
+            joinedload(Carriage.railcar_detail),
+            joinedload(Carriage.passenger_car_detail)
+        ).filter_by(carriageID=carriage_id).first()
 
-    if not r and not p:
-        return jsonify({"message": f"Carriage {carriage_id} not found"}), 404
+        if not carriage:
+            return jsonify({"message": f"Carriage {carriage_id} not found"}), 404
 
-    if r:
-        return jsonify({
-            "carriageID": r.carriageID,
-            "trackGauge": r.carriage.trackGauge,
-            "type": "Railcar",
-            "maxTractiveForce": r.maxTractiveForce
-        }), 200
-    else:
-        return jsonify({
-            "carriageID": p.carriageID,
-            "trackGauge": p.carriage.trackGauge,
-            "type": "PassengerCar",
-            "numberOfSeats": p.numberOfSeats,
-            "maxWeight": p.maxWeight
-        }), 200
+        serialized = serialize_carriage(carriage)
+        if "message" in serialized:
+            return jsonify(serialized), 400
+
+        return jsonify(serialized), 200
 
 @carriage_blueprint.route('/', methods=['POST'])
 def create_carriage():
+    """Create a new carriage (Railcar or Passenger Car)."""
     data = request.get_json()
-    if not data or not data.get('trackGauge') or not data.get('type'):
+    required_fields = {'trackGauge', 'type'}
+
+    if not data or not required_fields.issubset(data):
         return jsonify({"message": "Missing trackGauge or type"}), 400
 
-    if data['trackGauge'] not in ['1435', '1000']:
-        return jsonify({"message": "trackGauge must be 1435 or 1000"}), 400
+    carriage_type = data['type']
 
-    new_c = Carriage(trackGauge=data['trackGauge'], type=data['type'])
-    session = Session()
+    with SessionLocal() as session:
+        try:
+            carriage = Carriage(trackGauge=data['trackGauge'], type=carriage_type)
+            session.add(carriage)
+            session.flush()  # Retrieve carriageID before commit
 
-    # Create railcar or passengerCar
-    if data['type'] == "Railcar":
-        if 'maxTractiveForce' not in data:
-            return jsonify({"message": "maxTractiveForce required for Railcar"}), 400
-        new_r = Railcar(carriage=new_c, maxTractiveForce=data['maxTractiveForce'])
-        session.add(new_r)
-    elif data['type'] == "PassengerCar":
-        if 'numberOfSeats' not in data or 'maxWeight' not in data:
-            return jsonify({"message": "numberOfSeats and maxWeight required for PassengerCar"}), 400
-        new_p = PassengerCar(carriage=new_c,
-                             numberOfSeats=data['numberOfSeats'],
-                             maxWeight=data['maxWeight'])
-        session.add(new_p)
-    else:
-        return jsonify({"message": "Invalid carriage type"}), 400
+            if carriage_type == "Railcar":
+                max_force = data.get('maxTractiveForce')
+                if max_force is None:
+                    raise ValueError("maxTractiveForce is required for Railcar")
+                railcar = Railcar(carriageID=carriage.carriageID, maxTractiveForce=max_force)
+                session.add(railcar)
+            elif carriage_type == "PassengerCar":
+                seats = data.get('numberOfSeats')
+                weight = data.get('maxWeight')
+                if seats is None or weight is None:
+                    raise ValueError("numberOfSeats and maxWeight are required for PassengerCar")
+                passenger_car = PassengerCar(
+                    carriageID=carriage.carriageID,
+                    numberOfSeats=seats,
+                    maxWeight=weight
+                )
+                session.add(passenger_car)
+            else:
+                raise ValueError("Invalid carriage type")
 
-    session.commit()
-    return jsonify({"message": "Carriage created"}), 201
+            session.commit()
+            return jsonify({"message": "Carriage created"}), 201
+        except (ValueError, IntegrityError) as e:
+            session.rollback()
+            return jsonify({"message": str(e)}), 400
 
-@carriage_blueprint.route('/<int:carriageID>', methods=['PUT'])
-def update_carriage(carriageID):
+@carriage_blueprint.route('/<int:carriage_id>', methods=['PUT'])
+def update_carriage(carriage_id):
+    """Update an existing carriage."""
     data = request.get_json()
-    session = Session()
-    c = session.query(Carriage).filter_by(carriageID=carriageID).first()
-    if not c:
-        return jsonify({"message": "Carriage not found"}), 404
+    if not data:
+        return jsonify({"message": "No data provided for update"}), 400
 
-    # Check if carriage is in a train
-    in_train = session.query(TrainPassengerCars).filter_by(passengerCarID=carriageID).first() \
-               or session.query(Train).filter_by(railcarID=carriageID).first()
-    if in_train:
-        return jsonify({"message": "Cannot edit carriage currently assigned to a train"}), 400
+    with SessionLocal() as session:
+        try:
+            carriage = session.query(Carriage).options(
+                joinedload(Carriage.railcar_detail),
+                joinedload(Carriage.passenger_car_detail)
+            ).filter_by(carriageID=carriage_id).first()
 
-    if 'trackGauge' in data:
-        c.trackGauge = data['trackGauge']
-    if 'type' in data:
-        c.type = data['type']
+            if not carriage:
+                return jsonify({"message": f"Carriage {carriage_id} not found"}), 404
 
-    if c.type == "Railcar":
-        r = session.query(Railcar).filter_by(carriageID=carriageID).first()
-        if 'maxTractiveForce' in data:
-            r.maxTractiveForce = data['maxTractiveForce']
-    else:
-        p = session.query(PassengerCar).filter_by(carriageID=carriageID).first()
-        if 'numberOfSeats' in data:
-            p.numberOfSeats = data['numberOfSeats']
-        if 'maxWeight' in data:
-            p.maxWeight = data['maxWeight']
+            if is_carriage_assigned(session, carriage_id):
+                return jsonify({"message": "Cannot edit carriage assigned to a train"}), 400
 
-    session.commit()
-    return jsonify({"message": "Carriage updated"}), 200
+            # Update general fields
+            for field in ['trackGauge', 'type']:
+                if field in data:
+                    setattr(carriage, field, data[field])
 
-@carriage_blueprint.route('/<int:carriageID>', methods=['DELETE'])
-def delete_carriage(carriageID):
-    session = Session()
-    c = session.query(Carriage).filter_by(carriageID=carriageID).first()
-    if not c:
-        return jsonify({"message": "Carriage not found"}), 404
+            # Update specific details
+            if carriage.type == "Railcar" and carriage.railcar_detail:
+                if 'maxTractiveForce' in data:
+                    carriage.railcar_detail.maxTractiveForce = data['maxTractiveForce']
+            elif carriage.type == "PassengerCar" and carriage.passenger_car_detail:
+                for field in ['numberOfSeats', 'maxWeight']:
+                    if field in data:
+                        setattr(carriage.passenger_car_detail, field, data[field])
 
-    # Check if carriage is in a train
-    in_train = session.query(TrainPassengerCars).filter_by(passengerCarID=carriageID).first() \
-               or session.query(Train).filter_by(railcarID=carriageID).first()
-    if in_train:
-        return jsonify({"message": "Cannot delete carriage assigned to a train"}), 400
+            session.commit()
+            return jsonify({"message": "Carriage updated"}), 200
+        except (ValueError, IntegrityError) as e:
+            session.rollback()
+            return jsonify({"message": str(e)}), 400
 
-    if c.type == "Railcar":
-        r = session.query(Railcar).filter_by(carriageID=carriageID).first()
-        session.delete(r)
-    else:
-        p = session.query(PassengerCar).filter_by(carriageID=carriageID).first()
-        session.delete(p)
+@carriage_blueprint.route('/<int:carriage_id>', methods=['DELETE'])
+def delete_carriage(carriage_id):
+    """Delete a carriage (Railcar or Passenger Car)."""
+    with SessionLocal() as session:
+        try:
+            carriage = session.query(Carriage).options(
+                joinedload(Carriage.railcar_detail),
+                joinedload(Carriage.passenger_car_detail)
+            ).filter_by(carriageID=carriage_id).first()
 
-    session.delete(c)
-    session.commit()
-    return jsonify({"message": "Carriage deleted"}), 200
+            if not carriage:
+                return jsonify({"message": f"Carriage {carriage_id} not found"}), 404
+
+            if is_carriage_assigned(session, carriage_id):
+                return jsonify({"message": "Cannot delete carriage assigned to a train"}), 400
+
+            # Delete specific details
+            if carriage.type == "Railcar" and carriage.railcar_detail:
+                session.delete(carriage.railcar_detail)
+            elif carriage.type == "PassengerCar" and carriage.passenger_car_detail:
+                session.delete(carriage.passenger_car_detail)
+
+            session.delete(carriage)
+            session.commit()
+            return jsonify({"message": "Carriage deleted"}), 200
+        except IntegrityError:
+            session.rollback()
+            return jsonify({"message": "Integrity error"}), 400

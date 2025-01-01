@@ -1,6 +1,6 @@
-import re, os
-from sqlalchemy import Column, String, Enum, UniqueConstraint, create_engine
-from sqlalchemy.orm import sessionmaker, validates
+import re
+from sqlalchemy import Column, String, Enum, UniqueConstraint
+from sqlalchemy.orm import relationship, validates
 import enum
 from . import Base
 
@@ -21,7 +21,9 @@ class Employee(Base):
     password = Column(String, nullable=False)
     department = Column(Enum(Department), nullable=False)
     role = Column(Enum(Role), nullable=False)
-    username = Column(String, nullable=False, unique=True)
+    username = Column(String, unique=True, nullable=False)
+
+    maintenances = relationship("Maintenance", back_populates="employee")
 
     __table_args__ = (
         UniqueConstraint('username', name='unique_username'),
@@ -39,8 +41,3 @@ class Employee(Base):
         if not re.match(pattern, str(value)):
             raise ValueError("SSN does not match Austrian guidelines")
         return value
-
-    def generate_username(self):
-        if not self.firstName or not self.lastName:
-            raise ValueError("First/Last name required to generate username")
-        self.username = f"{self.firstName.lower()}.{self.lastName.lower()}"
