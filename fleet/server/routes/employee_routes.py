@@ -36,6 +36,7 @@ def login_employee():
 
 @employee_blueprint.route('/logout', methods=['POST'])
 @authenticate
+@authorize(roles=['Employee', 'Admin'])
 def logout_employee():
     """Logout an employee."""
     auth_header = request.headers.get('Authorization')
@@ -45,6 +46,7 @@ def logout_employee():
 
 @employee_blueprint.route('/', methods=['GET'])
 @authenticate
+@authorize(roles=['Employee', 'Admin'])
 def get_employees():
     """Retrieve all employees."""
     with SessionLocal() as session:
@@ -54,6 +56,7 @@ def get_employees():
 
 @employee_blueprint.route('/<string:username>', methods=['GET'])
 @authenticate
+@authorize(roles=['Employee', 'Admin'])
 def get_employee_by_username(username):
     """Retrieve an employee by username."""
     with SessionLocal() as session:

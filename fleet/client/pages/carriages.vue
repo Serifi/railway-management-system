@@ -62,7 +62,7 @@
 
   <ScotDialog :visible="editDialogVisible" type="edit" header="Wagen bearbeiten" :disable-action="disableAction"
               @update:visible="editDialogVisible = $event" @action="editCarriage" @cancel="toggleEditDialog">
-    <ScotCarriage :carriage="carriage" @update:carriage="updateCarriage" :disabledFields="['type', 'trackGauge']"/>
+    <ScotCarriage :carriage="carriage" @update:carriage="updateCarriage"/> <!-- :disabledFields="['type', 'trackGauge']" -->
   </ScotDialog>
 </template>
 
@@ -122,10 +122,25 @@ function toggleCreateDialog() {
   if (createDialogVisible.value) disableAction.value = true
 }
 
-function createCarriage() {
-  carriageStore.createCarriage(carriage.value)
-  toggleCreateDialog()
-  toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Aktion wurde erfolgreich abgeschlossen', life: 3000 })
+async function createCarriage() {
+  try {
+    const response = await carriageStore.createCarriage(carriage.value)
+    toggleCreateDialog()
+    toast.add({
+      severity: 'success',
+      summary: 'Erfolgreich',
+      detail: response.message || 'Wagen wurde erfolgreich erstellt.',
+      life: 3000
+    })
+  } catch (error) {
+    toggleCreateDialog()
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler',
+      detail: error.message || 'Beim Erstellen des Wagens ist ein Fehler aufgetreten.',
+      life: 5000
+    })
+  }
 }
 
 async function toggleEditDialog(currentCarriage) {
@@ -134,15 +149,44 @@ async function toggleEditDialog(currentCarriage) {
   if (editDialogVisible.value) disableAction.value = false
 }
 
-function editCarriage() {
-  carriageStore.editCarriage(carriage.value)
-  toggleEditDialog(null)
-  toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Aktion wurde erfolgreich abgeschlossen', life: 3000 })
+async function editCarriage() {
+  try {
+    const response = await carriageStore.editCarriage(carriage.value)
+    toggleEditDialog(null)
+    toast.add({
+      severity: 'success',
+      summary: 'Erfolgreich',
+      detail: response.message || 'Wagen wurde erfolgreich bearbeitet.',
+      life: 3000
+    })
+  } catch (error) {
+    toggleEditDialog(null)
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler',
+      detail: error.message || 'Beim Bearbeiten des Wagens ist ein Fehler aufgetreten.',
+      life: 5000
+    })
+  }
 }
 
-function deleteCarriage(currentCarriage) {
-  carriageStore.deleteCarriage(currentCarriage.carriageID)
-  toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Aktion wurde erfolgreich abgeschlossen', life: 3000 })
+async function deleteCarriage(currentCarriage) {
+  try {
+    const response = await carriageStore.deleteCarriage(currentCarriage.carriageID)
+    toast.add({
+      severity: 'success',
+      summary: 'Erfolgreich',
+      detail: response.message || 'Wagen wurde erfolgreich gelöscht.',
+      life: 3000
+    })
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler',
+      detail: error.message || 'Beim Löschen des Wagens ist ein Fehler aufgetreten.',
+      life: 5000
+    })
+  }
 }
 
 function getCarriageKey(carriage) {

@@ -7,6 +7,7 @@ from models.maintenance import Maintenance
 from models.employee import Employee, Department
 from models.train import Train
 from datetime import datetime
+from auth import authenticate, authorize
 
 maintenance_blueprint = Blueprint('maintenance_routes', __name__)
 
@@ -28,6 +29,8 @@ def parse_iso_datetime(date_str):
         return None
 
 @maintenance_blueprint.route('/', methods=['GET'])
+@authenticate
+@authorize(roles=['Employee', 'Admin'])
 def get_maintenances():
     """Retrieve all maintenance records."""
     with SessionLocal() as session:
@@ -36,6 +39,8 @@ def get_maintenances():
         return jsonify(serialized), 200
 
 @maintenance_blueprint.route('/<int:maintenance_id>', methods=['GET'])
+@authenticate
+@authorize(roles=['Employee', 'Admin'])
 def get_maintenance_by_id(maintenance_id):
     """Retrieve a maintenance record by ID."""
     with SessionLocal() as session:
@@ -46,6 +51,8 @@ def get_maintenance_by_id(maintenance_id):
         return jsonify(serialize_maintenance(maintenance)), 200
 
 @maintenance_blueprint.route('/', methods=['POST'])
+@authenticate
+@authorize(roles=['Admin'])
 def create_maintenance():
     """Create a new maintenance record with validations."""
     data = request.get_json()
@@ -111,6 +118,8 @@ def create_maintenance():
             return jsonify({"message": "Integrity error occurred while creating maintenance"}), 400
 
 @maintenance_blueprint.route('/<int:maintenance_id>', methods=['PUT'])
+@authenticate
+@authorize(roles=['Admin'])
 def update_maintenance(maintenance_id):
     """Update an existing maintenance record with validations."""
     data = request.get_json()
@@ -181,6 +190,8 @@ def update_maintenance(maintenance_id):
             return jsonify({"message": "Integrity error occurred while updating maintenance"}), 400
 
 @maintenance_blueprint.route('/<int:maintenance_id>', methods=['DELETE'])
+@authenticate
+@authorize(roles=['Admin'])
 def delete_maintenance(maintenance_id):
     """Delete a maintenance record."""
     with SessionLocal() as session:

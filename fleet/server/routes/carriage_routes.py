@@ -5,6 +5,7 @@ from sqlalchemy.orm import joinedload
 from . import SessionLocal
 from models.carriage import Carriage, Railcar, PassengerCar
 from models.train import TrainPassengerCar, Train
+from auth import authenticate, authorize
 
 carriage_blueprint = Blueprint('carriage_routes', __name__)
 
@@ -42,6 +43,8 @@ def serialize_carriage(carriage):
     return serialized
 
 @carriage_blueprint.route('/', methods=['GET'])
+@authenticate
+@authorize(roles=['Employee', 'Admin'])
 def get_all_carriages():
     """Retrieve all carriages (Railcars and Passenger Cars)."""
     with SessionLocal() as session:
@@ -50,6 +53,8 @@ def get_all_carriages():
         return jsonify(serialized), 200
 
 @carriage_blueprint.route('/<int:carriage_id>', methods=['GET'])
+@authenticate
+@authorize(roles=['Employee', 'Admin'])
 def get_carriage_by_id(carriage_id):
     """Retrieve a single carriage by ID."""
     with SessionLocal() as session:
@@ -68,6 +73,8 @@ def get_carriage_by_id(carriage_id):
         return jsonify(serialized), 200
 
 @carriage_blueprint.route('/', methods=['POST'])
+@authenticate
+@authorize(roles=['Admin'])
 def create_carriage():
     """Create a new carriage (Railcar or Passenger Car)."""
     data = request.get_json()
@@ -111,6 +118,8 @@ def create_carriage():
             return jsonify({"message": str(e)}), 400
 
 @carriage_blueprint.route('/<int:carriage_id>', methods=['PUT'])
+@authenticate
+@authorize(roles=['Admin'])
 def update_carriage(carriage_id):
     """Update an existing carriage."""
     data = request.get_json()
@@ -151,6 +160,8 @@ def update_carriage(carriage_id):
             return jsonify({"message": str(e)}), 400
 
 @carriage_blueprint.route('/<int:carriage_id>', methods=['DELETE'])
+@authenticate
+@authorize(roles=['Admin'])
 def delete_carriage(carriage_id):
     """Delete a carriage (Railcar or Passenger Car)."""
     with SessionLocal() as session:

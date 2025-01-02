@@ -7,7 +7,7 @@ from . import SessionLocal
 from models.train import Train, TrainPassengerCar
 from models.carriage import Railcar, PassengerCar
 from models.maintenance import Maintenance
-from datetime import datetime
+from auth import authenticate, authorize
 from math import fsum
 
 train_blueprint = Blueprint('train_routes', __name__)
@@ -56,6 +56,8 @@ def calculate_total_weight(passenger_cars):
 
 
 @train_blueprint.route('/', methods=['GET'])
+@authenticate
+@authorize(roles=['Employee', 'Admin'])
 def get_trains():
     """Retrieve all trains."""
     with SessionLocal() as session:
@@ -68,6 +70,8 @@ def get_trains():
 
 
 @train_blueprint.route('/<int:train_id>', methods=['GET'])
+@authenticate
+@authorize(roles=['Employee', 'Admin'])
 def get_train_by_id(train_id):
     """Retrieve a specific train by ID."""
     with SessionLocal() as session:
@@ -84,6 +88,8 @@ def get_train_by_id(train_id):
 
 
 @train_blueprint.route('/', methods=['POST'])
+@authenticate
+@authorize(roles=['Admin'])
 def create_train():
     """Create a new train, ensuring all carriages have the same trackGauge and weight constraints are met."""
     data = request.get_json()
@@ -154,6 +160,8 @@ def create_train():
 
 
 @train_blueprint.route('/<int:train_id>', methods=['PUT'])
+@authenticate
+@authorize(roles=['Admin'])
 def update_train(train_id):
     """Update an existing train, ensuring trackGauge consistency and weight constraints when railcar or passenger cars change."""
     data = request.get_json()
@@ -248,6 +256,8 @@ def update_train(train_id):
 
 
 @train_blueprint.route('/<int:train_id>', methods=['DELETE'])
+@authenticate
+@authorize(roles=['Admin'])
 def delete_train(train_id):
     """Delete a train, disallowing deletion if it has existing maintenance records."""
     with SessionLocal() as session:

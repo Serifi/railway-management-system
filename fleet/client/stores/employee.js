@@ -1,6 +1,8 @@
+// stores/employee.js
 import { defineStore } from 'pinia'
-import axios from "axios"
-import bcrypt from 'bcryptjs'
+import apiClient from '@/utils/api'
+
+const BASE_PATH = '/employees'
 
 export const useEmployeeStore = defineStore('employee', {
     state: () => ({
@@ -15,41 +17,50 @@ export const useEmployeeStore = defineStore('employee', {
         ],
     }),
     actions: {
-        async getEmployees() {
+        async handleRequest(promise) {
             try {
-                const response = await axios.get('http://127.0.0.1:5000/employees')
-                this.employees = response.data
+                const response = await promise
+                return response.data
             } catch (error) {
-                console.error('Error fetching employees:', error)
+                throw error.response?.data || error
             }
+        },
+
+        async getEmployees() {
+            const data = await this.handleRequest(apiClient.get(BASE_PATH))
+            this.employees = data
         },
 
         async createEmployee(employee) {
             try {
-                const password = await bcrypt.hash(employee.password, 12)
-                await axios.post('http://127.0.0.1:5000/employees', { ...employee, password: password })
+                const data = await this.handleRequest(apiClient.post(BASE_PATH, employee))
                 await this.getEmployees()
+                return data
             } catch (error) {
-                console.error('Error creating employee:', error.response?.data || error)
+                console.error('Error creating employee:', error)
+                throw error
             }
         },
 
         async editEmployee(employee) {
             try {
-                const password = await bcrypt.hash(employee.password, 12)
-                await axios.put(`http://127.0.0.1:5000/employees/${employee.ssn}`, { ...employee, password: password })
+                const data = await this.handleRequest(apiClient.put(`${BASE_PATH}/${employee.ssn}`, employee))
                 await this.getEmployees()
+                return data
             } catch (error) {
-                console.error('Error editing employee:', error.response?.data || error)
+                console.error('Error editing employee:', error)
+                throw error
             }
         },
 
         async deleteEmployee(ssn) {
             try {
-                await axios.delete(`http://127.0.0.1:5000/employees/${ssn}`)
+                const data = await this.handleRequest(apiClient.delete(`${BASE_PATH}/${ssn}`))
                 await this.getEmployees()
+                return data
             } catch (error) {
-                console.error('Error deleting employee:', error.response?.data || error)
+                console.error('Error deleting employee:', error)
+                throw error
             }
         },
     },

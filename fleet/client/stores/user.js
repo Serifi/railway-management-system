@@ -1,11 +1,13 @@
 // stores/user.js
 import { defineStore } from 'pinia'
-import apiClient from '@/utils/api' // Importieren der Axios-Instanz
+import apiClient from '@/utils/api'
+
+const BASE_PATH = '/employees'
 
 export const useUserStore = defineStore('user', {
     state: () => ({
         user: null,
-        token: null, // Neuer Zustand für den Token
+        token: null,
     }),
     getters: {
         getSSN: (state) => state.user ? state.user.ssn : '',
@@ -14,16 +16,21 @@ export const useUserStore = defineStore('user', {
         isAuthenticated: (state) => !!state.token,
     },
     actions: {
-        // Initialisierung des Stores mit einem gespeicherten Token
+        async handleRequest(promise) {
+            try {
+                const response = await promise
+                return response.data
+            } catch (error) {
+                throw error.response?.data || error
+            }
+        },
+
         initialize() {
-            if (process.client) { // Sicherstellen, dass wir auf der Client-Seite sind
+            if (process.client) {
                 const token = localStorage.getItem('auth_token')
+                const username = localStorage.getItem('username')
                 if (token) {
                     this.token = token
-                    // Laden der Benutzerdaten basierend auf dem Token
-                    // Annahme: Der Username ist im gespeicherten User oder muss separat gespeichert werden
-                    // Hier speichern wir den Username zusätzlich im localStorage
-                    const username = localStorage.getItem('username')
                     if (username) {
                         this.getEmployee(username)
                     }
@@ -33,7 +40,7 @@ export const useUserStore = defineStore('user', {
 
         async login(username, password) {
             try {
-                const response = await apiClient.post(`/employees/login`, {
+                const response = await apiClient.post(`${BASE_PATH}/login`, {
                     username,
                     password
                 })
@@ -71,11 +78,11 @@ export const useUserStore = defineStore('user', {
 
         async getEmployee(username) {
             try {
-                const response = await apiClient.get(`/employees/${username}`)
-                this.user = response.data
-                return response.data
+                const response = await this.handleRequest(apiClient.get(`${BASE_PATH}/${username}`))
+                this.user = response
+                return response
             } catch (error) {
-                console.error(`Error fetching employee with username ${username}:`, error.response?.data || error)
+                console.error(`Error fetching employee with username ${username}:`, error)
                 throw error
             }
         },

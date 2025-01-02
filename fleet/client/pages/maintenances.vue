@@ -139,7 +139,7 @@ function getMaintenanceKey(maintenance) {
 
 onMounted(async () => {
   await maintenanceStore.getTrains()
-  await maintenanceStore.getEmployees()
+  //await maintenanceStore.getEmployees()
   await maintenanceStore.getMaintenances()
 });
 </script>
