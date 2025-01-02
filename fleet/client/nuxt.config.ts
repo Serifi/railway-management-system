@@ -29,6 +29,7 @@ export default defineNuxtConfig({
         }
     },
     css: [
+        '~/assets/prime.css',
         '~/assets/tailwind.css',
         'primeicons/primeicons.css',
         '@fortawesome/fontawesome-free/css/all.css'
@@ -39,4 +40,7 @@ export default defineNuxtConfig({
             autoprefixer: {},
         },
     },
+    plugins: [
+        '~/plugins/i18n.config.js',
+    ]
 })
