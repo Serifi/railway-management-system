@@ -6,7 +6,7 @@
     </IconField>
     <div class="flex space-x-4 items-center cursor-pointer">
       <i class="pi pi-filter" @click="toggleFilter" />
-      <ScotButton label="Erstellen" icon="pi pi-plus" variant="blue" @click="emitCreate" />
+      <ScotButton v-if="isAdmin" label="Erstellen" icon="pi pi-plus" variant="blue" @click="emitCreate" />
     </div>
     <Drawer v-model:visible="filterVisible" header="Filter" position="right">
       <slot name="filters" :filters="filters" />
@@ -24,7 +24,7 @@
       </div>
     </div>
 
-    <div v-if="hover === getKey(item)" class="flex flex-col justify-center space-y-2">
+    <div v-if="isAdmin && hover === getKey(item)" class="flex flex-col justify-center space-y-2">
       <ScotButton label="Bearbeiten" icon="pi pi-pencil" variant="green" @click="emitEdit(item)" />
       <ScotButton label="Löschen" icon="pi pi-trash" variant="red" @click="confirmDeletion($event, item)" />
     </div>
@@ -150,6 +150,9 @@ const confirmDeletion = (event, item) => {
 watch([searchQuery, rowsPerPage], () => {
   currentPage.value = 0;
 });
+
+const userStore = useUserStore();
+const isAdmin = computed(() => userStore.getUserRole === 'Admin');
 </script>
 
 <style>

@@ -35,6 +35,9 @@
           <Calendar id="to_time" v-model="filters.to_time" showTime showSeconds placeholder="Endzeitpunkt" />
         </div>
       </div>
+      <div class="flex justify-center border rounded mt-8">
+        <ScotButton label="Filter zurücksetzen" icon="pi pi-refresh" variant="grey" :disabled="disableAction" @click="resetFilters(filters)"/>
+      </div>
     </template>
   </ScotList>
 
@@ -135,6 +138,18 @@ function deleteMaintenance(currentMaintenance) {
 
 function getMaintenanceKey(maintenance) {
   return maintenance.maintenanceID
+}
+
+function resetFilters(filters) {
+  Object.keys(filters).forEach(key => {
+    if (typeof filters[key] === 'object' && filters[key] !== null) {
+      Object.keys(filters[key]).forEach(subKey => {
+        filters[key][subKey] = null
+      })
+    } else {
+      filters[key] = null
+    }
+  })
 }
 
 onMounted(async () => {

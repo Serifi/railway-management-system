@@ -40,6 +40,9 @@
           <MultiSelect id="passengerCars" v-model="filters.passengerCarIDs" :options="passengerCars" optionLabel="carriageID" optionValue="carriageID" placeholder="Personenwagen auswählen..." />
         </div>
       </div>
+      <div class="flex justify-center border rounded mt-8">
+        <ScotButton label="Filter zurücksetzen" icon="pi pi-refresh" variant="grey" :disabled="disableAction" @click="resetFilters(filters)"/>
+      </div>
     </template>
   </ScotList>
 
@@ -140,6 +143,18 @@ function deleteTrain(currentTrain) {
 
 function getTrainKey(train) {
   return train.trainID
+}
+
+function resetFilters(filters) {
+  Object.keys(filters).forEach(key => {
+    if (typeof filters[key] === 'object' && filters[key] !== null) {
+      Object.keys(filters[key]).forEach(subKey => {
+        filters[key][subKey] = null
+      })
+    } else {
+      filters[key] = null
+    }
+  })
 }
 
 onMounted(async () => {

@@ -20,6 +20,9 @@
           <Select id="role" v-model="filters.role" :options="roles" optionLabel="label" optionValue="value" placeholder="Auswahl treffen..." showClear/>
         </div>
       </div>
+      <div class="flex justify-center border rounded mt-8">
+        <ScotButton label="Filter zurücksetzen" icon="pi pi-refresh" variant="grey" :disabled="disableAction" @click="resetFilters(filters)"/>
+      </div>
     </template>
   </List>
 
@@ -87,6 +90,18 @@ function deleteEmployee(currentEmployee) {
 
 function getEmployeeKey(employee) {
   return employee.ssn
+}
+
+function resetFilters(filters) {
+  Object.keys(filters).forEach(key => {
+    if (typeof filters[key] === 'object' && filters[key] !== null) {
+      Object.keys(filters[key]).forEach(subKey => {
+        filters[key][subKey] = null
+      })
+    } else {
+      filters[key] = null
+    }
+  })
 }
 
 onMounted(() => {

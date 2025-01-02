@@ -52,6 +52,9 @@
           <InputNumber v-model="filters.numberOfSeats.to" placeholder="bis" />
         </div>
       </div>
+      <div class="flex justify-center border rounded mt-8">
+        <ScotButton label="Filter zurücksetzen" icon="pi pi-refresh" variant="grey" :disabled="disableAction" @click="resetFilters(filters)"/>
+      </div>
     </template>
   </ScotList>
 
@@ -191,6 +194,18 @@ async function deleteCarriage(currentCarriage) {
 
 function getCarriageKey(carriage) {
   return carriage.carriageID
+}
+
+function resetFilters(filters) {
+  Object.keys(filters).forEach(key => {
+    if (typeof filters[key] === 'object' && filters[key] !== null) {
+      Object.keys(filters[key]).forEach(subKey => {
+        filters[key][subKey] = null
+      })
+    } else {
+      filters[key] = null
+    }
+  })
 }
 
 onMounted(() => {
