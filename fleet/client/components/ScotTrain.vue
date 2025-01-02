@@ -2,18 +2,18 @@
 <template>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="flex flex-col space-y-1 col-span-2">
-      <label for="name">Name</label>
-      <InputText id="name" v-model="train.name" placeholder="Name des Zuges" :disabled="isDisabled('name')" />
+      <label for="name">{{ $t('name') }}</label>
+      <InputText id="name" v-model="train.name" :placeholder="$t('textPlaceholder')" :disabled="isDisabled('name')" />
     </div>
 
     <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
-      <label for="railcar">Triebwagen</label>
-      <Select id="railcar" v-model="train.railcarID" :options="railcars" optionLabel="carriageID" optionValue="carriageID" placeholder="Triebwagen auswählen..." :disabled="isDisabled('railcarID')"/>
+      <label for="railcar">{{ $t('railcar') }}</label>
+      <Select id="railcar" v-model="train.railcarID" :options="railcars" optionLabel="carriageID" optionValue="carriageID" :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('railcarID')"/>
     </div>
 
     <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
-      <label for="passengerCars">Personenwagen</label>
-      <MultiSelect id="passengerCars" v-model="train.passengerCarIDs" :options="passengerCars" optionLabel="carriageID" optionValue="carriageID" placeholder="Personenwagen auswählen..." :disabled="isDisabled('passengerCarIDs')"/>
+      <label for="passengerCars">{{ $t('passengerCar') }}</label>
+      <MultiSelect id="passengerCars" v-model="train.passengerCarIDs" :options="passengerCars" optionLabel="carriageID" optionValue="carriageID" :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('passengerCarIDs')"/>
     </div>
   </div>
 </template>

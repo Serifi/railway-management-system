@@ -14,12 +14,10 @@
       <!-- Right: User -->
       <div class="flex items-center space-x-4 mx-4">
         <ScotIcon icon="pi pi-language" @click="toggleLanguagePopover" />
-        <ScotPopover ref="languagePopover" :items="languageItems" @item-click="setLanguage"
-            class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-md"/>
+        <ScotPopover ref="languagePopover" :items="languageItems" @item-click="setLanguage" class="rounded shadow"/>
 
         <ScotIcon icon="fa-solid fa-circle-half-stroke" @click="toggleThemePopover" />
-        <ScotPopover ref="themePopover" :items="themeItems" @item-click="setTheme"
-            class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-md"/>
+        <ScotPopover ref="themePopover" :items="themeItems" @item-click="setTheme" class="rounded shadow"/>
 
         <div class="w-px h-8 bg-gray-300"></div>
         <div class="flex items-center space-x-4 cursor-pointer" @click="showUserPanel">
@@ -60,6 +58,7 @@ import Navigation from '~/components/ScotNavigation.vue'
 const router = useRouter()
 const userStore = useUserStore()
 const userPanel = ref(null)
+const { t, locale } = useI18n({ useScope: 'global' })
 
 const userFullName = computed(() => userStore.getFullName)
 const userRole = computed(() => userStore.getUserRole)

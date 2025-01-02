@@ -1,7 +1,7 @@
 <template>
   <div class="grid grid-cols-2 gap-4">
     <div class="flex flex-col space-y-1 col-span-2">
-      <label for="ssn">Sozialversicherungsnummer</label>
+      <label for="ssn">{{ $t('socialSecurityNumber') }}</label>
       <div class="flex flex-col lg:flex-row justify-between space-y-2 lg:space-y-0">
         <InputOtp id="ssn1" v-model="ssn1" :length="4" integerOnly :disabled="isDisabled('ssn')"/>
         <InputOtp id="ssn2" v-model="ssn2" :length="6" integerOnly :disabled="isDisabled('ssn')"/>
@@ -9,42 +9,42 @@
     </div>
 
     <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
-      <label for="firstName">Vorname</label>
-      <InputText id="firstName" v-model="employee.firstName" placeholder="Text eingeben..." :disabled="isDisabled('firstName')"/>
+      <label for="firstName">{{ $t('firstName') }}</label>
+      <InputText id="firstName" v-model="employee.firstName" :placeholder="$t('textPlaceholder')" :disabled="isDisabled('firstName')"/>
     </div>
 
     <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
-      <label for="lastName">Nachname</label>
-      <InputText id="lastName" v-model="employee.lastName" placeholder="Text eingeben..." :disabled="isDisabled('lastName')"/>
+      <label for="lastName">{{ $t('lastName') }}</label>
+      <InputText id="lastName" v-model="employee.lastName" :placeholder="$t('textPlaceholder')" :disabled="isDisabled('lastName')"/>
     </div>
 
     <div class="flex flex-col space-y-1 col-span-2">
-      <label for="password">Passwort</label>
+      <label for="password">{{ $t('password') }}</label>
       <div class="flex items-center space-x-2">
-        <Password id="password" v-model="employee.password" toggleMask placeholder="Text eingeben..." class="flex-1" :disabled="isDisabled('password')">
+        <Password id="password" v-model="employee.password" toggleMask :placeholder="$t('textPlaceholder')" class="flex-1" :disabled="isDisabled('password')">
           <template #header>
-            <div class="font-bold">Empfehlungen</div>
+            <div class="font-bold">{{ $t('passwordRecommendations') }}</div>
           </template>
           <template #footer>
             <ul>
-              <li>Mindestens 8 Zeichen</li>
-              <li>Mindestens eine numerische Ziffer</li>
-              <li>Mindestens ein Klein- und ein Großbuchstabe</li>
+              <li>{{ $t('passwordMinLength') }}</li>
+              <li>{{ $t('passwordNumber') }}</li>
+              <li>{{ $t('passwordCase') }}</li>
             </ul>
           </template>
         </Password>
-        <i class="pi pi-sparkles text-blue-500 cursor-pointer"  @click="generatePassword"/>
+        <i class="pi pi-sparkles text-blue-500 cursor-pointer" @click="generatePassword"/>
       </div>
     </div>
 
     <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
-      <label for="role">Rolle</label>
-      <Select id="role" v-model="employee.role" :options="roles" optionLabel="label" optionValue="value" placeholder="Auswahl treffen..." :disabled="isDisabled('role')"/>
+      <label for="role">{{ $t('role') }}</label>
+      <Select id="role" v-model="employee.role" :options="roles" optionLabel="label" optionValue="value" :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('role')"/>
     </div>
 
     <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
-      <label for="department">Abteilung</label>
-      <Select id="department" v-model="employee.department" :options="departments" optionLabel="label" optionValue="value" placeholder="Auswahl treffen..." :disabled="isDisabled('department')"/>
+      <label for="department">{{ $t('department') }}</label>
+      <Select id="department" v-model="employee.department" :options="departments" optionLabel="label" optionValue="value" :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('department')"/>
     </div>
   </div>
 </template>

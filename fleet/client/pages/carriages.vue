@@ -2,18 +2,18 @@
   <ScotList :items="carriages" :getKey="getCarriageKey" :rowsPerPage="5"
             @create="toggleCreateDialog" @edit="toggleEditDialog" @delete="deleteCarriage">
     <template #title="{ item }">
-      {{ item.type }} #{{ item.carriageID }}
-      <Tag :severity="item.active ? 'danger' : 'success'" :value="item.active ? 'aktiv' : 'inaktiv'" class="ml-2"/>
+      {{ $t(item.type.toLowerCase()) }} #{{ item.carriageID }}
+      <Tag :severity="item.active ? 'danger' : 'success'" :value="item.active ? $t('active') : $t('inactive')" class="ml-2"/>
     </template>
     <template #description="{ item }">
       <span v-if="item.type === 'Railcar'">
-        Spurweite: {{ item.trackGauge }} mm<br/>
-        Maximale Zugkraft: {{ item.maxTractiveForce }} kN
+        {{ $t('trackGauge') }}: {{ item.trackGauge }} mm<br/>
+        {{ $t('maxTractiveForce') }}: {{ item.maxTractiveForce }} kN
       </span>
       <span v-else-if="item.type === 'PassengerCar'">
-        Spurweite: {{ item.trackGauge }} mm<br/>
-        Sitzplätze: {{ item.numberOfSeats }}<br/>
-        Maximales Gewicht: {{ item.maxWeight }} kg
+        {{ $t('trackGauge') }}: {{ item.trackGauge }} mm<br/>
+        {{ $t('numberOfSeats') }}: {{ item.numberOfSeats }}<br/>
+        {{ $t('maxWeight') }}: {{ item.maxWeight }} kg
       </span>
     </template>
     <template #filters="{ filters }">
@@ -21,49 +21,46 @@
 
       <div class="p-4 space-y-4">
         <div class="flex flex-col space-y-1">
-          <label for="status">Status</label>
+          <label for="status">{{ $t('status') }}</label>
           <SelectButton id="status" v-model="filters.status" :options="statusOptions" optionLabel="label" optionValue="value"/>
         </div>
 
         <div class="flex flex-col space-y-1">
-          <label for="type">Typ</label>
+          <label for="type">{{ $t('type') }}</label>
           <SelectButton id="type" v-model="filters.type" :options="carriageTypes" optionLabel="label" optionValue="value" @change="onTypeChange(filters)"/>
         </div>
 
         <div class="flex flex-col space-y-1">
-          <label for="trackGauge">Spurweite</label>
+          <label for="trackGauge">{{ $t('trackGauge') }}</label>
           <SelectButton id="trackGauge" v-model="filters.trackGauge"  :options="trackGauges" optionLabel="label" optionValue="value"/>
         </div>
 
         <div class="flex flex-col space-y-1" v-if="filters.type === 'Railcar'">
-          <label>Maximale Zugkraft</label>
-          <InputNumber v-model="filters.maxTractiveForce.from" suffix="kN" placeholder="von" />
-          <InputNumber v-model="filters.maxTractiveForce.to" suffix="kN" placeholder="bis" />
+          <label>{{ $t('maxTractiveForce') }}</label>
+          <InputNumber v-model="filters.maxTractiveForce.from" suffix="kN" :placeholder="$t('from')" />
+          <InputNumber v-model="filters.maxTractiveForce.to" suffix="kN" :placeholder="$t('to')" />
         </div>
         <div class="flex flex-col space-y-1" v-if="filters.type === 'PassengerCar'">
-          <label>Maximales Gewicht</label>
-          <InputNumber v-model="filters.maxWeight.from" suffix="t" placeholder="von" />
-          <InputNumber v-model="filters.maxWeight.to" suffix="t" placeholder="bis" />
+          <label>{{ $t('maxWeight') }}</label>
+          <InputNumber v-model="filters.maxWeight.from" suffix="t" :placeholder="$t('from')" />
+          <InputNumber v-model="filters.maxWeight.to" suffix="t" :placeholder="$t('to')" />
         </div>
 
         <div class="flex flex-col space-y-1" v-if="filters.type === 'PassengerCar'">
-          <label>Sitzplätze</label>
-          <InputNumber v-model="filters.numberOfSeats.from" placeholder="von" />
-          <InputNumber v-model="filters.numberOfSeats.to" placeholder="bis" />
+          <label>{{ $t('numberOfSeats') }}</label>
+          <InputNumber v-model="filters.numberOfSeats.from" :placeholder="$t('from')" />
+          <InputNumber v-model="filters.numberOfSeats.to" :placeholder="$t('to')" />
         </div>
-      </div>
-      <div class="flex justify-center border rounded mt-8">
-        <ScotButton label="Filter zurücksetzen" icon="pi pi-refresh" variant="grey" :disabled="disableAction" @click="resetFilters(filters)"/>
       </div>
     </template>
   </ScotList>
 
-  <ScotDialog :visible="createDialogVisible" type="create" header="Wagen erstellen" :disable-action="disableAction"
+  <ScotDialog :visible="createDialogVisible" type="create" :header="$t('createCarriage')" :disable-action="disableAction"
               @update:visible="createDialogVisible = $event" @action="createCarriage" @cancel="toggleCreateDialog">
     <ScotCarriage @update:carriage="updateCarriage"/>
   </ScotDialog>
 
-  <ScotDialog :visible="editDialogVisible" type="edit" header="Wagen bearbeiten" :disable-action="disableAction"
+  <ScotDialog :visible="editDialogVisible" type="edit" :header="$t('editCarriage')" :disable-action="disableAction"
               @update:visible="editDialogVisible = $event" @action="editCarriage" @cancel="toggleEditDialog">
     <ScotCarriage :carriage="carriage" @update:carriage="updateCarriage"/> <!-- :disabledFields="['type', 'trackGauge']" -->
   </ScotDialog>
@@ -73,6 +70,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useCarriageStore } from '@/stores/carriage'
 import { useToast } from 'primevue/usetoast'
+import { useI18n } from 'vue-i18n'
 import ScotList from '~/components/ScotList.vue'
 import ScotCarriage from '~/components/ScotCarriage.vue'
 import ScotDialog from "~/components/ScotDialog.vue"
@@ -87,10 +85,12 @@ const disableAction = ref(false)
 const trackGauges = computed(() => carriageStore.trackGauges)
 const carriageTypes = computed(() => carriageStore.carriageTypes)
 
+const { t } = useI18n()
 const statusOptions = [
-  { label: 'Aktiv', value: 'aktiv' },
-  { label: 'Inaktiv', value: 'inaktiv' }
+  { label: t('active'), value: 'active' },
+  { label: t('inactive'), value: 'inactive' }
 ]
+
 
 function initializeFilters(filters) {
   if (!filters.maxTractiveForce) {
@@ -194,18 +194,6 @@ async function deleteCarriage(currentCarriage) {
 
 function getCarriageKey(carriage) {
   return carriage.carriageID
-}
-
-function resetFilters(filters) {
-  Object.keys(filters).forEach(key => {
-    if (typeof filters[key] === 'object' && filters[key] !== null) {
-      Object.keys(filters[key]).forEach(subKey => {
-        filters[key][subKey] = null
-      })
-    } else {
-      filters[key] = null
-    }
-  })
 }
 
 onMounted(() => {

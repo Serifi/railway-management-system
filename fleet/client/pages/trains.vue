@@ -1,22 +1,21 @@
-<!-- components/Train.vue -->
 <template>
   <ScotList :items="trains" :getKey="getTrainKey" :rowsPerPage="5"
             @create="toggleCreateDialog" @edit="toggleEditDialog" @delete="deleteTrain">
     <template #title="{ item }">
       {{ item.name }}
-      <Tag :severity="item.active ? 'success' : 'danger'" :value="item.active ? 'aktiv' : 'inaktiv'" class="ml-2"/>
+      <Tag :severity="item.active ? 'success' : 'danger'" :value="$t(item.active ? 'active' : 'inactive')" class="ml-2"/>
     </template>
     <template #description="{ item }">
       <div class="wagon-container">
         <!-- Triebwagen -->
         <div class="wagon">
-          <img :src="railcarImage" alt="Triebwagen" class="wagon-image"/>
+          <img :src="railcarImage" :alt="$t('railcar')" class="wagon-image"/>
           <div class="wagon-id">{{ item.railcarID }}</div>
         </div>
 
         <!-- Personenwagen -->
         <div class="wagon" v-for="passengerCarID in item.passengerCarIDs" :key="passengerCarID">
-          <img :src="passengerCarImage" alt="Personenwagen" class="wagon-image"/>
+          <img :src="passengerCarImage" :alt="$t('passengerCar')" class="wagon-image"/>
           <div class="wagon-id">{{ passengerCarID }}</div>
         </div>
       </div>
@@ -26,32 +25,29 @@
 
       <div class="p-4 space-y-4">
         <div class="flex flex-col space-y-1">
-          <label for="status">Status</label>
+          <label for="status">{{ $t('status') }}</label>
           <SelectButton id="status" v-model="filters.status" :options="statusOptions" optionLabel="label" optionValue="value"/>
         </div>
 
         <div class="flex flex-col space-y-1">
-          <label for="railcar">Triebwagen</label>
-          <Select id="railcar" v-model="filters.railcarID" :options="railcars" optionLabel="carriageID" optionValue="carriageID" placeholder="Triebwagen auswählen..." />
+          <label for="railcar">{{ $t('railcar') }}</label>
+          <Select id="railcar" v-model="filters.railcarID" :options="railcars" optionLabel="carriageID" optionValue="carriageID" :placeholder="$t('selectPlaceholder')" showClear/>
         </div>
 
         <div class="flex flex-col space-y-1">
-          <label for="passengerCars">Personenwagen</label>
-          <MultiSelect id="passengerCars" v-model="filters.passengerCarIDs" :options="passengerCars" optionLabel="carriageID" optionValue="carriageID" placeholder="Personenwagen auswählen..." />
+          <label for="passengerCars">{{ $t('passengerCar') }}</label>
+          <MultiSelect id="passengerCars" v-model="filters.passengerCarIDs" :options="passengerCars" optionLabel="carriageID" optionValue="carriageID" :placeholder="$t('selectPlaceholder')" showClear/>
         </div>
-      </div>
-      <div class="flex justify-center border rounded mt-8">
-        <ScotButton label="Filter zurücksetzen" icon="pi pi-refresh" variant="grey" :disabled="disableAction" @click="resetFilters(filters)"/>
       </div>
     </template>
   </ScotList>
 
-  <ScotDialog :visible="createDialogVisible" type="create" header="Zug erstellen" :disable-action="disableAction"
+  <ScotDialog :visible="createDialogVisible" type="create" :header="$t('createTrain')" :disable-action="disableAction"
               @update:visible="createDialogVisible = $event" @action="createTrain" @cancel="toggleCreateDialog">
     <ScotTrain @update:train="updateTrain"/>
   </ScotDialog>
 
-  <ScotDialog :visible="editDialogVisible" type="edit" header="Zug bearbeiten" :disable-action="disableAction"
+  <ScotDialog :visible="editDialogVisible" type="edit" :header="$t('editTrain')" :disable-action="disableAction"
               @update:visible="editDialogVisible = $event" @action="editTrain" @cancel="toggleEditDialog">
     <ScotTrain :train="train" @update:train="updateTrain" :disabledFields="['trainID']"/>
   </ScotDialog>
@@ -61,6 +57,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useTrainStore } from '@/stores/train'
 import { useToast } from 'primevue/usetoast'
+import { useI18n } from 'vue-i18n'
 
 import railcarImage from '@/assets/images/railcar.png'
 import passengerCarImage from '@/assets/images/passenger_car.png'
@@ -75,9 +72,10 @@ const disableAction = ref(false)
 const railcars = computed(() => trainStore.railcars)
 const passengerCars = computed(() => trainStore.passengerCars)
 
+const { t } = useI18n()
 const statusOptions = [
-  { label: 'Aktiv', value: 'aktiv' },
-  { label: 'Inaktiv', value: 'inaktiv' }
+  { label: t('active'), value: 'active' },
+  { label: t('inactive'), value: 'inactive' }
 ]
 
 function initializeFilters(filters) {
@@ -143,18 +141,6 @@ function deleteTrain(currentTrain) {
 
 function getTrainKey(train) {
   return train.trainID
-}
-
-function resetFilters(filters) {
-  Object.keys(filters).forEach(key => {
-    if (typeof filters[key] === 'object' && filters[key] !== null) {
-      Object.keys(filters[key]).forEach(subKey => {
-        filters[key][subKey] = null
-      })
-    } else {
-      filters[key] = null
-    }
-  })
 }
 
 onMounted(async () => {

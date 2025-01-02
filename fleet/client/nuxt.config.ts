@@ -29,7 +29,6 @@ export default defineNuxtConfig({
         }
     },
     css: [
-        '~/assets/prime.css',
         '~/assets/tailwind.css',
         'primeicons/primeicons.css',
         '@fortawesome/fontawesome-free/css/all.css'

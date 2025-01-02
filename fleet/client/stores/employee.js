@@ -8,12 +8,12 @@ export const useEmployeeStore = defineStore('employee', {
     state: () => ({
         employees: [],
         roles: [
-            { label: 'Mitarbeiter:in', value: 'Employee' },
-            { label: 'Administrator:in', value: 'Admin' },
+            { label: 'Employee', value: 'Employee' },
+            { label: 'Admin', value: 'Admin' },
         ],
         departments: [
-            { label: 'Wartung', value: 'Maintenance' },
-            { label: 'Bordpersonal', value: 'Crew' },
+            { label: 'Maintenance', value: 'Maintenance' },
+            { label: 'Crew', value: 'Crew' },
         ],
     }),
     actions: {

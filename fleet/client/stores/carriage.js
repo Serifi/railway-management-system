@@ -9,12 +9,12 @@ export const useCarriageStore = defineStore('carriage', {
     state: () => ({
         carriages: [],
         trackGauges: [
-            { label: 'Normalspur', value: '1435' },
-            { label: 'Schmalspur', value: '1000' }
+            { label: 'Standard Gauge', value: '1435' },
+            { label: 'Narrow Gauge', value: '1000' }
         ],
         carriageTypes: [
-            { label: 'Triebwagen', value: 'Railcar' },
-            { label: 'Personenwagen', value: 'PassengerCar' }
+            { label: 'Railcar', value: 'Railcar' },
+            { label: 'Passenger Car', value: 'PassengerCar' }
         ]
     }),
     getters: {
