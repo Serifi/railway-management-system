@@ -25,6 +25,7 @@
   "search": "Suche...",
   "railcar": "Triebwagen",
   "passengerCar": "Personenwagen",
+  "passengercar": "Personenwagen",
   "name": "Name",
   "train": "Zug",
   "employee": "Mitarbeiter:in",
@@ -50,5 +51,7 @@
   "createMaintenance": "Wartung erstellen",
   "editMaintenance": "Wartung bearbeiten",
   "createTrain": "Zug erstellen",
-  "editTrain": "Zug bearbeiten"
+  "editTrain": "Zug bearbeiten",
+  "admin": "Admin",
+  "crew": "Bordpersonal"
 }

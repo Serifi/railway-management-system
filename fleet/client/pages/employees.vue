@@ -5,8 +5,8 @@
       {{ `${item.firstName} ${item.lastName}` }}
     </template>
     <template #description="{ item }">
-      {{ $t('department') }}: {{ $t(`departments.${item.department.toLowerCase()}`) }}<br/>
-      {{ $t('role') }}: {{ $t(`roles.${item.role.toLowerCase()}`) }}
+      {{ $t('department') }}: {{ $t(item.department.toLowerCase())}}<br/>
+      {{ $t('role') }}: {{ $t(item.role.toLowerCase())}}
     </template>
     <template #filters="{ filters }">
       <div class="p-4 space-y-4">

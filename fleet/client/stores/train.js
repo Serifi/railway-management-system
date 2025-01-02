@@ -45,7 +45,6 @@ export const useTrainStore = defineStore('train', {
             try {
                 const data = await this.handleRequest(apiClient.get(BASE_PATH))
                 this.trains = data
-                console.log(this.trains)
             } catch (error) {
                 console.error('Error fetching trains:', error)
                 throw error

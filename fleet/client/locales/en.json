@@ -25,6 +25,7 @@
   "search": "Search...",
   "railcar": "Railcar",
   "passengerCar": "Passenger Car",
+  "passengercar": "Passenger Car",
   "name": "Name",
   "train": "Train",
   "employee": "Employee",
@@ -50,5 +51,7 @@
   "createMaintenance": "Create Maintenance",
   "editMaintenance": "Edit Maintenance",
   "createTrain": "Create Train",
-  "editTrain": "Edit Train"
+  "editTrain": "Edit Train",
+  "admin": "Admin",
+  "crew": "Crew"
 }
