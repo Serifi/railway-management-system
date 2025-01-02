@@ -32,7 +32,7 @@
 
         <div class="flex flex-col space-y-1">
           <label for="railcar">Triebwagen</label>
-          <Dropdown id="railcar" v-model="filters.railcarID" :options="railcars" optionLabel="carriageID" optionValue="carriageID" placeholder="Triebwagen auswählen..." />
+          <Select id="railcar" v-model="filters.railcarID" :options="railcars" optionLabel="carriageID" optionValue="carriageID" placeholder="Triebwagen auswählen..." />
         </div>
 
         <div class="flex flex-col space-y-1">

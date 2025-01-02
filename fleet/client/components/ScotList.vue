@@ -4,9 +4,6 @@
       <InputIcon class="pi pi-search" />
       <InputText v-model="searchQuery" placeholder="Suchen..." />
     </IconField>
-    <div class="flex flex-wrap gap-2 mb-4">
-      <Chip v-for="(filter, index) in activeFilters" :key="index" :label="filter.label" removable @remove="removeFilter(filter)"/>
-    </div>
     <div class="flex space-x-4 items-center cursor-pointer">
       <i class="pi pi-filter" @click="toggleFilter" />
       <ScotButton label="Erstellen" icon="pi pi-plus" variant="blue" @click="emitCreate" />

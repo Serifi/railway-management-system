@@ -7,10 +7,6 @@ export const useTrainStore = defineStore('train', {
         trainsLoading: false,
         railcars: [],
         passengerCars: [],
-        trainTypes: [
-            { label: 'Express', value: 'Express' },
-            { label: 'Regional', value: 'Regional' }
-        ]
     }),
     getters: {
         trainsWithStatus: (state) => {
@@ -35,6 +31,7 @@ export const useTrainStore = defineStore('train', {
             try {
                 const response = await axios.get('http://127.0.0.1:5000/fleet/trains')
                 this.trains = response.data
+                console.log(this.trains)
             } catch (error) {
                 console.error('Error fetching trains:', error)
             } finally {

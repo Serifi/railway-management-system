@@ -3,7 +3,7 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="flex flex-col space-y-1">
       <label for="train">Zug</label>
-      <Dropdown id="train" v-model="maintenance.trainID" :options="trains" optionLabel="name" optionValue="trainID" placeholder="Zug auswählen..." :disabled="isDisabled('trainID')"/>
+      <Select id="train" v-model="maintenance.trainID" :options="trains" optionLabel="name" optionValue="trainID" placeholder="Zug auswählen..." :disabled="isDisabled('trainID')"/>
     </div>
 
     <div class="flex flex-col space-y-1">

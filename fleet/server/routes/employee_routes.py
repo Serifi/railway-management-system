@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from . import SessionLocal
 from models.employee import Employee, Department, Role
+from auth import login_user, logout_user, authenticate, authorize
 
 employee_blueprint = Blueprint('employee_routes', __name__)
 
@@ -20,7 +21,7 @@ def serialize_employee(emp):
 
 @employee_blueprint.route('/login', methods=['POST'])
 def login_employee():
-    """Authenticate an employee."""
+    """Authenticate an employee and return a token."""
     data = request.get_json()
     if not data or not data.get('username') or not data.get('password'):
         return jsonify({"message": "Username and password are required"}), 400
@@ -29,9 +30,21 @@ def login_employee():
         emp = session.query(Employee).filter_by(username=data['username']).first()
         if not emp or emp.password != data['password']:
             return jsonify({"message": "Incorrect username or password"}), 401
-        return jsonify({"message": "Logged in successfully"}), 200
+
+        token = login_user(emp)
+        return jsonify({"message": "Logged in successfully", "token": token}), 200
+
+@employee_blueprint.route('/logout', methods=['POST'])
+@authenticate
+def logout_employee():
+    """Logout an employee."""
+    auth_header = request.headers.get('Authorization')
+    token = auth_header.split(" ")[1] if " " in auth_header else auth_header
+    logout_user(token)
+    return jsonify({"message": "Logged out successfully"}), 200
 
 @employee_blueprint.route('/', methods=['GET'])
+@authenticate
 def get_employees():
     """Retrieve all employees."""
     with SessionLocal() as session:
@@ -40,6 +53,7 @@ def get_employees():
         return jsonify(serialized), 200
 
 @employee_blueprint.route('/<string:username>', methods=['GET'])
+@authenticate
 def get_employee_by_username(username):
     """Retrieve an employee by username."""
     with SessionLocal() as session:
@@ -49,6 +63,8 @@ def get_employee_by_username(username):
         return jsonify(serialize_employee(emp)), 200
 
 @employee_blueprint.route('/', methods=['POST'])
+@authenticate
+@authorize(roles=['Admin'])
 def create_employee():
     """Create a new employee."""
     data = request.get_json()
@@ -88,6 +104,8 @@ def create_employee():
             return jsonify({"message": "SSN or username must be unique"}), 400
 
 @employee_blueprint.route('/<string:ssn>', methods=['PUT'])
+@authenticate
+@authorize(roles=['Admin'])
 def update_employee(ssn):
     """Update an existing employee."""
     data = request.get_json()
@@ -129,6 +147,8 @@ def update_employee(ssn):
             return jsonify({"message": str(ve)}), 400
 
 @employee_blueprint.route('/<string:ssn>', methods=['DELETE'])
+@authenticate
+@authorize(roles=['Admin'])
 def delete_employee(ssn):
     """Delete an employee."""
     with SessionLocal() as session:

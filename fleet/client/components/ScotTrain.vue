@@ -8,7 +8,7 @@
 
     <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
       <label for="railcar">Triebwagen</label>
-      <Dropdown id="railcar" v-model="train.railcarID" :options="railcars" optionLabel="carriageID" optionValue="carriageID" placeholder="Triebwagen auswählen..." :disabled="isDisabled('railcarID')"/>
+      <Select id="railcar" v-model="train.railcarID" :options="railcars" optionLabel="carriageID" optionValue="carriageID" placeholder="Triebwagen auswählen..." :disabled="isDisabled('railcarID')"/>
     </div>
 
     <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
