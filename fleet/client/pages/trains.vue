@@ -3,7 +3,7 @@
             @create="toggleCreateDialog" @edit="toggleEditDialog" @delete="deleteTrain">
     <template #title="{ item }">
       {{ item.name }}
-      <Tag :severity="item.active ? 'success' : 'danger'" :value="$t(item.active ? 'active' : 'inactive')" class="ml-2"/>
+      <Tag :severity="item.active ? 'success' : 'danger'" :value="$t(item.active ? 'active' : 'inactive')" class="ml-2 !py-[0px]"/>
     </template>
     <template #description="{ item }">
       <div class="wagon-container">
@@ -101,42 +101,50 @@ function toggleCreateDialog() {
   if (createDialogVisible.value) disableAction.value = true
 }
 
-function createTrain() {
-  trainStore.createTrain(train.value)
-      .then(() => {
-        toggleCreateDialog()
-        toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Zug wurde erstellt', life: 3000 })
-      })
-      .catch(error => {
-        toast.add({ severity: 'error', summary: 'Fehler', detail: error.response?.data?.message || 'Zug konnte nicht erstellt werden', life: 3000 })
-      })
-}
-
 function toggleEditDialog(currentTrain) {
   train.value = currentTrain
   editDialogVisible.value = !editDialogVisible.value
   if (editDialogVisible.value) disableAction.value = false
 }
 
-function editTrain() {
-  trainStore.editTrain(train.value)
-      .then(() => {
-        toggleEditDialog(null)
-        toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Zug wurde aktualisiert', life: 3000 })
-      })
-      .catch(error => {
-        toast.add({ severity: 'error', summary: 'Fehler', detail: error.response?.data?.message || 'Zug konnte nicht aktualisiert werden', life: 3000 })
-      })
+function showToast(type, message) {
+  toast.add({
+    severity: type,
+    summary: type === 'success' ? t('success') : t('error'),
+    detail: message,
+    life: 3000
+  })
 }
 
-function deleteTrain(currentTrain) {
-  trainStore.deleteTrain(currentTrain.trainID)
-      .then(() => {
-        toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Zug wurde gelöscht', life: 3000 })
-      })
-      .catch(error => {
-        toast.add({ severity: 'error', summary: 'Fehler', detail: error.response?.data?.message || 'Zug konnte nicht gelöscht werden', life: 3000 })
-      })
+async function createTrain() {
+  try {
+    const response = await trainStore.createTrain(train.value)
+    toggleCreateDialog()
+    showToast('success', response.message || t('trainCreated'))
+  } catch (error) {
+    toggleCreateDialog()
+    showToast('error', error.message || t('trainCreateError'))
+  }
+}
+
+async function editTrain() {
+  try {
+    const response = await trainStore.editTrain(train.value)
+    toggleEditDialog()
+    showToast('success', response.message || t('trainUpdated'))
+  } catch (error) {
+    toggleEditDialog()
+    showToast('error', error.message || t('trainUpdateError'))
+  }
+}
+
+async function deleteTrain(currentTrain) {
+  try {
+    const response = await trainStore.deleteTrain(currentTrain.trainID)
+    showToast('success', response.message || t('trainDeleted'))
+  } catch (error) {
+    showToast('error', error.message || t('trainDeleteError'))
+  }
 }
 
 function getTrainKey(train) {
@@ -144,8 +152,7 @@ function getTrainKey(train) {
 }
 
 onMounted(async () => {
-  await trainStore.getRailcars()
-  await trainStore.getPassengerCars()
+  await trainStore.getCarriagesByType()
   await trainStore.getTrains()
 });
 </script>

@@ -2,6 +2,7 @@
 import { defineStore } from 'pinia'
 import apiClient from '@/utils/api'
 import { useMaintenanceStore } from '@/stores/maintenance'
+import { useCarriageStore } from '@/stores/carriage'
 
 const BASE_PATH = '/fleet/trains'
 
@@ -86,22 +87,15 @@ export const useTrainStore = defineStore('train', {
             }
         },
 
-        async getRailcars() {
+        async getCarriagesByType() {
             try {
-                const data = await this.handleRequest(apiClient.get('/fleet/carriages', { params: { type: 'Railcar' } }))
-                this.railcars = data
-            } catch (error) {
-                console.error('Error fetching railcars:', error)
-                throw error
-            }
-        },
+                const carriageStore = useCarriageStore()
+                await carriageStore.getCarriages()
 
-        async getPassengerCars() {
-            try {
-                const data = await this.handleRequest(apiClient.get('/fleet/carriages', { params: { type: 'PassengerCar' } }))
-                this.passengerCars = data
+                this.railcars = carriageStore.carriages.filter(carriage => carriage.type === 'Railcar')
+                this.passengerCars = carriageStore.carriages.filter(carriage => carriage.type === 'PassengerCar')
             } catch (error) {
-                console.error('Error fetching passenger cars:', error)
+                console.error('Error fetching carriages by type:', error)
                 throw error
             }
         }

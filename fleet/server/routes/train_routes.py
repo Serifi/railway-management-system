@@ -259,25 +259,33 @@ def update_train(train_id):
 @authenticate
 @authorize(roles=['Admin'])
 def delete_train(train_id):
-    """Delete a train, disallowing deletion if it has existing maintenance records."""
+    """Delete a train, disallowing deletion if it has ongoing or upcoming maintenance records."""
     with SessionLocal() as session:
         try:
+            # Fetch the train
             train = session.query(Train).filter_by(trainID=train_id).first()
             if not train:
-                return jsonify({"message": f"Train {train_id} not found"}), 404
+                return jsonify({"message": f"Train with ID {train_id} not found"}), 404
 
-            # Check for existing maintenance records
-            has_maintenance = session.query(Maintenance).filter_by(trainID=train_id).first()
-            if has_maintenance:
-                return jsonify({"message": "Cannot delete train with existing maintenance records"}), 400
+            # Check if the train has ongoing or upcoming maintenance
+            from datetime import datetime
+            now = datetime.utcnow()
+            maintenance_exists = session.query(Maintenance).filter(
+                Maintenance.trainID == train_id,
+                Maintenance.to_time >= now
+            ).first()
 
+            if maintenance_exists:
+                return jsonify({"message": "Cannot delete train with ongoing or upcoming maintenance records"}), 400
+
+            # Delete the train
             session.delete(train)
             session.commit()
-            return jsonify({"message": "Train deleted successfully"}), 200
+            return jsonify({"message": f"Train with ID {train_id} deleted successfully"}), 200
 
         except IntegrityError as ie:
             session.rollback()
-            return jsonify({"message": "Integrity error occurred while deleting the train", "details": str(ie.orig)}), 400
+            return jsonify({"message": "An integrity error occurred while deleting the train", "details": str(ie.orig)}), 400
         except Exception as e:
             session.rollback()
-            return jsonify({"message": "An error occurred", "details": str(e)}), 500
+            return jsonify({"message": "An unexpected error occurred", "details": str(e)}), 500

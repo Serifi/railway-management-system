@@ -1,4 +1,3 @@
-<!-- components/ScotTrain.vue -->
 <template>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="flex flex-col space-y-1 col-span-2">
@@ -8,20 +7,38 @@
 
     <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
       <label for="railcar">{{ $t('railcar') }}</label>
-      <Select id="railcar" v-model="train.railcarID" :options="railcars" optionLabel="carriageID" optionValue="carriageID" :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('railcarID')"/>
+      <Select
+          id="railcar"
+          v-model="train.railcarID"
+          :options="railcars"
+          :optionLabel="formatRailcarOption"
+          optionValue="carriageID"
+          :placeholder="$t('selectPlaceholder')"
+          :disabled="isDisabled('railcarID')"
+      />
     </div>
 
     <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
       <label for="passengerCars">{{ $t('passengerCar') }}</label>
-      <MultiSelect id="passengerCars" v-model="train.passengerCarIDs" :options="passengerCars" optionLabel="carriageID" optionValue="carriageID" :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('passengerCarIDs')"/>
+      <MultiSelect
+          id="passengerCars"
+          v-model="train.passengerCarIDs"
+          :options="passengerCars"
+          :optionLabel="formatPassengerCarOption"
+          optionValue="carriageID"
+          :placeholder="$t('selectPlaceholder')"
+          :disabled="isDisabled('passengerCarIDs')"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useTrainStore } from '@/stores/train'
+import {useI18n} from "vue-i18n"
 
+const { t } = useI18n()
 const emits = defineEmits(['update:train'])
 const props = defineProps({
   train: {
@@ -44,6 +61,16 @@ const railcars = computed(() => trainStore.railcars)
 const passengerCars = computed(() => trainStore.passengerCars)
 
 const isDisabled = (field) => props.disabledFields.includes(field)
+
+const formatRailcarOption = (option) => {
+  if (!option) return ''
+  return `ID: ${option.carriageID} - ${t('maxTractiveForce')}: ${option.maxTractiveForce}kN`
+}
+
+const formatPassengerCarOption = (option) => {
+  if (!option) return ''
+  return `ID: ${option.carriageID} - ${t('maxWeight')}: ${option.maxWeight}kg - ${t('numberOfSeats')}: ${option.numberOfSeats}`
+}
 
 watch(
     [

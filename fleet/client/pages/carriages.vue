@@ -3,7 +3,7 @@
             @create="toggleCreateDialog" @edit="toggleEditDialog" @delete="deleteCarriage">
     <template #title="{ item }">
       {{ $t(item.type.toLowerCase()) }} #{{ item.carriageID }}
-      <Tag :severity="item.active ? 'danger' : 'success'" :value="item.active ? $t('active') : $t('inactive')" class="ml-2"/>
+      <Tag :severity="item.active ? 'danger' : 'success'" :value="item.active ? $t('active') : $t('inactive')" class="ml-2 !py-[0px]"/>
     </template>
     <template #description="{ item }">
       <span v-if="item.type === 'Railcar'">
@@ -125,70 +125,49 @@ function toggleCreateDialog() {
   if (createDialogVisible.value) disableAction.value = true
 }
 
-async function createCarriage() {
-  try {
-    const response = await carriageStore.createCarriage(carriage.value)
-    toggleCreateDialog()
-    toast.add({
-      severity: 'success',
-      summary: 'Erfolgreich',
-      detail: response.message || 'Wagen wurde erfolgreich erstellt.',
-      life: 3000
-    })
-  } catch (error) {
-    toggleCreateDialog()
-    toast.add({
-      severity: 'error',
-      summary: 'Fehler',
-      detail: error.message || 'Beim Erstellen des Wagens ist ein Fehler aufgetreten.',
-      life: 5000
-    })
-  }
-}
-
 async function toggleEditDialog(currentCarriage) {
   carriage.value = currentCarriage
   editDialogVisible.value = !editDialogVisible.value
   if (editDialogVisible.value) disableAction.value = false
 }
 
+function showToast(type, message) {
+  toast.add({
+    severity: type,
+    summary: type === 'success' ? t('success') : t('error'),
+    detail: message,
+    life: 3000
+  })
+}
+
+async function createCarriage() {
+  try {
+    const response = await carriageStore.createCarriage(carriage.value)
+    toggleCreateDialog()
+    showToast('success', response.message || t('carriageCreated'))
+  } catch (error) {
+    toggleCreateDialog()
+    showToast('error', error.message || t('carriageCreateError'))
+  }
+}
+
 async function editCarriage() {
   try {
     const response = await carriageStore.editCarriage(carriage.value)
     toggleEditDialog(null)
-    toast.add({
-      severity: 'success',
-      summary: 'Erfolgreich',
-      detail: response.message || 'Wagen wurde erfolgreich bearbeitet.',
-      life: 3000
-    })
+    showToast('success', response.message || t('carriageUpdated'))
   } catch (error) {
     toggleEditDialog(null)
-    toast.add({
-      severity: 'error',
-      summary: 'Fehler',
-      detail: error.message || 'Beim Bearbeiten des Wagens ist ein Fehler aufgetreten.',
-      life: 5000
-    })
+    showToast('error', error.message || t('carriageUpdateError'))
   }
 }
 
 async function deleteCarriage(currentCarriage) {
   try {
     const response = await carriageStore.deleteCarriage(currentCarriage.carriageID)
-    toast.add({
-      severity: 'success',
-      summary: 'Erfolgreich',
-      detail: response.message || 'Wagen wurde erfolgreich gelöscht.',
-      life: 3000
-    })
+    showToast('success', response.message || t('carriageDeleted'))
   } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Fehler',
-      detail: error.message || 'Beim Löschen des Wagens ist ein Fehler aufgetreten.',
-      life: 5000
-    })
+    showToast('error', error.message || t('carriageDeleteError'))
   }
 }
 

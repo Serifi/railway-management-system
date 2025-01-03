@@ -10,17 +10,9 @@ from auth import authenticate, authorize
 carriage_blueprint = Blueprint('carriage_routes', __name__)
 
 def is_carriage_assigned(session, carriage_id):
-    """Check if a carriage is assigned to any train."""
-    return (
-            session.query(Train)
-            .filter_by(railcarID=carriage_id)
-            .exists()
-            .scalar()
-            or session.query(TrainPassengerCar)
-            .filter_by(passengerCarID=carriage_id)
-            .exists()
-            .scalar()
-    )
+    return session.query(
+        session.query(Train).filter(Train.railcarID == carriage_id).exists()
+    ).scalar()
 
 def serialize_carriage(carriage):
     """Serialize a carriage object based on its type."""

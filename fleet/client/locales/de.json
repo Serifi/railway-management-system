@@ -53,5 +53,19 @@
   "createTrain": "Zug erstellen",
   "editTrain": "Zug bearbeiten",
   "admin": "Admin",
-  "crew": "Bordpersonal"
+  "crew": "Bordpersonal",
+  "carriageCreated": "Wagen wurde erfolgreich erstellt.",
+  "carriageCreateError": "Beim Erstellen des Wagens ist ein Fehler aufgetreten.",
+  "carriageUpdated": "Wagen wurde erfolgreich bearbeitet.",
+  "carriageUpdateError": "Beim Bearbeiten des Wagens ist ein Fehler aufgetreten.",
+  "carriageDeleted": "Wagen wurde erfolgreich gelöscht.",
+  "carriageDeleteError": "Beim Löschen des Wagens ist ein Fehler aufgetreten.",
+  "success": "Erfolgreich",
+  "error": "Fehler",
+  "trainCreated": "Zug wurde erfolgreich erstellt.",
+  "trainCreateError": "Beim Erstellen des Zuges ist ein Fehler aufgetreten.",
+  "trainUpdated": "Zug wurde erfolgreich bearbeitet.",
+  "trainUpdateError": "Beim Bearbeiten des Zuges ist ein Fehler aufgetreten.",
+  "trainDeleted": "Zug wurde erfolgreich gelöscht.",
+  "trainDeleteError": "Beim Löschen des Zuges ist ein Fehler aufgetreten."
 }

@@ -53,5 +53,19 @@
   "createTrain": "Create Train",
   "editTrain": "Edit Train",
   "admin": "Admin",
-  "crew": "Crew"
+  "crew": "Crew",
+  "carriageCreated": "Carriage was successfully created.",
+  "carriageCreateError": "An error occurred while creating the carriage.",
+  "carriageUpdated": "Carriage was successfully updated.",
+  "carriageUpdateError": "An error occurred while updating the carriage.",
+  "carriageDeleted": "Carriage was successfully deleted.",
+  "carriageDeleteError": "An error occurred while deleting the carriage.",
+  "success": "Success",
+  "error": "Error",
+  "trainCreated": "Train was successfully created.",
+  "trainCreateError": "An error occurred while creating the train.",
+  "trainUpdated": "Train was successfully updated.",
+  "trainUpdateError": "An error occurred while updating the train.",
+  "trainDeleted": "Train was successfully deleted.",
+  "trainDeleteError": "An error occurred while deleting the train."
 }
