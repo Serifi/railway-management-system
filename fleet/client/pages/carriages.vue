@@ -91,7 +91,6 @@ const statusOptions = [
   { label: t('inactive'), value: 'inactive' }
 ]
 
-
 function initializeFilters(filters) {
   if (!filters.maxTractiveForce) {
     filters.maxTractiveForce = { from: null, to: null }

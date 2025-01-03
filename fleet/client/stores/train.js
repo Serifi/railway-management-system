@@ -55,19 +55,35 @@ export const useTrainStore = defineStore('train', {
         },
 
         async createTrain(train) {
+            const payload = {
+                name: train.name,
+                railcarID: train.railcarID,
+                passenger_cars: train.passengerCarIDs.map((id, index) => ({
+                    carriageID: id,
+                    position: index + 1,
+                })),
+            };
             try {
-                const data = await this.handleRequest(apiClient.post(BASE_PATH, train))
-                await this.getTrains()
-                return data
+                const data = await this.handleRequest(apiClient.post(BASE_PATH, payload));
+                await this.getTrains();
+                return data;
             } catch (error) {
-                console.error('Error creating train:', error)
-                throw error
+                console.error('Error creating train:', error);
+                throw error;
             }
         },
 
         async editTrain(train) {
+            const payload = {
+                name: train.name,
+                railcarID: train.railcarID,
+                passenger_cars: train.passengerCarIDs.map((id, index) => ({
+                    carriageID: id,
+                    position: index + 1,
+                })),
+            };
             try {
-                const data = await this.handleRequest(apiClient.put(`${BASE_PATH}/${train.trainID}`, train))
+                const data = await this.handleRequest(apiClient.put(`${BASE_PATH}/${train.trainID}`, payload))
                 await this.getTrains()
                 return data
             } catch (error) {

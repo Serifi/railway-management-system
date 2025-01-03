@@ -7,16 +7,18 @@
     </template>
     <template #description="{ item }">
       <div class="wagon-container">
-        <!-- Triebwagen -->
+        <!-- Railcar -->
         <div class="wagon">
           <img :src="railcarImage" :alt="$t('railcar')" class="wagon-image"/>
-          <div class="wagon-id">{{ item.railcarID }}</div>
+          <div class="wagon-id">{{ item.railcar.carriageID }}</div>
         </div>
 
-        <!-- Personenwagen -->
-        <div class="wagon" v-for="passengerCarID in item.passengerCarIDs" :key="passengerCarID">
+        <!-- Passenger Cars -->
+        <div class="wagon"
+             v-for="passengerCar in sortedPassengerCars(item.passenger_cars)"
+             :key="passengerCar.carriageID">
           <img :src="passengerCarImage" :alt="$t('passengerCar')" class="wagon-image"/>
-          <div class="wagon-id">{{ passengerCarID }}</div>
+          <div class="wagon-id">{{ passengerCar.carriageID }}</div>
         </div>
       </div>
     </template>
@@ -49,7 +51,7 @@
 
   <ScotDialog :visible="editDialogVisible" type="edit" :header="$t('editTrain')" :disable-action="disableAction"
               @update:visible="editDialogVisible = $event" @action="editTrain" @cancel="toggleEditDialog">
-    <ScotTrain :train="train" @update:train="updateTrain" :disabledFields="['trainID']"/>
+    <ScotTrain :train="train" @update:train="updateTrain" is-edit/>
   </ScotDialog>
 </template>
 
@@ -71,6 +73,9 @@ const train = ref(null)
 const disableAction = ref(false)
 const railcars = computed(() => trainStore.railcars)
 const passengerCars = computed(() => trainStore.passengerCars)
+const sortedPassengerCars = (passengerCars) => {
+  return passengerCars.slice().sort((a, b) => a.position - b.position)
+}
 
 const { t } = useI18n()
 const statusOptions = [
@@ -189,9 +194,10 @@ onMounted(async () => {
 .wagon-id {
   position: absolute;
   top: 30%;
-  right: 15%;
+  right: 10%;
   transform: translate(-50%, -50%);
   color: white;
+  font-size: 12px;
   font-weight: bold;
   pointer-events: none;
 }
