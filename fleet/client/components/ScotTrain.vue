@@ -50,22 +50,17 @@
       </div>
     </div>
 
-    <div v-if="selectedRailcar || orderedPassengerCars.length" class="flex flex-wrap gap-4 items-center justify-start col-span-2 mt-4">
-      <!-- Railcar  -->
+    <!-- Live Preview with Drag-and-Drop -->
+    <div v-if="selectedRailcar || orderedPassengerCars.length" class="flex flex-wrap col-span-2 my-6 cursor-pointer">
+      <!-- Railcar Preview -->
       <div v-if="selectedRailcar" class="wagon">
         <img :src="railcarImage" :alt="$t('railcar')" class="wagon-image" />
         <div class="wagon-id">{{ selectedRailcar.carriageID }}</div>
       </div>
 
-      <!-- Passenger Cars -->
-      <draggable
-          v-if="orderedPassengerCars.length"
-          v-model="orderedPassengerCars"
-          group="passengerCars"
-          item-key="carriageID"
-          class="flex flex-wrap gap-4"
-          @end="updatePassengerCarOrder"
-      >
+      <!-- Passenger Cars Drag-and-Drop -->
+      <draggable v-if="orderedPassengerCars.length" v-model="orderedPassengerCars" group="passengerCars"
+          item-key="carriageID" class="flex flex-wrap" @update:modelValue="updatePassengerCarOrder">
         <template #item="{ element }">
           <div class="wagon">
             <img :src="passengerCarImage" :alt="$t('passengerCar')" class="wagon-image" />
@@ -204,31 +199,21 @@ watch(
 </script>
 
 <style scoped>
-.wagon-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: start;
-  align-items: center;
-}
-
 .wagon {
   position: relative;
-  width: 100px;
-  height: auto;
   flex: 0 0 auto;
 }
 
 .wagon-image {
-  width: 100%;
+  width: 100px;
   height: auto;
   display: block;
 }
 
 .wagon-id {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 30%;
+  right: 10%;
   transform: translate(-50%, -50%);
   color: white;
   font-size: 12px;
