@@ -7,7 +7,6 @@
     </NuxtLink>
   </nav>
 
-  <!-- Mobile -->
   <nav class="fixed bottom-0 left-0 right-0 h-12 border-t lg:hidden">
     <div class="flex justify-around">
       <NuxtLink v-for="item in navItems"  :key="item.page"  :to="`/${item.page}`"

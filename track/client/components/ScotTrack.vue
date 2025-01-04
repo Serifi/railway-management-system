@@ -5,6 +5,7 @@
       <InputText
         v-model="trackData.trackName"
         placeholder="Streckenname eingeben..."
+        @input="validateTrack"
       />
     </div>
 
@@ -16,23 +17,22 @@
         optionLabel="label"
         optionValue="sectionID"
         placeholder="Abschnitte auswählen..."
+        @change="validateTrack"
         filter
       />
-    </div>
-
-    <div v-if="errorMessage" class="error-message">
-      {{ errorMessage }}
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, computed } from "vue";
+import { ref, computed, watch } from 'vue';
+import InputText from 'primevue/inputtext';
+import MultiSelect from 'primevue/multiselect';
 
 const props = defineProps({
   track: {
     type: Object,
-    default: () => ({ trackName: "", sectionIDs: [] }),
+    default: () => ({ trackName: '', sectionIDs: [] }),
   },
   sections: {
     type: Array,
@@ -42,43 +42,45 @@ const props = defineProps({
     type: Array,
     required: true,
   },
-  errorMessage: {
-    type: String,
-    default: "",
-  },
 });
 
-const emits = defineEmits(["update:track"]);
+const emits = defineEmits(['update:track', 'validate']);
 const trackData = ref({ ...props.track });
 
 const sectionOptions = computed(() =>
   props.sections.map((section) => ({
-    label: `${getStationName(section.startStationID)} - ${getStationName(
-      section.endStationID
-    )}`,
+    label: `${getStationName(section.startStationID)} - ${getStationName(section.endStationID)}`,
     sectionID: section.sectionID,
   }))
 );
 
 function getStationName(stationID) {
   const station = props.trainStations.find((s) => s.stationID === stationID);
-  return station ? station.stationName : "Unbekannt";
+  return station ? station.stationName : 'Unbekannt';
+}
+
+function validateTrack() {
+  const isValid =
+    !!trackData.value.trackName.trim() && trackData.value.sectionIDs.length > 0;
+  emits('validate', isValid);
 }
 
 watch(
   () => trackData.value,
   (newTrack) => {
-    emits("update:track", newTrack);
+    emits('update:track', newTrack);
+    validateTrack();
   },
-  { deep: true }
+    {deep: true}
 );
 
 watch(
-  () => props.track,
-  (newTrack) => {
-    trackData.value = { ...newTrack };
-  },
-  { deep: true, immediate: true }
+    () => props.track,
+    (newTrack) => {
+      trackData.value = {...newTrack};
+      validateTrack();
+    },
+    {deep: true, immediate: true}
 );
 </script>
 
@@ -86,10 +88,5 @@ watch(
 label {
   font-weight: bold;
   margin-bottom: 0.25rem;
-}
-.error-message {
-  color: red;
-  font-size: 14px;
-  margin-top: 10px;
 }
 </style>

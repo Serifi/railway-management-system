@@ -11,12 +11,12 @@ class Track(Base):
     @validates('trackName')
     def validate_name(self, key, value):
         if not value or not value.strip():
-            raise ValueError("Der Streckenname darf nicht leer sein.")
+            raise ValueError("Der Streckenname darf nicht leer sein")
         return value.strip()
 
     def validate_section_sequence(self, section_ids, session):
         if len(section_ids) < 1:
-            raise ValueError("Es muss mindestens ein Abschnitt angegeben werden, um eine Strecke zu bilden.")
+            raise ValueError("Es muss mindestens ein Abschnitt angegeben werden, um eine Strecke zu bilden")
 
         sections = session.query(Section).filter(Section.sectionID.in_(section_ids)).all()
 
@@ -24,16 +24,20 @@ class Track(Base):
             missing_ids = set(section_ids) - {s.sectionID for s in sections}
             raise ValueError(f"Folgende Abschnitte existieren nicht: {missing_ids}")
 
+        track_gauges = {section.trackGauge for section in sections}
+        if len(track_gauges) > 1:
+            raise ValueError("Die Spurweiten der gewählten Abschnitte stimmen nicht überein")
+
         start_stations = {s.startStationID for s in sections}
         end_stations = {s.endStationID for s in sections}
 
         valid_start_stations = start_stations - end_stations
         if len(valid_start_stations) != 1:
-            raise ValueError("Die Abschnitte bilden keine gültige durchgängige Strecke. Kein eindeutiger Startpunkt gefunden.")
+            raise ValueError("Die Abschnitte bilden keine gültige durchgängige Strecke")
 
         valid_end_stations = end_stations - start_stations
         if len(valid_end_stations) != 1:
-            raise ValueError("Die Abschnitte bilden keine gültige durchgängige Strecke. Kein eindeutiger Endpunkt gefunden.")
+            raise ValueError("Die Abschnitte bilden keine gültige durchgängige Strecke")
 
         connected_stations = set()
         for section in sections:
@@ -44,6 +48,6 @@ class Track(Base):
                 connected_stations.add(section.startStationID)
                 connected_stations.add(section.endStationID)
             else:
-                raise ValueError("Die Sections sind nicht vollständig verbunden.")
+                raise ValueError("Die Abschnitte sind nicht vollständig verbunden")
 
         return True

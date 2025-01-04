@@ -3,6 +3,7 @@ from models.Warning import Warning
 from models.SectionWarning import section_warning
 from sqlalchemy import create_engine, delete
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timezone
 import os
 
@@ -12,12 +13,13 @@ Session = sessionmaker(bind=engine)
 
 warning_blueprint = Blueprint('warning_routes', __name__)
 
+
 @warning_blueprint.route('/', methods=['GET'])
 def get_warnings():
     session = Session()
     current_time = datetime.now(timezone.utc)
 
-    expired_warnings = session.query(Warning.warningID).filter(Warning.endDate < current_time).all()
+    expired_warnings = session.query(Warning.warningID).filter(Warning.endDate < current_time, Warning.endDate.isnot(None)).all()
     expired_ids = [warning.warningID for warning in expired_warnings]
 
     if expired_ids:
@@ -25,7 +27,7 @@ def get_warnings():
         session.query(Warning).filter(Warning.warningID.in_(expired_ids)).delete(synchronize_session='fetch')
         session.commit()
 
-    warnings = session.query(Warning).filter(Warning.endDate >= current_time).all()
+    warnings = session.query(Warning).filter((Warning.endDate >= current_time) | (Warning.endDate.is_(None))).all()
 
     warning_list = [
         {
@@ -33,7 +35,7 @@ def get_warnings():
             'warningName': warning.warningName,
             'description': warning.description,
             'startDate': warning.startDate.strftime('%Y-%m-%d %H:%M:%S'),
-            'endDate': warning.endDate.strftime('%Y-%m-%d %H:%M:%S'),
+            'endDate': warning.endDate.strftime('%Y-%m-%d %H:%M:%S') if warning.endDate else None,
         }
         for warning in warnings
     ]
@@ -64,13 +66,17 @@ def get_warning_by_id(warning_id):
 def create_warning():
     session = Session()
     data = request.get_json()
-
-    if not data or not all(key in data for key in ['warningName', 'description', 'startDate', 'endDate']):
-        return jsonify({"message": "Fehlende Daten: 'warningName', 'description', 'startDate' und 'endDate' werden benötigt"}), 400
-
     try:
-        start_date = datetime.strptime(data['startDate'], '%Y-%m-%d %H:%M:%S')
-        end_date = datetime.strptime(data['endDate'], '%Y-%m-%d %H:%M:%S')
+        existing_warning = session.query(Warning).filter_by(warningName=data['warningName']).first()
+        if existing_warning:
+            raise ValueError("Der Name der Warnung muss eindeutig sein.")
+
+        start_date = datetime.strptime(data['startDate'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+        end_date = (
+            datetime.strptime(data['endDate'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+            if data.get('endDate')
+            else None
+        )
 
         new_warning = Warning(
             warningName=data['warningName'],
@@ -78,36 +84,23 @@ def create_warning():
             startDate=start_date,
             endDate=end_date
         )
-
         session.add(new_warning)
         session.commit()
-
         return jsonify({
             'warningID': new_warning.warningID,
             'warningName': new_warning.warningName,
             'description': new_warning.description,
             'startDate': new_warning.startDate.strftime('%Y-%m-%d %H:%M:%S'),
-            'endDate': new_warning.endDate.strftime('%Y-%m-%d %H:%M:%S'),
+            'endDate': new_warning.endDate.strftime('%Y-%m-%d %H:%M:%S') if new_warning.endDate else None,
         }), 201
-
     except ValueError as e:
         session.rollback()
         return jsonify({"message": str(e)}), 400
+    except IntegrityError:
+        session.rollback()
+        return jsonify({"message": "Ein unerwarteter Fehler ist aufgetreten."}), 500
     except Exception as e:
         session.rollback()
         return jsonify({"message": f"Ein unerwarteter Fehler ist aufgetreten: {str(e)}"}), 500
     finally:
         session.close()
-
-@warning_blueprint.route('/<int:warning_id>', methods=['DELETE'])
-def delete_warning(warning_id):
-    session = Session()
-    warning = session.query(Warning).filter(Warning.warningID == warning_id).first()
-
-    if not warning:
-        return jsonify({"message": f"Warnung mit ID {warning_id} nicht gefunden"}), 404
-
-    session.delete(warning)
-    session.commit()
-
-    return jsonify({"message": f"Warnung mit ID {warning_id} wurde erfolgreich gelöscht"}), 200

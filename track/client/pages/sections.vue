@@ -26,7 +26,7 @@
     :visible="createDialogVisible || editDialogVisible"
     :type="createDialogVisible ? 'create' : 'edit'"
     :header="createDialogVisible ? 'Abschnitt erstellen' : 'Abschnitt bearbeiten'"
-    :disable-action="disableAction"
+    :disable-action="!isSectionValid"
     @update:visible="closeDialog"
     @action="saveSection"
     @cancel="closeDialog"
@@ -35,7 +35,7 @@
       v-model:section="section"
       :trainStations="stations"
       :warnings="warnings"
-      :errorMessage="errorMessage"
+      @validate="updateSectionValidity"
     />
   </ScotDialog>
 
@@ -43,16 +43,17 @@
     :visible="warningDialogVisible"
     type="create"
     header="Warnung erstellen"
+    :disable-action="!isWarningValid"
     @update:visible="warningDialogVisible = $event"
     @action="createWarning"
     @cancel="toggleWarningDialog"
   >
-    <ScotWarning v-model:warning="newWarning" :errorMessage="errorMessage" />
+    <ScotWarning v-model:warning="newWarning" @validate="updateWarningValidity" />
   </ScotDialog>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useSectionStore } from '@/stores/section.js';
 import { useTrainStationStore } from '@/stores/train-station.js';
@@ -73,9 +74,9 @@ const stations = computed(() => stationStore.trainStations);
 const warnings = computed(() => warningStore.warnings);
 
 const section = ref({
-  usageFee: 0,
-  length: 0,
-  maxSpeed: 0,
+  usageFee: null,
+  length: null,
+  maxSpeed: null,
   trackGauge: '',
   startStationID: null,
   endStationID: null,
@@ -91,8 +92,16 @@ const newWarning = ref({
 const createDialogVisible = ref(false);
 const editDialogVisible = ref(false);
 const warningDialogVisible = ref(false);
-const disableAction = ref(false);
-const errorMessage = ref(''); // Neue Fehlermeldung
+const isWarningValid = ref(false);
+const isSectionValid = ref(false);
+
+function updateSectionValidity(isValid) {
+  isSectionValid.value = isValid;
+}
+
+function updateWarningValidity(isValid) {
+  isWarningValid.value = isValid;
+}
 
 onMounted(() => {
   sectionStore.getSections();
@@ -119,11 +128,10 @@ function getStationName(id) {
 
 function toggleCreateDialog() {
   createDialogVisible.value = true;
-  errorMessage.value = '';
   section.value = {
-    usageFee: 0,
-    length: 0,
-    maxSpeed: 0,
+    usageFee: null,
+    length: null,
+    maxSpeed: null,
     trackGauge: '',
     startStationID: null,
     endStationID: null,
@@ -133,7 +141,6 @@ function toggleCreateDialog() {
 
 function toggleEditDialog(currentSection) {
   editDialogVisible.value = true;
-  errorMessage.value = '';
 
   const warningIDs = currentSection.warnings
     ? currentSection.warnings.map((warning) => warning.warningID)
@@ -154,12 +161,16 @@ function toggleEditDialog(currentSection) {
 function closeDialog() {
   createDialogVisible.value = false;
   editDialogVisible.value = false;
-  errorMessage.value = '';
 }
 
 function toggleWarningDialog() {
   warningDialogVisible.value = !warningDialogVisible.value;
-  errorMessage.value = '';
+  newWarning.value = {
+    warningName: '',
+    description: '',
+    startDate: '',
+    endDate: ''
+  };
 }
 
 async function createWarning() {
@@ -174,14 +185,13 @@ async function createWarning() {
     });
 
     toggleWarningDialog();
-    newWarning.value = {
-      warningName: '',
-      description: '',
-      startDate: '',
-      endDate: ''
-    };
   } catch (error) {
-    errorMessage.value = error.response?.data?.message || 'Ein unbekannter Fehler ist aufgetreten.';
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler',
+      detail: error.response?.data?.message || 'Ein unbekannter Fehler ist aufgetreten.',
+      life: 3000
+    });
   }
 }
 
@@ -198,10 +208,7 @@ async function saveSection() {
     } else {
       const { sectionID, ...sectionData } = section.value;
 
-      if (!sectionID) {
-        console.error("Fehler: sectionID ist undefined!");
-        return;
-      }
+      if (!sectionID) return;
 
       await sectionStore.editSection(sectionID, sectionData);
       toast.add({
@@ -213,7 +220,12 @@ async function saveSection() {
     }
     closeDialog();
   } catch (error) {
-    errorMessage.value = error.response?.data?.message || 'Ein unbekannter Fehler ist aufgetreten.';
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler',
+      detail: error.response?.data?.message || 'Ein unbekannter Fehler ist aufgetreten.',
+      life: 3000
+    });
   }
 }
 
@@ -227,11 +239,10 @@ async function deleteSection(section) {
       life: 3000
     });
   } catch (error) {
-    console.error('Fehler beim Löschen der Section:', error);
     toast.add({
       severity: 'error',
       summary: 'Fehler',
-      detail: 'Fehler beim Löschen des Abschnitts',
+      detail: error.response?.data?.message || 'Ein unbekannter Fehler ist aufgetreten.',
       life: 3000
     });
   }
