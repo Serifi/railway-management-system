@@ -1,67 +1,102 @@
+// stores/maintenance.js
 import { defineStore } from 'pinia'
-import axios from 'axios'
+import apiClient from '@/utils/api'
+import { useTrainStore } from '@/stores/train'
+import { useEmployeeStore } from '@/stores/employee'
+
+const BASE_PATH = '/fleet/maintenances'
 
 export const useMaintenanceStore = defineStore('maintenance', {
     state: () => ({
         maintenances: [],
         maintenancesLoading: false,
-        trains: [],
-        employees: []
     }),
     actions: {
+        async handleRequest(promise) {
+            try {
+                const response = await promise
+                return response.data
+            } catch (error) {
+                throw error.response?.data || error
+            }
+        },
+
+        // Initialisierung des Stores und Laden der notwendigen Daten
+        async initialize() {
+            try {
+                await this.getTrains()
+                //await this.getEmployees()
+                await this.getMaintenances()
+            } catch (error) {
+                console.error('Error initializing maintenance store:', error)
+            }
+        },
+
         async getMaintenances() {
             this.maintenancesLoading = true
             try {
-                const response = await axios.get('http://127.0.0.1:5000/fleet/maintenance')
-                this.maintenances = response.data
+                const data = await this.handleRequest(apiClient.get(BASE_PATH))
+                this.maintenances = data
             } catch (error) {
                 console.error('Error fetching maintenances:', error)
+                throw error
             } finally {
                 this.maintenancesLoading = false
             }
         },
+
         async createMaintenance(maintenance) {
             try {
-                await axios.post('http://127.0.0.1:5000/fleet/maintenance', maintenance)
+                const data = await this.handleRequest(apiClient.post(BASE_PATH, maintenance))
                 await this.getMaintenances()
+                return data
             } catch (error) {
-                console.error('Error creating maintenance:', error.response?.data || error)
+                console.error('Error creating maintenance:', error)
                 throw error
             }
         },
+
         async editMaintenance(maintenance) {
             try {
-                await axios.put(`http://127.0.0.1:5000/fleet/maintenance/${maintenance.maintenanceID}`, maintenance)
+                const data = await this.handleRequest(apiClient.put(`${BASE_PATH}/${maintenance.maintenanceID}`, maintenance))
                 await this.getMaintenances()
+                return data
             } catch (error) {
-                console.error('Error editing maintenance:', error.response?.data || error)
+                console.error('Error editing maintenance:', error)
                 throw error
             }
         },
+
         async deleteMaintenance(maintenanceID) {
             try {
-                await axios.delete(`http://127.0.0.1:5000/fleet/maintenance/${maintenanceID}`)
+                const data = await this.handleRequest(apiClient.delete(`${BASE_PATH}/${maintenanceID}`))
                 await this.getMaintenances()
+                return data
             } catch (error) {
-                console.error('Error deleting maintenance:', error.response?.data || error)
+                console.error('Error deleting maintenance:', error)
                 throw error
             }
         },
+
+        // Methoden zur Nutzung der Train- und Employee-Stores
         async getTrains() {
+            const trainStore = useTrainStore()
             try {
-                const response = await axios.get('http://127.0.0.1:5000/fleet/trains')
-                this.trains = response.data
+                await trainStore.getTrains()
             } catch (error) {
-                console.error('Error fetching trains:', error)
+                console.error('Error fetching trains from trainStore:', error)
+                throw error
             }
         },
-        async getEmployees() {
+
+        /*async getEmployeees() {
+            const employeeStore = useEmployeeStore()
             try {
-                const response = await axios.get('http://127.0.0.1:5000/fleet/employees')
-                this.employees = response.data
+                await employeeStore.getEmployees()
             } catch (error) {
-                console.error('Error fetching employees:', error)
+                console.error('Error fetching employees from employeeStore:', error)
+                throw error
             }
-        }
-    }
+        }*/
+    },
 })

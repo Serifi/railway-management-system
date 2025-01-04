@@ -1,14 +1,13 @@
-<!-- components/Maintenance.vue -->
 <template>
   <ScotList :items="maintenances" :getKey="getMaintenanceKey" :rowsPerPage="5"
             @create="toggleCreateDialog" @edit="toggleEditDialog" @delete="deleteMaintenance">
     <template #title="{ item }">
-      Wartung #{{ item.maintenanceID }}
+      {{ $t('maintenance') }} #{{ item.maintenanceID }}
     </template>
     <template #description="{ item }">
       <span>
-        Zug ID: {{ item.trainID }}<br/>
-        Zeitraum: {{ formatDate(item.from_time) }} - {{ formatDate(item.to_time) }}<br/>
+        {{ $t('trainID') }}: {{ item.trainID }}<br/>
+        {{ $t('timePeriod') }}: {{ formatDate(item.from_time) }} - {{ formatDate(item.to_time) }}<br/>
       </span>
     </template>
     <template #filters="{ filters }">
@@ -16,34 +15,34 @@
 
       <div class="p-4 space-y-4">
         <div class="flex flex-col space-y-1">
-          <label for="train">Zug</label>
-          <Select id="train" v-model="filters.trainID" :options="trains" optionLabel="name" optionValue="trainID" placeholder="Zug auswählen..." />
+          <label for="train">{{ $t('train') }}</label>
+          <Select id="train" v-model="filters.trainID" :options="trains" optionLabel="name" optionValue="trainID" :placeholder="$t('selectPlaceholder')" showClear/>
         </div>
 
         <div class="flex flex-col space-y-1">
-          <label for="employee">Mitarbeiter:innen</label>
-          <MultiSelect id="employee" v-model="filters.employeeSSNs" :options="employees" optionLabel="username" optionValue="ssn" placeholder="Mitarbeiter auswählen..." />
+          <label for="employee">{{ $t('employees') }}</label>
+          <MultiSelect id="employee" v-model="filters.employeeSSNs" :options="employees" optionLabel="username" optionValue="ssn" :placeholder="$t('selectPlaceholder')" showClear/>
         </div>
 
         <div class="flex flex-col space-y-1">
-          <label for="from_time">Von</label>
-          <Calendar id="from_time" v-model="filters.from_time" showTime showSeconds placeholder="Startzeitpunkt" />
+          <label for="from_time">{{ $t('from') }}</label>
+          <Calendar id="from_time" v-model="filters.from_time" showTime showSeconds :placeholder="$t('selectPlaceholder')"/>
         </div>
 
         <div class="flex flex-col space-y-1">
-          <label for="to_time">Bis</label>
-          <Calendar id="to_time" v-model="filters.to_time" showTime showSeconds placeholder="Endzeitpunkt" />
+          <label for="to_time">{{ $t('to') }}</label>
+          <Calendar id="to_time" v-model="filters.to_time" showTime showSeconds :placeholder="$t('selectPlaceholder')"/>
         </div>
       </div>
     </template>
   </ScotList>
 
-  <ScotDialog :visible="createDialogVisible" type="create" header="Wartung erstellen" :disable-action="disableAction"
+  <ScotDialog :visible="createDialogVisible" type="create" :header="$t('createMaintenance')" :disable-action="disableAction"
               @update:visible="createDialogVisible = $event" @action="createMaintenance" @cancel="toggleCreateDialog">
     <ScotMaintenance @update:maintenance="updateMaintenance"/>
   </ScotDialog>
 
-  <ScotDialog :visible="editDialogVisible" type="edit" header="Wartung bearbeiten" :disable-action="disableAction"
+  <ScotDialog :visible="editDialogVisible" type="edit" :header="$t('editMaintenance')" :disable-action="disableAction"
               @update:visible="editDialogVisible = $event" @action="editMaintenance" @cancel="toggleEditDialog">
     <ScotMaintenance :maintenance="maintenance" @update:maintenance="updateMaintenance" :disabledFields="['maintenanceID']"/>
   </ScotDialog>
@@ -137,9 +136,21 @@ function getMaintenanceKey(maintenance) {
   return maintenance.maintenanceID
 }
 
+function resetFilters(filters) {
+  Object.keys(filters).forEach(key => {
+    if (typeof filters[key] === 'object' && filters[key] !== null) {
+      Object.keys(filters[key]).forEach(subKey => {
+        filters[key][subKey] = null
+      })
+    } else {
+      filters[key] = null
+    }
+  })
+}
+
 onMounted(async () => {
   await maintenanceStore.getTrains()
-  await maintenanceStore.getEmployees()
+  //await maintenanceStore.getEmployees()
   await maintenanceStore.getMaintenances()
 });
 </script>

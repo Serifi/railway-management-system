@@ -1,21 +1,26 @@
+// stores/carriage.js
 import { defineStore } from 'pinia'
-import axios from 'axios'
+import apiClient from '@/utils/api'
+import { useTrainStore } from '@/stores/train'
+
+const BASE_PATH = '/fleet/carriages'
 
 export const useCarriageStore = defineStore('carriage', {
     state: () => ({
         carriages: [],
         trackGauges: [
-            { label: 'Normalspur', value: '1435' },
-            { label: 'Schmalspur', value: '1000' }
+            { label: 'Standard Gauge', value: '1435' },
+            { label: 'Narrow Gauge', value: '1000' }
         ],
         carriageTypes: [
-            { label: 'Triebwagen', value: 'Railcar' },
-            { label: 'Personenwagen', value: 'PassengerCar' }
+            { label: 'Railcar', value: 'Railcar' },
+            { label: 'Passenger Car', value: 'PassengerCar' }
         ]
     }),
     getters: {
         carriagesWithStatus: (state) => {
-            const trains = useTrainStore().trains
+            const trainStore = useTrainStore()
+            const trains = trainStore.trains
             return state.carriages.map(carriage => {
                 const isActive = trains.some(train =>
                     train.railcarID === carriage.carriageID ||
@@ -29,37 +34,37 @@ export const useCarriageStore = defineStore('carriage', {
         }
     },
     actions: {
+        // Generische Methode zur Handhabung von API-Anfragen
+        async handleRequest(promise) {
+            try {
+                const response = await promise
+                return response.data
+            } catch (error) {
+                throw error.response?.data || error
+            }
+        },
+
         async getCarriages() {
-            try {
-                const response = await axios.get('http://127.0.0.1:5000/fleet/carriages')
-                this.carriages = response.data
-            } catch (error) {
-                console.error('Error fetching carriages:', error)
-            }
+            const data = await this.handleRequest(apiClient.get(BASE_PATH))
+            this.carriages = data
         },
+
         async createCarriage(carriage) {
-            try {
-                await axios.post('http://127.0.0.1:5000/fleet/carriages', carriage)
-                await this.getCarriages()
-            } catch (error) {
-                console.error('Error creating carriage:', error.response?.data || error)
-            }
+            const data = await this.handleRequest(apiClient.post(BASE_PATH, carriage))
+            await this.getCarriages()
+            return data
         },
+
         async editCarriage(carriage) {
-            try {
-                await axios.put(`http://127.0.0.1:5000/fleet/carriages/${carriage.carriageID}`, carriage)
-                await this.getCarriages()
-            } catch (error) {
-                console.error('Error editing carriage:', error.response?.data || error)
-            }
+            const data = await this.handleRequest(apiClient.put(`${BASE_PATH}/${carriage.carriageID}`, carriage))
+            await this.getCarriages()
+            return data
         },
+
         async deleteCarriage(carriageID) {
-            try {
-                await axios.delete(`http://127.0.0.1:5000/fleet/carriages/${carriageID}`)
-                await this.getCarriages()
-            } catch (error) {
-                console.error('Error deleting carriage:', error.response?.data || error)
-            }
+            const data = await this.handleRequest(apiClient.delete(`${BASE_PATH}/${carriageID}`))
+            await this.getCarriages()
+            return data
         }
     }
 })

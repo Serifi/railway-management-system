@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body, input::placeholder, .p-paginator, .p-dialog, .p-popover, .p-drawer, .p-togglebutton,
+.p-inputtext, .p-select, .p-select-list-container, .p-select .p-select-label, .p-select-option,
+.p-multiselect, .p-multiselect-list-container, .p-multiselect-header, .p-multiselect .p-multiselect-label, .p-multiselect-option {
+    background-color: var(--background-color) !important;
+    color: var(--text-color) !important;
+}
+
+.p-togglebutton-checked::before {
+    background-color: var(--toggle-button) !important;
+}
+
+[data-theme='dark'] {
+    --background-color: #1a202c;
+    --text-color: #cbd5e0;
+    --toggle-button: #000000
+}
+
+[data-theme='light'] {
+    --background-color: #ffffff;
+    --text-color: #2d3748;
+    --toggle-button: #f5f5f5
+}

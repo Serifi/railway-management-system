@@ -1,23 +1,24 @@
-<!-- components/Train.vue -->
 <template>
   <ScotList :items="trains" :getKey="getTrainKey" :rowsPerPage="5"
             @create="toggleCreateDialog" @edit="toggleEditDialog" @delete="deleteTrain">
     <template #title="{ item }">
       {{ item.name }}
-      <Tag :severity="item.active ? 'success' : 'danger'" :value="item.active ? 'aktiv' : 'inaktiv'" class="ml-2"/>
+      <Tag :severity="item.active ? 'success' : 'danger'" :value="$t(item.active ? 'active' : 'inactive')" class="ml-2 !py-[0px]"/>
     </template>
     <template #description="{ item }">
       <div class="wagon-container">
-        <!-- Triebwagen -->
+        <!-- Railcar -->
         <div class="wagon">
-          <img :src="railcarImage" alt="Triebwagen" class="wagon-image"/>
-          <div class="wagon-id">{{ item.railcarID }}</div>
+          <img :src="railcarImage" :alt="$t('railcar')" class="wagon-image"/>
+          <div class="wagon-id">{{ item.railcar.carriageID }}</div>
         </div>
 
-        <!-- Personenwagen -->
-        <div class="wagon" v-for="passengerCarID in item.passengerCarIDs" :key="passengerCarID">
-          <img :src="passengerCarImage" alt="Personenwagen" class="wagon-image"/>
-          <div class="wagon-id">{{ passengerCarID }}</div>
+        <!-- Passenger Cars -->
+        <div class="wagon"
+             v-for="passengerCar in sortedPassengerCars(item.passenger_cars)"
+             :key="passengerCar.carriageID">
+          <img :src="passengerCarImage" :alt="$t('passengerCar')" class="wagon-image"/>
+          <div class="wagon-id">{{ passengerCar.carriageID }}</div>
         </div>
       </div>
     </template>
@@ -26,31 +27,31 @@
 
       <div class="p-4 space-y-4">
         <div class="flex flex-col space-y-1">
-          <label for="status">Status</label>
+          <label for="status">{{ $t('status') }}</label>
           <SelectButton id="status" v-model="filters.status" :options="statusOptions" optionLabel="label" optionValue="value"/>
         </div>
 
         <div class="flex flex-col space-y-1">
-          <label for="railcar">Triebwagen</label>
-          <Dropdown id="railcar" v-model="filters.railcarID" :options="railcars" optionLabel="carriageID" optionValue="carriageID" placeholder="Triebwagen auswählen..." />
+          <label for="railcar">{{ $t('railcar') }}</label>
+          <Select id="railcar" v-model="filters.railcarID" :options="railcars" optionLabel="carriageID" optionValue="carriageID" :placeholder="$t('selectPlaceholder')" showClear/>
         </div>
 
         <div class="flex flex-col space-y-1">
-          <label for="passengerCars">Personenwagen</label>
-          <MultiSelect id="passengerCars" v-model="filters.passengerCarIDs" :options="passengerCars" optionLabel="carriageID" optionValue="carriageID" placeholder="Personenwagen auswählen..." />
+          <label for="passengerCars">{{ $t('passengerCar') }}</label>
+          <MultiSelect id="passengerCars" v-model="filters.passengerCarIDs" :options="passengerCars" optionLabel="carriageID" optionValue="carriageID" :placeholder="$t('selectPlaceholder')" showClear/>
         </div>
       </div>
     </template>
   </ScotList>
 
-  <ScotDialog :visible="createDialogVisible" type="create" header="Zug erstellen" :disable-action="disableAction"
+  <ScotDialog :visible="createDialogVisible" type="create" :header="$t('createTrain')" :disable-action="disableAction"
               @update:visible="createDialogVisible = $event" @action="createTrain" @cancel="toggleCreateDialog">
     <ScotTrain @update:train="updateTrain"/>
   </ScotDialog>
 
-  <ScotDialog :visible="editDialogVisible" type="edit" header="Zug bearbeiten" :disable-action="disableAction"
+  <ScotDialog :visible="editDialogVisible" type="edit" :header="$t('editTrain')" :disable-action="disableAction"
               @update:visible="editDialogVisible = $event" @action="editTrain" @cancel="toggleEditDialog">
-    <ScotTrain :train="train" @update:train="updateTrain" :disabledFields="['trainID']"/>
+    <ScotTrain :train="train" @update:train="updateTrain" is-edit/>
   </ScotDialog>
 </template>
 
@@ -58,6 +59,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useTrainStore } from '@/stores/train'
 import { useToast } from 'primevue/usetoast'
+import { useI18n } from 'vue-i18n'
 
 import railcarImage from '@/assets/images/railcar.png'
 import passengerCarImage from '@/assets/images/passenger_car.png'
@@ -71,10 +73,14 @@ const train = ref(null)
 const disableAction = ref(false)
 const railcars = computed(() => trainStore.railcars)
 const passengerCars = computed(() => trainStore.passengerCars)
+const sortedPassengerCars = (passengerCars) => {
+  return passengerCars.slice().sort((a, b) => a.position - b.position)
+}
 
+const { t } = useI18n()
 const statusOptions = [
-  { label: 'Aktiv', value: 'aktiv' },
-  { label: 'Inaktiv', value: 'inaktiv' }
+  { label: t('active'), value: 'active' },
+  { label: t('inactive'), value: 'inactive' }
 ]
 
 function initializeFilters(filters) {
@@ -100,42 +106,50 @@ function toggleCreateDialog() {
   if (createDialogVisible.value) disableAction.value = true
 }
 
-function createTrain() {
-  trainStore.createTrain(train.value)
-      .then(() => {
-        toggleCreateDialog()
-        toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Zug wurde erstellt', life: 3000 })
-      })
-      .catch(error => {
-        toast.add({ severity: 'error', summary: 'Fehler', detail: error.response?.data?.message || 'Zug konnte nicht erstellt werden', life: 3000 })
-      })
-}
-
 function toggleEditDialog(currentTrain) {
   train.value = currentTrain
   editDialogVisible.value = !editDialogVisible.value
   if (editDialogVisible.value) disableAction.value = false
 }
 
-function editTrain() {
-  trainStore.editTrain(train.value)
-      .then(() => {
-        toggleEditDialog(null)
-        toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Zug wurde aktualisiert', life: 3000 })
-      })
-      .catch(error => {
-        toast.add({ severity: 'error', summary: 'Fehler', detail: error.response?.data?.message || 'Zug konnte nicht aktualisiert werden', life: 3000 })
-      })
+function showToast(type, message) {
+  toast.add({
+    severity: type,
+    summary: type === 'success' ? t('success') : t('error'),
+    detail: message,
+    life: 3000
+  })
 }
 
-function deleteTrain(currentTrain) {
-  trainStore.deleteTrain(currentTrain.trainID)
-      .then(() => {
-        toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Zug wurde gelöscht', life: 3000 })
-      })
-      .catch(error => {
-        toast.add({ severity: 'error', summary: 'Fehler', detail: error.response?.data?.message || 'Zug konnte nicht gelöscht werden', life: 3000 })
-      })
+async function createTrain() {
+  try {
+    const response = await trainStore.createTrain(train.value)
+    toggleCreateDialog()
+    showToast('success', response.message || t('trainCreated'))
+  } catch (error) {
+    toggleCreateDialog()
+    showToast('error', error.message || t('trainCreateError'))
+  }
+}
+
+async function editTrain() {
+  try {
+    const response = await trainStore.editTrain(train.value)
+    toggleEditDialog()
+    showToast('success', response.message || t('trainUpdated'))
+  } catch (error) {
+    toggleEditDialog()
+    showToast('error', error.message || t('trainUpdateError'))
+  }
+}
+
+async function deleteTrain(currentTrain) {
+  try {
+    const response = await trainStore.deleteTrain(currentTrain.trainID)
+    showToast('success', response.message || t('trainDeleted'))
+  } catch (error) {
+    showToast('error', error.message || t('trainDeleteError'))
+  }
 }
 
 function getTrainKey(train) {
@@ -143,8 +157,7 @@ function getTrainKey(train) {
 }
 
 onMounted(async () => {
-  await trainStore.getRailcars()
-  await trainStore.getPassengerCars()
+  await trainStore.getCarriagesByType()
   await trainStore.getTrains()
 });
 </script>
@@ -169,12 +182,7 @@ onMounted(async () => {
 
 .wagon {
   position: relative;
-  margin-right: 0px;
   flex: 0 0 auto;
-}
-
-.wagon:last-child {
-  margin-right: 0;
 }
 
 .wagon-image {
@@ -186,9 +194,10 @@ onMounted(async () => {
 .wagon-id {
   position: absolute;
   top: 30%;
-  right: 15%;
+  right: 10%;
   transform: translate(-50%, -50%);
   color: white;
+  font-size: 12px;
   font-weight: bold;
   pointer-events: none;
 }

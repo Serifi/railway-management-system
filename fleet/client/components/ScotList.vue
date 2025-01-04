@@ -2,14 +2,11 @@
   <div class="flex justify-between mb-4">
     <IconField>
       <InputIcon class="pi pi-search" />
-      <InputText v-model="searchQuery" placeholder="Suchen..." />
+      <InputText v-model="searchQuery" :placeholder="$t('search')" />
     </IconField>
-    <div class="flex flex-wrap gap-2 mb-4">
-      <Chip v-for="(filter, index) in activeFilters" :key="index" :label="filter.label" removable @remove="removeFilter(filter)"/>
-    </div>
     <div class="flex space-x-4 items-center cursor-pointer">
       <i class="pi pi-filter" @click="toggleFilter" />
-      <ScotButton label="Erstellen" icon="pi pi-plus" variant="blue" @click="emitCreate" />
+      <ScotButton v-if="isAdmin" :label="$t('create')" icon="pi pi-plus" variant="blue" @click="emitCreate" />
     </div>
     <Drawer v-model:visible="filterVisible" header="Filter" position="right">
       <slot name="filters" :filters="filters" />
@@ -27,9 +24,9 @@
       </div>
     </div>
 
-    <div v-if="hover === getKey(item)" class="flex flex-col justify-center space-y-2">
-      <ScotButton label="Bearbeiten" icon="pi pi-pencil" variant="green" @click="emitEdit(item)" />
-      <ScotButton label="Löschen" icon="pi pi-trash" variant="red" @click="confirmDeletion($event, item)" />
+    <div v-if="isAdmin && hover === getKey(item)" class="flex flex-col justify-center space-y-2">
+      <ScotButton :label="$t('edit')" icon="pi pi-pencil" variant="green" @click="emitEdit(item)" />
+      <ScotButton :label="$t('delete')" icon="pi pi-trash" variant="red" @click="confirmDeletion($event, item)" />
     </div>
   </div>
   <ConfirmPopup />
@@ -153,6 +150,9 @@ const confirmDeletion = (event, item) => {
 watch([searchQuery, rowsPerPage], () => {
   currentPage.value = 0;
 });
+
+const userStore = useUserStore();
+const isAdmin = computed(() => userStore.getUserRole === 'Admin');
 </script>
 
 <style>

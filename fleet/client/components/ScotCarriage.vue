@@ -1,28 +1,28 @@
 <template>
   <div class="grid grid-cols-2 gap-4">
     <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
-      <label for="trackGauge">Spurweite</label>
-      <Select id="trackGauge" v-model="carriage.trackGauge" :options="trackGauges" optionLabel="label" optionValue="value" placeholder="Auswahl treffen..." :disabled="isDisabled('trackGauge')"/>
+      <label for="trackGauge">{{ $t('trackGauge') }}</label>
+      <Select id="trackGauge" v-model="carriage.trackGauge" :options="trackGauges" optionLabel="label" optionValue="value" :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('trackGauge')"/>
     </div>
 
     <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
-      <label for="type">Typ</label>
-      <Select id="type" v-model="carriage.type" :options="carriageTypes" optionLabel="label" optionValue="value" placeholder="Auswahl treffen..." :disabled="isDisabled('type')"/>
+      <label for="type">{{ $t('type') }}</label>
+      <Select id="type" v-model="carriage.type" :options="carriageTypes" optionLabel="label" optionValue="value" :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('type')"/>
     </div>
 
     <div v-if="carriage.type === 'Railcar'" class="flex flex-col space-y-1 col-span-2">
-      <label for="maxTractiveForce">Maximale Zugkraft</label>
-      <InputNumber id="maxTractiveForce" v-model="carriage.maxTractiveForce" placeholder="Wert eingeben..." suffix="kN" :disabled="isDisabled('maxTractiveForce')"/>
+      <label for="maxTractiveForce">{{ $t('maxTractiveForce') }}</label>
+      <InputNumber id="maxTractiveForce" v-model="carriage.maxTractiveForce" :placeholder="$t('textPlaceholder')" suffix="kN" :disabled="isDisabled('maxTractiveForce')"/>
     </div>
 
     <div v-if="carriage.type === 'PassengerCar'" class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
-      <label for="numberOfSeats">Sitzplätze</label>
-      <InputNumber id="numberOfSeats" v-model="carriage.numberOfSeats" placeholder="Wert eingeben..." :disabled="isDisabled('numberOfSeats')"/>
+      <label for="numberOfSeats">{{ $t('numberOfSeats') }}</label>
+      <InputNumber id="numberOfSeats" v-model="carriage.numberOfSeats" :placeholder="$t('textPlaceholder')" :disabled="isDisabled('numberOfSeats')"/>
     </div>
 
     <div v-if="carriage.type === 'PassengerCar'" class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
-      <label for="maxWeight">Maximales Gewicht</label>
-      <InputNumber id="maxWeight" v-model="carriage.maxWeight" placeholder="Wert eingeben..." suffix="t" :disabled="isDisabled('maxWeight')"/>
+      <label for="maxWeight">{{ $t('maxWeight') }}</label>
+      <InputNumber id="maxWeight" v-model="carriage.maxWeight" :placeholder="$t('textPlaceholder')" suffix="t" :disabled="isDisabled('maxWeight')"/>
     </div>
   </div>
 </template>

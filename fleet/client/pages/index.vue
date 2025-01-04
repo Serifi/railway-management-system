@@ -8,17 +8,17 @@
       <div class="w-full lg:w-1/2">
         <div class="flex-col space-y-8">
           <div class="flex flex-col space-y-2">
-            <label for="username" class="font-bold">Benutzername</label>
-            <InputText id="username" v-model="username" placeholder="Text eingeben..."/>
+            <label for="username" class="font-bold">{{ $t('username') }}</label>
+            <InputText id="username" v-model="username" :placeholder="$t('textPlaceholder')"/>
           </div>
           <div class="flex flex-col space-y-2">
-            <label for="password" class="font-bold">Passwort</label>
-            <Password id="password" v-model="password" placeholder="Text eingeben..." toggleMask :feedback="false"/>
+            <label for="password" class="font-bold">{{ $t('password') }}</label>
+            <Password id="password" v-model="password" :placeholder="$t('textPlaceholder')" toggleMask :feedback="false"/>
           </div>
           <Message v-if="wrongCredentials" severity="error" :closable="false">
-            <div class="text-sm">Oops! Es scheint, dass Benutzername / Passwort falsch ist.</div>
+            <div class="text-sm">{{ $t('wrongCredentials') }}</div>
           </Message>
-          <ScotButton label="Anmelden" icon="pi pi-user" variant="blue" @click="login" class="w-full"/>
+          <ScotButton :label="$t('login')" icon="pi pi-user" variant="blue" @click="login" class="w-full"/>
         </div>
       </div>
     </div>

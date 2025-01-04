@@ -3,7 +3,7 @@
     <slot />
 
     <template #footer>
-      <ScotButton label="Abbrechen" icon="pi pi-times" variant="gray" @click="emitCancel"/>
+      <ScotButton :label="$t('cancel')" icon="pi pi-times" variant="gray" @click="emitCancel"/>
       <ScotButton v-if="type === 'create'" :label="header" icon="pi pi-plus" variant="blue" :disabled="disableAction" @click="emitAction"/>
       <ScotButton v-else-if="type === 'edit'" :label="header" icon="pi pi-pencil" variant="green" :disabled="disableAction" @click="emitAction"/>
     </template>

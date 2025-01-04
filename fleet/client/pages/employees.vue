@@ -5,30 +5,30 @@
       {{ `${item.firstName} ${item.lastName}` }}
     </template>
     <template #description="{ item }">
-      Abteilung: {{ item.department }}<br/>
-      Rolle: {{ item.role }}
+      {{ $t('department') }}: {{ $t(item.department.toLowerCase())}}<br/>
+      {{ $t('role') }}: {{ $t(item.role.toLowerCase())}}
     </template>
     <template #filters="{ filters }">
       <div class="p-4 space-y-4">
         <div class="flex flex-col space-y-1">
-          <label for="department">Abteilung</label>
-          <Select id="department" v-model="filters.department" :options="departments" optionLabel="label" optionValue="value" placeholder="Auswahl treffen..." showClear/>
+          <label for="department">{{ $t('department') }}</label>
+          <Select id="department" v-model="filters.department" :options="departments" optionLabel="label" optionValue="value" :placeholder="$t('selectPlaceholder')" showClear/>
         </div>
 
         <div class="flex flex-col space-y-1">
-          <label for="role">Rolle</label>
-          <Select id="role" v-model="filters.role" :options="roles" optionLabel="label" optionValue="value" placeholder="Auswahl treffen..." showClear/>
+          <label for="role">{{ $t('role') }}</label>
+          <Select id="role" v-model="filters.role" :options="roles" optionLabel="label" optionValue="value" :placeholder="$t('selectPlaceholder')" showClear/>
         </div>
       </div>
     </template>
   </List>
 
-  <ScotDialog :visible="createDialogVisible" type="create" header="Mitarbeiter:in erstellen" :disable-action="disableAction"
+  <ScotDialog :visible="createDialogVisible" type="create" :header="$t('createEmployee')" :disable-action="disableAction"
               @update:visible="createDialogVisible = $event" @action="createEmployee" @cancel="toggleCreateDialog">
     <ScotEmployee @update:employee="updateEmployee"/>
   </ScotDialog>
 
-  <ScotDialog :visible="editDialogVisible" type="edit" header="Mitarbeiter:in bearbeiten" :disable-action="disableAction"
+  <ScotDialog :visible="editDialogVisible" type="edit" :header="$t('editEmployee')" :disable-action="disableAction"
               @update:visible="editDialogVisible = $event" @action="editEmployee" @cancel="toggleEditDialog">
     <ScotEmployee :employee="employee" :disabledFields="['ssn']" @update:employee="updateEmployee"/>
   </ScotDialog>
