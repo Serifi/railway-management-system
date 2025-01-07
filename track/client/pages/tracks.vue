@@ -365,9 +365,9 @@ onMounted(() => {
 }
 
 .section-line {
-  width: 4px;
+  width: 5px;
   background-color: #3076A7;
-  margin-left: 4.3px;
+  margin-left: 3.5px;
   margin-right: 20px;
   transition: background-color 0.3s ease;
   cursor: pointer;
