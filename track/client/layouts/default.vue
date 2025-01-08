@@ -9,6 +9,14 @@
       <Navigation />
 
       <div class="flex items-center space-x-4 mx-4">
+        <!-- Dark Mode Toggle -->
+        <div class="theme-switch" @click="toggleDarkMode">
+          <div :class="['theme-toggle', isDarkMode ? 'dark' : 'light']">
+            <i v-if="!isDarkMode" class="pi pi-sun sun-icon"></i>
+            <i v-else class="pi pi-moon moon-icon"></i>
+          </div>
+        </div>
+
         <div class="w-px h-8 bg-gray-300"></div>
         <div class="flex items-center space-x-4 cursor-pointer" @click="showUserPanel">
           <i class="pi pi-user text-xl" />
@@ -59,10 +67,10 @@
 </template>
 
 <script setup>
-import {ref, computed} from 'vue';
-import {useUserStore} from '@/stores/user';
-import {useEmployeeStore} from '@/stores/employee';
-import {useToast} from 'primevue/usetoast';
+import { ref, computed, onMounted } from 'vue';
+import { useUserStore } from '@/stores/user';
+import { useEmployeeStore } from '@/stores/employee';
+import { useToast } from 'primevue/usetoast';
 import Navigation from '~/components/ScotNavigation.vue';
 import ScotDialog from '~/components/ScotDialog.vue';
 import ScotEmployee from '~/components/ScotEmployee.vue';
@@ -79,6 +87,33 @@ const disableAction = ref(false);
 
 const userFullName = computed(() => userStore.getFullName);
 const userRole = computed(() => userStore.getUserRole);
+
+const isDarkMode = ref(false);
+
+function toggleDarkMode() {
+  isDarkMode.value = !isDarkMode.value;
+  if (isDarkMode.value) {
+    document.documentElement.classList.add('dark');
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+    document.documentElement.setAttribute('data-theme', 'light');
+    localStorage.setItem('theme', 'light');
+  }
+}
+
+onMounted(() => {
+  const savedTheme = localStorage.getItem('theme');
+  isDarkMode.value = savedTheme === 'dark';
+  if (isDarkMode.value) {
+    document.documentElement.classList.add('dark');
+    document.documentElement.setAttribute('data-theme', 'dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+});
 
 const determineDisabledFields = computed(() => {
   if (userRole.value === 'Admin') {
@@ -157,3 +192,44 @@ function handleError(error) {
   }
 }
 </script>
+
+<style scoped>
+.theme-switch {
+  width: 50px;
+  height: 25px;
+  background-color: #ccc;
+  border-radius: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px;
+  cursor: pointer;
+  position: relative;
+}
+
+.theme-toggle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.theme-toggle.dark {
+  transform: translateX(25px);
+  background-color: #4f46e5;
+}
+
+.sun-icon {
+  font-size: 12px;
+  color: #fbbf24;
+}
+
+.moon-icon {
+  font-size: 12px;
+  color: white;
+}
+</style>

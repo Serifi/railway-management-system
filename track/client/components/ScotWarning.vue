@@ -82,3 +82,13 @@ watch(
   { deep: true }
 );
 </script>
+
+<style scoped>
+textarea {
+  color: var(--text-color) !important;
+}
+
+textarea::placeholder {
+  color: rgba(var(--text-color), 0.7) !important;
+}
+</style>

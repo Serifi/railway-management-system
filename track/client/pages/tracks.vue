@@ -332,23 +332,39 @@ onMounted(() => {
 .station-point {
   width: 12px;
   height: 12px;
-  background-color: #3076A7;
+  background-color: #1769AA;
   border-radius: 50%;
   margin-right: 10px;
   transition: background-color 0.3s ease;
+}
+
+[data-theme="dark"] .station-point {
+  background-color: #0E3C63;
 }
 
 .highlighted-point {
   background-color: #0056A7;
 }
 
+[data-theme="dark"] .highlighted-point {
+  background-color: #004080;
+}
+
 .dimmed-point {
   background-color: #ccc;
+}
+
+[data-theme="dark"] .dimmed-point {
+  background-color: #4A4A4A;
 }
 
 .station-name {
   font-size: 15px;
   color: black;
+}
+
+[data-theme="dark"] .station-name {
+  color: #C0C0C0;
 }
 
 .station-name.highlighted {
@@ -359,6 +375,10 @@ onMounted(() => {
   color: #999;
 }
 
+[data-theme="dark"] .station-name.dimmed {
+  color: #666;
+}
+
 .section-container {
   display: flex;
   align-items: center;
@@ -366,19 +386,31 @@ onMounted(() => {
 
 .section-line {
   width: 5px;
-  background-color: #3076A7;
+  background-color: #1769AA;
   margin-left: 3.5px;
   margin-right: 20px;
   transition: background-color 0.3s ease;
   cursor: pointer;
 }
 
+[data-theme="dark"] .section-line {
+  background-color: #0E3C63;
+}
+
 .section-line.dimmed-line {
   background-color: #ccc;
 }
 
+[data-theme="dark"] .section-line.dimmed-line {
+  background-color: #4A4A4A;
+}
+
 .warning-line {
-  background-color: #A73030;
+  background-color: #D32F2F;
+}
+
+[data-theme="dark"] .warning-line {
+  background-color: #8B1A1A;
 }
 
 .section-details {
@@ -387,6 +419,10 @@ onMounted(() => {
   margin-left: 15px;
   font-size: 5px;
   color: #333;
+}
+
+[data-theme="dark"] .section-details {
+  color: #C0C0C0;
 }
 
 .details-layout {
@@ -398,7 +434,6 @@ onMounted(() => {
   display: flex;
   gap: 20px;
 }
-
 
 .detail-row {
   display: flex;
@@ -416,8 +451,16 @@ onMounted(() => {
   color: #b0b0b0;
 }
 
+[data-theme="dark"] .gray-icon {
+  color: #7A7A7A;
+}
+
 .detail-value {
   font-size: 13px;
+}
+
+[data-theme="dark"] .detail-value {
+  color: #C0C0C0;
 }
 
 .warnings-container {
@@ -434,6 +477,10 @@ onMounted(() => {
   font-size: 13px;
   color: #333;
   margin-bottom: 1px;
+}
+
+[data-theme="dark"] .warnings-list li {
+  color: #cbd5e0;
 }
 
 .warning-name {

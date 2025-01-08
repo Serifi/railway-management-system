@@ -125,6 +125,53 @@ button:disabled {
   border-color: black;
 }
 
+[data-theme="dark"] .blue-button {
+  background-color: #1A283A;
+  color: #7FB3D4;
+}
+
+[data-theme="dark"] .blue-button:hover {
+  background-color: #223A50;
+}
+
+[data-theme="dark"] .yellow-button {
+  background-color: #3A3020;
+  color: #D3B76F;
+}
+
+[data-theme="dark"] .yellow-button:hover {
+  background-color: #4A3E28;
+}
+
+[data-theme="dark"] .red-button {
+  background-color: #36232A;
+  color: #D28A99;
+}
+
+[data-theme="dark"] .red-button:hover {
+  background-color: #432D37;
+}
+
+[data-theme="dark"] .green-button {
+  background-color: #333333;
+  color: #C0C0C0;
+}
+
+[data-theme="dark"] .green-button:hover {
+  background-color: #3C3C3C;
+}
+
+[data-theme="dark"] .gray-button {
+  background-color: #2A2A2A;
+  color: #B0B0B0;
+  border: 1px solid #3A3A3A;
+}
+
+[data-theme="dark"] .gray-button:hover {
+  background-color: #3A3A3A;
+  border-color: #4A4A4A;
+}
+
 .dialog button {
   border: 1px solid currentColor;
 }
