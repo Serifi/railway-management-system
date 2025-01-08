@@ -1,8 +1,7 @@
 # Projekt Setup
 Zunächst muss die jeweilige Applikation im Terminal geöffnet werden, um anschließend die notwendigen Befehle ausführen zu können.
 
-
-![Struktur](https://github.com/user-attachments/assets/b7c0fccd-bc6f-4872-a090-35eb5455c3eb)
+<img width="599" alt="Struktur" src="https://github.com/user-attachments/assets/0cc191c9-5136-4854-8b1f-d95bb8a6639c" />
 
 ## Server
 
