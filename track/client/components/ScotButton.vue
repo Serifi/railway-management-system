@@ -1,3 +1,4 @@
+<!-- Komponente für die Buttons in der Anwendung in verschiedenen Varianten -->
 <template>
   <button @click="handleClick" :class="buttonClasses" :disabled="disabled" type="button">
     <div class="flex items-center space-x-2">
@@ -39,6 +40,7 @@ const props = defineProps({
 const emits = defineEmits(['click'])
 const handleClick = (event) => emits('click', event)
 
+/* Dynamische Klassen basierend auf der Variante des Buttons */
 const buttonClasses = computed(() => {
   switch (props.variant) {
     case 'blue':

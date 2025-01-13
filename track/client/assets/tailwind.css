@@ -9,19 +9,22 @@ body, input::placeholder, .p-paginator, .p-dialog, .p-popover, .p-drawer, .p-tog
     color: var(--text-color) !important;
 }
 
+/* Spezifische Stile für aktivierte Umschalt-Buttons */
 .p-togglebutton-checked::before {
     background-color: var(--toggle-button) !important;
 }
 
+/* Farbvariablen für Dark Theme */
 [data-theme='dark'] {
     --background-color: #1a202c;
     --text-color: #cbd5e0;
     --color: #cbd5e0;
-    --toggle-button: #000000
+    --toggle-button: #000000;
 }
 
+/* Farbvariablen für Light Theme */
 [data-theme='light'] {
     --background-color: #ffffff;
     --text-color: #2d3748;
-    --toggle-button: #f5f5f5
+    --toggle-button: #f5f5f5;
 }

@@ -13,7 +13,7 @@
       <label class="font-bold mb-1">Abschnitte wählen</label>
       <MultiSelect
         v-model="trackData.sectionIDs"
-        :options="sectionOptions"
+        :options="filteredSectionOptions"
         optionLabel="label"
         optionValue="sectionID"
         placeholder="Abschnitte auswählen..."
@@ -45,14 +45,18 @@ const props = defineProps({
 });
 
 const emits = defineEmits(['update:track', 'validate']);
+
 const trackData = ref({ ...props.track });
 
 const sectionOptions = computed(() =>
   props.sections.map((section) => ({
     label: `${getStationName(section.startStationID)} - ${getStationName(section.endStationID)}`,
     sectionID: section.sectionID,
+    trackGauge: section.trackGauge,
   }))
 );
+
+const filteredSectionOptions = ref(sectionOptions.value);
 
 function getStationName(stationID) {
   const station = props.trainStations.find((s) => s.stationID === stationID);
@@ -60,10 +64,28 @@ function getStationName(stationID) {
 }
 
 function validateTrack() {
-  const isValid =
-    !!trackData.value.trackName.trim() && trackData.value.sectionIDs.length > 0;
+  const isValid = !!trackData.value.trackName.trim() && trackData.value.sectionIDs.length > 0;
   emits('validate', isValid);
 }
+
+watch(
+  () => trackData.value.sectionIDs,
+  (selectedIDs) => {
+    if (selectedIDs.length === 0) {
+      filteredSectionOptions.value = sectionOptions.value;
+    } else {
+      const selectedSections = sectionOptions.value.filter((option) =>
+        selectedIDs.includes(option.sectionID)
+      );
+      const allowedTrackGauges = new Set(selectedSections.map((section) => section.trackGauge));
+
+      filteredSectionOptions.value = sectionOptions.value.filter((option) =>
+        allowedTrackGauges.has(option.trackGauge)
+      );
+    }
+  },
+  { immediate: true }
+);
 
 watch(
   () => trackData.value,
@@ -71,16 +93,16 @@ watch(
     emits('update:track', newTrack);
     validateTrack();
   },
-    {deep: true}
+  { deep: true }
 );
 
 watch(
-    () => props.track,
-    (newTrack) => {
-      trackData.value = {...newTrack};
-      validateTrack();
-    },
-    {deep: true, immediate: true}
+  () => props.track,
+  (newTrack) => {
+    trackData.value = { ...newTrack };
+    validateTrack();
+  },
+  { deep: true, immediate: true }
 );
 </script>
 
