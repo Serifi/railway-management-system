@@ -1,3 +1,4 @@
+# Zwischentabelle für Abschnitte und Warnungen
 from sqlalchemy import Table, Column, Integer, ForeignKey
 from models.Base import Base
 

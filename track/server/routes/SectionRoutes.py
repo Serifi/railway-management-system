@@ -1,3 +1,4 @@
+# Section-Endpunkte
 from flask import Blueprint, jsonify, request
 from models.Section import Section, validate_station
 from models.Warning import Warning
@@ -8,12 +9,14 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import exists, select
 import os
 
+# Datenbankverbindung einrichten
 DATABASE_URL = f"sqlite:///{os.path.abspath('server/db/track.db')}"
 engine = create_engine(DATABASE_URL, echo=True)
 Session = sessionmaker(bind=engine)
 
 section_blueprint = Blueprint('section_routes', __name__)
 
+# Endpoint: Alle Abschnitte abrufen
 @section_blueprint.route('/', methods=['GET'])
 def get_sections():
     session = Session()
@@ -21,6 +24,7 @@ def get_sections():
 
     section_list = []
     for section in sections:
+        # Abrufen der mit dem Abschnitt verknüpften Warnungen
         warnings_query = session.query(Warning).join(section_warning).filter(section_warning.c.sectionID == section.sectionID).all()
 
         warnings_list = [
@@ -34,6 +38,7 @@ def get_sections():
             for warning in warnings_query
         ]
 
+        # Abschnittsdaten und zugehörige Warnungen zusammenstellen
         section_list.append({
             'sectionID': section.sectionID,
             'usageFee': section.usageFee,
@@ -46,15 +51,17 @@ def get_sections():
         })
     return jsonify(section_list)
 
+# Endpoint: Abschnitt anhand der ID abrufen
 @section_blueprint.route('/<int:section_id>', methods=['GET'])
 def get_section_by_id(section_id):
     session = Session()
-
     section = session.query(Section).filter(Section.sectionID == section_id).first()
 
+    # Überprüfung, ob Abschnitt existiert
     if not section:
         return jsonify({"message": f"Section mit ID {section_id} nicht gefunden"}), 404
 
+    # Abrufen der mit dem Abschnitt verknüpften Warnungen
     warnings_query = session.query(Warning).join(section_warning).filter(section_warning.c.sectionID == section_id).all()
 
     warnings_list = [
@@ -68,6 +75,7 @@ def get_section_by_id(section_id):
         for warning in warnings_query
     ]
 
+    # Abschnittsdaten und zugehörige Warnungen zurückgeben
     return jsonify({
         'sectionID': section.sectionID,
         'usageFee': section.usageFee,
@@ -79,15 +87,18 @@ def get_section_by_id(section_id):
         'warnings': warnings_list
     })
 
+# Endpoint: Neuen Abschnitt erstellen
 @section_blueprint.route('/', methods=['POST'])
 def create_section():
     session = Session()
     data = request.get_json()
 
     try:
+        # Überprüfung der Start- und Endbahnhöfe
         start_station_id = validate_station(session, 'startStationID', data['startStationID'])
         end_station_id = validate_station(session, 'endStationID', data['endStationID'], start_station_id=start_station_id)
 
+        # Neuen Abschnitt erstellen
         new_section = Section(
             usageFee=data['usageFee'],
             length=data['length'],
@@ -98,6 +109,7 @@ def create_section():
         )
         session.add(new_section)
 
+        # Mit dem Abschnitt verknüpfte Warnungen hinzufügen
         if 'warningIDs' in data:
             for warning_id in data['warningIDs']:
                 warning = session.query(Warning).filter(Warning.warningID == warning_id).first()
@@ -125,20 +137,24 @@ def create_section():
     finally:
         session.close()
 
+# Endpoint: Abschnitt aktualisieren
 @section_blueprint.route('/<int:section_id>', methods=['PUT'])
 def update_section(section_id):
     session = Session()
     section = session.query(Section).filter(Section.sectionID == section_id).first()
 
+    # Überprüfung, ob Abschnitt existiert
     if not section:
         return jsonify({"message": f"Section mit ID {section_id} nicht gefunden"}), 404
 
+    # Überprüfung, ob Abschnitt in Verwendung ist
     section_in_use = session.query(exists().where(track_section.c.sectionID == section_id)).scalar()
     if section_in_use:
         return jsonify({"message": "Abschnitt ist aktuell in Verwendung und kann nicht bearbeitet werden"}), 400
 
     data = request.get_json()
     try:
+        # Aktualisierung der Abschnittsdaten
         if 'startStationID' in data:
             section.startStationID = validate_station(session, 'startStationID', data['startStationID'])
         if 'endStationID' in data:
@@ -152,6 +168,7 @@ def update_section(section_id):
         if 'trackGauge' in data:
             section.trackGauge = data['trackGauge']
 
+        # Mit dem Abschnitt verknüpfte Warnungen aktualisieren
         if 'warningIDs' in data:
             session.execute(section_warning.delete().where(section_warning.c.sectionID == section_id))
             for warning_id in data['warningIDs']:
@@ -177,19 +194,23 @@ def update_section(section_id):
     finally:
         session.close()
 
+# Endpoint: Abschnitt löschen
 @section_blueprint.route('/<int:section_id>', methods=['DELETE'])
 def delete_section(section_id):
     session = Session()
     section = session.query(Section).filter(Section.sectionID == section_id).first()
 
+    # Überprüfung, ob Abschnitt existiert
     if not section:
         return jsonify({"message": f"Section mit ID {section_id} nicht gefunden"}), 404
 
+    # Überprüfung, ob Abschnitt in Verwendung
     section_in_use = session.query(exists().where(track_section.c.sectionID == section_id)).scalar()
     if section_in_use:
         return jsonify({"message": "Abschnitt ist aktuell in Verwendung und kann nicht gelöscht werden"}), 400
 
     try:
+        # Abschnitt und zugehörige Warnungen löschen
         session.execute(section_warning.delete().where(section_warning.c.sectionID == section_id))
         session.delete(section)
         session.commit()

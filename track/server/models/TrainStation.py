@@ -1,3 +1,4 @@
+# Modell für die Tabelle der Bahnhöfe in der Datenbank
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import validates
 import re
@@ -5,10 +6,13 @@ from models.Base import Base
 
 class TrainStation(Base):
     __tablename__ = 'trainStation'
+
+    # Spalten der Tabelle
     stationID = Column(Integer, primary_key=True, autoincrement=True)
     stationName = Column(String, unique=True, nullable=False)
     address = Column(String, nullable=False)
 
+    # Validierung für den Bahnhofsnamen
     @validates('stationName')
     def validate_station_name(self, key, value):
         if not value or not value.strip():
@@ -18,6 +22,7 @@ class TrainStation(Base):
             raise ValueError("Der Name des Bahnhofs ist ungültig")
         return value.strip()
 
+    # Validierung für die Adresse
     @validates('address')
     def validate_address(self, key, value):
         pattern = r"^[a-zA-ZäöüÄÖÜß\s.\-']+\s\d+(-\d+)?,\s\d{4}\s[a-zA-ZäöüÄÖÜß\s.\-']+$"

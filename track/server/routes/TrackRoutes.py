@@ -1,3 +1,4 @@
+# Track-Endpunkte
 from flask import Blueprint, jsonify, request
 from models.Track import Track
 from models.TrackSection import track_section
@@ -6,12 +7,14 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import text
 import os
 
+# Datenbankverbindung einrichten
 DATABASE_URL = f"sqlite:///{os.path.abspath('server/db/track.db')}"
 engine = create_engine(DATABASE_URL, echo=True)
 Session = sessionmaker(bind=engine)
 
 track_blueprint = Blueprint('track_routes', __name__)
 
+# Endpoint: Alle Strecken abrufen
 @track_blueprint.route('/', methods=['GET'])
 def get_tracks():
     session = Session()
@@ -19,6 +22,7 @@ def get_tracks():
 
     track_list = []
     for track in tracks:
+        # Abschnittsdaten der Strecke abrufen
         sections_query = session.execute(text("""
             SELECT section.sectionID, section.usageFee, section.length, section.maxSpeed, section.trackGauge,
                    section.startStationID, section.endStationID
@@ -30,6 +34,7 @@ def get_tracks():
 
         sections_list = []
         for section in sections_query:
+            # Warnungen für jeden Abschnitt abrufen
             warnings_query = session.execute(text("""
                 SELECT warning.warningID, warning.warningName, warning.description, 
                        warning.startDate, warning.endDate
@@ -49,6 +54,7 @@ def get_tracks():
                 for warning in warnings_query
             ]
 
+            # Abschnittsdaten und Warnungen zusammenstellen
             sections_list.append({
                 "sectionID": section.sectionID,
                 "usageFee": section.usageFee,
@@ -60,6 +66,7 @@ def get_tracks():
                 "warnings": warnings_list
             })
 
+        # Streckendaten zusammenstellen
         track_list.append({
             'trackID': track.trackID,
             'trackName': track.trackName,
@@ -68,12 +75,17 @@ def get_tracks():
 
     return jsonify(track_list)
 
+# Endpoint: Strecke anhand der ID abrufen
 @track_blueprint.route('/<int:track_id>', methods=['GET'])
 def get_track_by_id(track_id):
     session = Session()
     track = session.query(Track).filter(Track.trackID == track_id).first()
+
+    # Überprüfung, ob die Strecke existiert
     if not track:
         return jsonify({"message": f"Track mit ID {track_id} nicht gefunden"}), 404
+
+    # Abschnittsdaten der Strecke abrufen
     sections_query = session.execute("""
         SELECT section.sectionID, section.usageFee, section.length, section.maxSpeed, section.trackGauge,
                section.startStationID, section.endStationID
@@ -82,8 +94,10 @@ def get_track_by_id(track_id):
         WHERE track_section.trackID = :trackID
         ORDER BY track_section.sequence ASC
     """, {"trackID": track_id}).fetchall()
+
     sections_list = []
     for section in sections_query:
+        # Warnungen für jeden Abschnitt abrufen
         warnings_query = session.execute("""
             SELECT warning.warningID, warning.warningName, warning.description, 
                    warning.startDate, warning.endDate
@@ -101,6 +115,8 @@ def get_track_by_id(track_id):
             }
             for warning in warnings_query
         ]
+
+        # Abschnittsdaten und Warnungen zusammenstellen
         sections_list.append({
             "sectionID": section.sectionID,
             "usageFee": section.usageFee,
@@ -111,22 +127,30 @@ def get_track_by_id(track_id):
             "endStationID": section.endStationID,
             "warnings": warnings_list
         })
+
     return jsonify({
         'trackID': track.trackID,
         'trackName': track.trackName,
         'sections': sections_list
     })
 
+# Endpoint: Neue Strecke erstellen
 @track_blueprint.route('/', methods=['POST'])
 def create_track():
     session = Session()
     data = request.get_json()
+
     try:
+        # Neue Strecke erstellen
         new_track = Track(trackName=data['trackName'])
         section_ids = data['sectionIDs']
+
+        # Validierung der Abschnittsreihenfolge
         new_track.validate_section_sequence(section_ids, session)
         session.add(new_track)
         session.commit()
+
+        # Abschnitte der Strecke zuordnen
         for index, section_id in enumerate(section_ids):
             session.execute(track_section.insert().values(
                 trackID=new_track.trackID,
@@ -137,25 +161,35 @@ def create_track():
     except ValueError as e:
         session.rollback()
         return jsonify({"message": str(e)}), 400
+
     return jsonify({
         'trackID': new_track.trackID,
         'trackName': new_track.trackName,
         'sectionIDs': section_ids
     }), 201
 
+# Endpoint: Strecke aktualisieren
 @track_blueprint.route('/<int:track_id>', methods=['PUT'])
 def update_track(track_id):
     session = Session()
     track = session.query(Track).filter(Track.trackID == track_id).first()
+
+    # Überprüfung, ob die Strecke existiert
     if not track:
         return jsonify({"message": f"Track mit ID {track_id} nicht gefunden"}), 404
+
     data = request.get_json()
     try:
+        # Aktualisierung der Streckendaten
         if 'trackName' in data:
             track.trackName = data['trackName']
         if 'sectionIDs' in data:
             section_ids = data['sectionIDs']
+
+            # Validierung der Abschnittsreihenfolge
             track.validate_section_sequence(section_ids, session)
+
+            # Alte Abschnitte entfernen und neue hinzufügen
             session.execute(track_section.delete().where(track_section.c.trackID == track.trackID))
             for index, section_id in enumerate(section_ids):
                 session.execute(track_section.insert().values(
@@ -167,24 +201,28 @@ def update_track(track_id):
     except ValueError as e:
         session.rollback()
         return jsonify({"message": str(e)}), 400
+
     return jsonify({
         'trackID': track.trackID,
         'trackName': track.trackName,
         'sectionIDs': data.get('sectionIDs', [])
     }), 200
 
-
+# Endpoint: Strecke löschen
 @track_blueprint.route('/<int:track_id>', methods=['DELETE'])
 def delete_track(track_id):
     session = Session()
     track = session.query(Track).filter(Track.trackID == track_id).first()
 
+    # Überprüfung, ob die Strecke existiert
     if not track:
         return jsonify({"message": f"Track mit ID {track_id} nicht gefunden"}), 404
 
     try:
+        # Abschnitte der Strecke in Zwischentabelle löschen
         session.execute(track_section.delete().where(track_section.c.trackID == track.trackID))
 
+        # Strecke löschen
         session.delete(track)
         session.commit()
 

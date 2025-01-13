@@ -3,8 +3,8 @@
     <div class="flex flex-col col-span-2">
       <label for="ssn" class="mb-1">Sozialversicherungsnummer</label>
       <div class="flex flex-col lg:flex-row justify-between space-y-2 lg:space-y-0">
-        <InputOtp id="ssn1" v-model="ssn1" :length="4" integerOnly :disabled="isDisabled('ssn')" />
-        <InputOtp id="ssn2" v-model="ssn2" :length="6" integerOnly :disabled="isDisabled('ssn')" />
+        <InputOtp id="ssn1" v-model="ssn1" :length="4" integerOnly :class="{ 'input-otp-disabled': isDisabled('ssn') }" :disabled="isDisabled('ssn')" />
+        <InputOtp id="ssn2" v-model="ssn2" :length="6" integerOnly :class="{ 'input-otp-disabled': isDisabled('ssn') }" :disabled="isDisabled('ssn')" />
       </div>
     </div>
 
@@ -63,6 +63,7 @@
         optionLabel="label"
         optionValue="value"
         placeholder="Rolle wählen..."
+        :class="{ 'p-disabled': isDisabled('role') }"
         :disabled="isDisabled('role')"
       />
     </div>
@@ -76,6 +77,7 @@
         optionLabel="label"
         optionValue="value"
         placeholder="Abteilung wählen..."
+        :class="{ 'p-disabled': isDisabled('department') }"
         :disabled="isDisabled('department')"
       />
     </div>
