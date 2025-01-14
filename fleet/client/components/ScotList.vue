@@ -25,8 +25,8 @@
     </div>
 
     <div v-if="isAdmin && hover === getKey(item)" class="flex flex-col justify-center space-y-2">
-      <ScotButton :label="$t('edit')" icon="pi pi-pencil" variant="green" @click="emitEdit(item)" :disabled="item.active" />
-      <ScotButton :label="$t('delete')" icon="pi pi-trash" variant="red" @click="confirmDeletion($event, item)" :disabled="item.active" />
+      <ScotButton :label="$t('edit')" icon="pi pi-pencil" variant="green" @click="emitEdit(item)" :disabled="disableOnActive && item.active" />
+      <ScotButton :label="$t('delete')" icon="pi pi-trash" variant="red" @click="confirmDeletion($event, item)" :disabled="disableOnActive && item.active" />
     </div>
   </div>
   <ConfirmPopup />
@@ -53,8 +53,12 @@ const props = defineProps({
   getKey: {
     type: Function,
     required: true
+  },
+  disableOnActive: {
+    type: Boolean,
+    default: false
   }
-});
+})
 
 const slots = useSlots()
 const rowsPerPage = ref(props.rowsPerPage)

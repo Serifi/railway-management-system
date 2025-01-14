@@ -1,5 +1,5 @@
 <template>
-  <ScotList :items="carriages" :getKey="getCarriageKey" :rowsPerPage="5"
+  <ScotList :items="carriages" :getKey="getCarriageKey" :rowsPerPage="5" disable-on-active
             @create="toggleCreateDialog" @edit="toggleEditDialog" @delete="deleteCarriage">
     <template #title="{ item }">
       {{ $t(item.type.toLowerCase()) }} #{{ item.carriageID }}

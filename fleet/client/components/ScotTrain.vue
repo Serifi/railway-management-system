@@ -160,7 +160,7 @@ const selectedPassengerCars = computed(() =>
 )
 
 // Calculated Stats
-const calculatedTrackGauge = computed(() => selectedRailcar.value?.trackGauge || 'N/A')
+const calculatedTrackGauge = computed(() => selectedRailcar.value?.trackGauge || '-')
 const trackGaugeClass = computed(() =>
     selectedPassengerCars.value.some(car => car?.trackGauge !== selectedRailcar.value?.trackGauge)
         ? 'text-red-500'

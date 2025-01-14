@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import {ref, computed, onMounted, watch} from 'vue'
 import { useTrainStore } from '@/stores/train'
 import { useToast } from 'primevue/usetoast'
 import { useI18n } from 'vue-i18n'
@@ -70,6 +70,7 @@ const editDialogVisible = ref(false)
 const trainStore = useTrainStore()
 const trains = computed(() => trainStore.trainsWithStatus)
 const train = ref(null)
+const originalTrain = ref(null)
 const disableAction = ref(false)
 const railcars = computed(() => trainStore.railcars)
 const passengerCars = computed(() => trainStore.passengerCars)
@@ -108,8 +109,11 @@ function toggleCreateDialog() {
 
 function toggleEditDialog(currentTrain) {
   train.value = currentTrain
+  if (!editDialogVisible.value) {
+    originalTrain.value = JSON.parse(JSON.stringify(currentTrain))
+    disableAction.value = true
+  }
   editDialogVisible.value = !editDialogVisible.value
-  if (editDialogVisible.value) disableAction.value = false
 }
 
 function showToast(type, message) {
@@ -155,6 +159,11 @@ async function deleteTrain(currentTrain) {
 function getTrainKey(train) {
   return train.trainID
 }
+
+watch(train, (newVal) => {
+  if (originalTrain.value)
+    disableAction.value = JSON.stringify(newVal) === JSON.stringify(originalTrain.value)
+}, { deep: true })
 
 onMounted(async () => {
   await trainStore.getCarriagesByType()
