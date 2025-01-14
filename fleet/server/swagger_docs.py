@@ -6,7 +6,7 @@ swagger_template = {
         "description": "API to manage employees, carriages, trains, and maintenances."
     },
     "paths": {
-        # --- Employees ---
+        # Employees
         "/employees": {
             "get": {
                 "tags": ["Employees"],
@@ -133,7 +133,7 @@ swagger_template = {
             }
         },
 
-        # --- Carriages ---
+        # Carriages
         "/fleet/carriages": {
             "get": {
                 "tags": ["Carriages"],
@@ -260,7 +260,7 @@ swagger_template = {
             }
         },
 
-        # --- Trains ---
+        # Trains
         "/fleet/trains": {
             "get": {
                 "tags": ["Trains"],
@@ -390,7 +390,7 @@ swagger_template = {
             }
         },
 
-        # --- Maintenances ---
+        # Maintenances
         "/fleet/maintenance": {
             "get": {
                 "tags": ["Maintenances"],
@@ -519,7 +519,7 @@ swagger_template = {
     },
     "components": {
         "schemas": {
-            # --- Employee ---
+            # Employee
             "Employee": {
                 "type": "object",
                 "properties": {
@@ -557,7 +557,7 @@ swagger_template = {
                 }
             },
 
-            # --- Carriage ---
+            # Carriage
             "Carriage": {
                 "type": "object",
                 "properties": {
@@ -591,7 +591,7 @@ swagger_template = {
                 }
             },
 
-            # --- Train ---
+            # Train
             "Train": {
                 "type": "object",
                 "properties": {
@@ -648,7 +648,7 @@ swagger_template = {
                 }
             },
 
-            # --- Maintenance ---
+            # Maintenance
             "Maintenance": {
                 "type": "object",
                 "properties": {

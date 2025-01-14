@@ -1,10 +1,8 @@
-// stores/carriage.js
 import { defineStore } from 'pinia'
 import apiClient from '@/utils/api'
 import { useTrainStore } from '@/stores/train'
 
 const BASE_PATH = '/fleet/carriages'
-
 export const useCarriageStore = defineStore('carriage', {
     state: () => ({
         carriages: [],
@@ -21,10 +19,11 @@ export const useCarriageStore = defineStore('carriage', {
         carriagesWithStatus: (state) => {
             const trainStore = useTrainStore()
             const trains = trainStore.trains
+
             return state.carriages.map(carriage => {
                 const isActive = trains.some(train =>
-                    train.railcarID === carriage.carriageID ||
-                    (train.passengerCarIDs && train.passengerCarIDs.includes(carriage.carriageID))
+                    (train.railcar && train.railcar.carriageID === carriage.carriageID) ||
+                    (train.passenger_cars && train.passenger_cars.some(pc => pc.carriageID === carriage.carriageID))
                 )
                 return {
                     ...carriage,
@@ -34,7 +33,6 @@ export const useCarriageStore = defineStore('carriage', {
         }
     },
     actions: {
-        // Generische Methode zur Handhabung von API-Anfragen
         async handleRequest(promise) {
             try {
                 const response = await promise

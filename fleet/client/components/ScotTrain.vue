@@ -178,7 +178,6 @@ const totalSeats = computed(() =>
     selectedPassengerCars.value.reduce((sum, car) => sum + (car?.numberOfSeats || 0), 0)
 )
 
-// Watch for changes in train object to emit updates
 watch(
     [
       () => train.value.name,
@@ -197,27 +196,3 @@ watch(
     { deep: true }
 )
 </script>
-
-<style scoped>
-.wagon {
-  position: relative;
-  flex: 0 0 auto;
-}
-
-.wagon-image {
-  width: 100px;
-  height: auto;
-  display: block;
-}
-
-.wagon-id {
-  position: absolute;
-  top: 30%;
-  right: 10%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-size: 12px;
-  font-weight: bold;
-  pointer-events: none;
-}
-</style>

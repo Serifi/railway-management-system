@@ -68,5 +68,7 @@
   "trainUpdated": "Train was successfully updated.",
   "trainUpdateError": "An error occurred while updating the train.",
   "trainDeleted": "Train was successfully deleted.",
-  "trainDeleteError": "An error occurred while deleting the train."
+  "trainDeleteError": "An error occurred while deleting the train.",
+  "standardGauge": "Standard Gauge",
+  "narrowGauge": "Narrow Gauge"
 }

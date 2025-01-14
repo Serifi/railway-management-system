@@ -24,3 +24,42 @@ body, input::placeholder, .p-paginator, .p-dialog, .p-popover, .p-drawer, .p-tog
     --text-color: #2d3748;
     --toggle-button: #f5f5f5
 }
+
+.p-confirm-popup-accept,
+.p-confirm-popup-reject {
+    padding: 4px;
+    margin: 4px;
+}
+
+.p-confirm-popup-accept{
+    background-color: #FF9999 !important;
+}
+
+.wagon-container {
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    padding: 10px 0;
+}
+
+.wagon {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.wagon-image {
+    width: 100px;
+    height: auto;
+    display: block;
+}
+
+.wagon-id {
+    position: absolute;
+    top: 30%;
+    right: 10%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    pointer-events: none;
+}

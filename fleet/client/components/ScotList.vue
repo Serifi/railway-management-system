@@ -25,8 +25,8 @@
     </div>
 
     <div v-if="isAdmin && hover === getKey(item)" class="flex flex-col justify-center space-y-2">
-      <ScotButton :label="$t('edit')" icon="pi pi-pencil" variant="green" @click="emitEdit(item)" />
-      <ScotButton :label="$t('delete')" icon="pi pi-trash" variant="red" @click="confirmDeletion($event, item)" />
+      <ScotButton :label="$t('edit')" icon="pi pi-pencil" variant="green" @click="emitEdit(item)" :disabled="item.active" />
+      <ScotButton :label="$t('delete')" icon="pi pi-trash" variant="red" @click="confirmDeletion($event, item)" :disabled="item.active" />
     </div>
   </div>
   <ConfirmPopup />
@@ -85,7 +85,7 @@ const filteredItems = computed(() =>
           for (const key in filters) {
             const filter = filters[key];
             if (key === 'status') {
-              if (filter && ((filter === 'aktiv' && !item.active) || (filter === 'inaktiv' && item.active))) {
+              if (typeof filter === 'boolean' && item.active !== filter) {
                 matchesFilter = false
                 break
               }
@@ -105,8 +105,7 @@ const filteredItems = computed(() =>
           }
 
           return matchesSearch && matchesFilter
-        })
-        .sort((a, b) => getTitle(a).localeCompare(getTitle(b), undefined, { sensitivity: 'base' }))
+        }).sort((a, b) => getTitle(a).localeCompare(getTitle(b), undefined, { sensitivity: 'base' }))
 )
 
 const firstRecord = computed(() => currentPage.value * rowsPerPage.value);
@@ -154,15 +153,3 @@ watch([searchQuery, rowsPerPage], () => {
 const userStore = useUserStore();
 const isAdmin = computed(() => userStore.getUserRole === 'Admin');
 </script>
-
-<style>
-.p-confirm-popup-accept,
-.p-confirm-popup-reject {
-  padding: 4px;
-  margin: 4px;
-}
-
-.p-confirm-popup-accept{
-  background-color: #FF9999 !important;
-}
-</style>

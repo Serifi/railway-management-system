@@ -62,12 +62,12 @@
 
   <ScotDialog :visible="editDialogVisible" type="edit" :header="$t('editCarriage')" :disable-action="disableAction"
               @update:visible="editDialogVisible = $event" @action="editCarriage" @cancel="toggleEditDialog">
-    <ScotCarriage :carriage="carriage" @update:carriage="updateCarriage"/> <!-- :disabledFields="['type', 'trackGauge']" -->
+    <ScotCarriage :carriage="carriage" @update:carriage="updateCarriage"/>
   </ScotDialog>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useCarriageStore } from '@/stores/carriage'
 import { useToast } from 'primevue/usetoast'
 import { useI18n } from 'vue-i18n'
@@ -75,32 +75,27 @@ import ScotList from '~/components/ScotList.vue'
 import ScotCarriage from '~/components/ScotCarriage.vue'
 import ScotDialog from "~/components/ScotDialog.vue"
 
-const toast = useToast();
+const toast = useToast()
 const createDialogVisible = ref(false)
 const editDialogVisible = ref(false)
 const carriageStore = useCarriageStore()
 const carriages = computed(() => carriageStore.carriagesWithStatus)
 const carriage = ref(null)
+const originalCarriage = ref(null)
 const disableAction = ref(false)
 const trackGauges = computed(() => carriageStore.trackGauges)
 const carriageTypes = computed(() => carriageStore.carriageTypes)
 
 const { t } = useI18n()
 const statusOptions = [
-  { label: t('active'), value: 'active' },
-  { label: t('inactive'), value: 'inactive' }
+  { label: t('active'), value: true },
+  { label: t('inactive'), value: false }
 ]
 
 function initializeFilters(filters) {
-  if (!filters.maxTractiveForce) {
-    filters.maxTractiveForce = { from: null, to: null }
-  }
-  if (!filters.maxWeight) {
-    filters.maxWeight = { from: null, to: null }
-  }
-  if (!filters.numberOfSeats) {
-    filters.numberOfSeats = { from: null, to: null }
-  }
+  if (!filters.maxTractiveForce) filters.maxTractiveForce = { from: null, to: null }
+  if (!filters.maxWeight) filters.maxWeight = { from: null, to: null }
+  if (!filters.numberOfSeats) filters.numberOfSeats = { from: null, to: null }
   return false
 }
 
@@ -124,10 +119,13 @@ function toggleCreateDialog() {
   if (createDialogVisible.value) disableAction.value = true
 }
 
-async function toggleEditDialog(currentCarriage) {
+function toggleEditDialog(currentCarriage) {
   carriage.value = currentCarriage
+  if (!editDialogVisible.value) {
+    originalCarriage.value = JSON.parse(JSON.stringify(currentCarriage))
+    disableAction.value = true
+  }
   editDialogVisible.value = !editDialogVisible.value
-  if (editDialogVisible.value) disableAction.value = false
 }
 
 function showToast(type, message) {
@@ -174,19 +172,10 @@ function getCarriageKey(carriage) {
   return carriage.carriageID
 }
 
-onMounted(() => {
-  carriageStore.getCarriages()
-});
+watch(carriage, (newVal) => {
+  if (originalCarriage.value)
+    disableAction.value = JSON.stringify(newVal) === JSON.stringify(originalCarriage.value)
+}, { deep: true })
+
+onMounted(() => carriageStore.getCarriages())
 </script>
-
-<style>
-.p-confirm-popup-accept,
-.p-confirm-popup-reject {
-  padding: 4px;
-  margin: 4px;
-}
-
-.p-confirm-popup-accept{
-  background-color: #FF9999 !important;
-}
-</style>

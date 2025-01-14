@@ -68,5 +68,7 @@
   "trainUpdated": "Zug wurde erfolgreich bearbeitet.",
   "trainUpdateError": "Beim Bearbeiten des Zuges ist ein Fehler aufgetreten.",
   "trainDeleted": "Zug wurde erfolgreich gelöscht.",
-  "trainDeleteError": "Beim Löschen des Zuges ist ein Fehler aufgetreten."
+  "trainDeleteError": "Beim Löschen des Zuges ist ein Fehler aufgetreten.",
+  "standardGauge": "Normalspur",
+  "narrowGauge": "Schmalspur"
 }

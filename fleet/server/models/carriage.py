@@ -1,4 +1,3 @@
-# carriage.py
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship, validates
 from . import Base
@@ -6,6 +5,7 @@ from . import Base
 class Carriage(Base):
     __tablename__ = 'carriage'
 
+    # Primary key for Carriage
     carriageID = Column(Integer, primary_key=True, autoincrement=True)
     trackGauge = Column(String, nullable=False)
     type = Column(String, nullable=False)
@@ -25,9 +25,11 @@ class Carriage(Base):
 class Railcar(Base):
     __tablename__ = 'railcar'
 
+    # Foreign key linking Railcar to Carriage
     carriageID = Column(Integer, ForeignKey('carriage.carriageID'), primary_key=True)
     maxTractiveForce = Column(Integer, nullable=False)
 
+    # Relationships with Carriage and Train
     carriage = relationship("Carriage", back_populates="railcar_detail", uselist=False)
     train = relationship("Train", back_populates="railcar", uselist=False)
 
@@ -40,10 +42,12 @@ class Railcar(Base):
 class PassengerCar(Base):
     __tablename__ = 'passenger_car'
 
+    # Foreign key linking PassengerCar to Carriage
     carriageID = Column(Integer, ForeignKey('carriage.carriageID'), primary_key=True)
     numberOfSeats = Column(Integer, nullable=False)
     maxWeight = Column(Integer, nullable=False)
 
+    # Relationships with Carriage and TrainPassengerCar association
     carriage = relationship("Carriage", back_populates="passenger_car_detail", uselist=False)
     train_passenger_cars_associations = relationship(
         "TrainPassengerCar",
@@ -63,5 +67,6 @@ class PassengerCar(Base):
             raise ValueError("maxWeight must be positive")
         return value
 
+# Relationships between Carriage, Railcar, and PassengerCar
 Carriage.railcar_detail = relationship("Railcar", back_populates="carriage", uselist=False)
 Carriage.passenger_car_detail = relationship("PassengerCar", back_populates="carriage", uselist=False)
