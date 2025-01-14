@@ -1,3 +1,4 @@
+# Enumeration für die vierschiedenen Abteilungen der Mitarbeiter
 import enum
 
 class Department(enum.Enum):

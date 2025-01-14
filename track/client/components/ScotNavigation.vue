@@ -7,7 +7,6 @@
     </NuxtLink>
   </nav>
 
-  <!-- Mobile -->
   <nav class="fixed bottom-0 left-0 right-0 h-12 border-t lg:hidden">
     <div class="flex justify-around">
       <NuxtLink v-for="item in navItems"  :key="item.page"  :to="`/${item.page}`"
@@ -64,5 +63,19 @@ const isActive = (page) => route.path === `/${page}`
 
 .text-color {
   color: #1769AA;
+}
+
+[data-theme="dark"] .nav-active {
+  background-color: #1A283A;
+  color: #7FB3D4;
+}
+
+[data-theme="dark"] .nav-hover:hover {
+  background-color: #223A50;
+  color: #A4D0F0;
+}
+
+[data-theme="dark"] .text-color {
+  color: #A4D0F0;
 }
 </style>

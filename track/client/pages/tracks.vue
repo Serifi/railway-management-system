@@ -1,61 +1,123 @@
 <template>
-  <div>
-    <List
+  <div @click="handleTrackVisualizationClick">
+    <ScotTrackList
       :items="tracks"
       :getKey="getTrackKey"
       pageType="Strecke"
       @create="toggleCreateDialog"
       @edit="toggleEditDialog"
       @delete="deleteTrack"
+      @toggle="handleTrackToggle"
     >
       <template #title="{ item }">
         <h2>{{ item.trackName }}</h2>
       </template>
 
       <template #description="{ item }">
-        <div class="track-visualization">
-          <div
-            v-for="section in item.sections"
-            :key="section.sectionID"
-            class="track-row"
-          >
-            <div class="station-container">
-              <div class="station-point"></div>
-              <div class="station-name">
+        <div class="track-visualization" @click="handleTrackVisualizationClick">
+          <div v-for="(section, index) in item.sections" :key="section.sectionID">
+            <div class="station">
+              <div
+                class="station-point"
+                :class="{
+                  'highlighted-point': isHighlighted(section.sectionID, item.sections, index, true),
+                  'dimmed-point': expandedTrack === item.trackID && !isHighlighted(section.sectionID, item.sections, index, true)
+                }"
+              ></div>
+              <div
+                class="station-name"
+                :class="{
+                  'highlighted': expandedTrack === item.trackID && isHighlighted(section.sectionID, item.sections, index, true),
+                  'dimmed': expandedTrack === item.trackID && !isHighlighted(section.sectionID, item.sections, index, true)
+                }"
+              >
                 {{ getStationName(section.startStationID) }}
               </div>
             </div>
-            <div
-              class="section-line"
-              :style="{ width: section.length * 3 + 'px' }"
-            ></div>
-            <div class="station-container">
-              <div class="station-point"></div>
-              <div class="station-name">
+
+            <div class="section-container">
+              <div
+                class="section-line"
+                :class="{
+                  'warning-line': section.warnings.length > 0,
+                  'highlighted-line': expandedSection === section.sectionID,
+                  'dimmed-line': expandedTrack === item.trackID && expandedSection !== section.sectionID
+                }"
+                :style="{ height: `${Math.max(section.length*0.5, 80)}px` }"
+                @click.stop="toggleSectionDetails(section.sectionID, item.trackID)"
+              ></div>
+              <div
+                class="section-details"
+                v-if="expandedSection === section.sectionID && expandedTrack === item.trackID"
+              >
+                <div class="details-layout">
+                  <div class="top-details">
+                    <div class="detail-row">
+                      <span class="icon-wrapper">
+                        <i class="pi pi-money-bill gray-icon"></i>
+                      </span>
+                      <span class="detail-value">{{ section.usageFee }}€</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="icon-wrapper">
+                        <i class="pi pi-map gray-icon"></i>
+                      </span>
+                      <span class="detail-value">{{ section.length }}km</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="icon-wrapper">
+                        <i class="pi pi-send gray-icon"></i>
+                      </span>
+                      <span class="detail-value">{{ section.maxSpeed }}km/h</span>
+                    </div>
+                  </div>
+                  <div class="warnings-container" v-if="section.warnings.length">
+                    <ul class="warnings-list">
+                      <li v-for="warning in section.warnings" :key="warning.warningID" class="warning-item">
+                        <span class="icon-wrapper">
+                          <i class="pi pi-exclamation-triangle gray-icon"></i>
+                        </span>
+                        <span class="warning-content">
+                          <span class="warning-name">{{ warning.warningName }}</span>
+                          <span v-if="warning.description" class="warning-description">
+                            : {{ warning.description }}
+                          </span>
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="index === item.sections.length - 1" class="station">
+              <div
+                class="station-point"
+                :class="{
+                  'highlighted-point': isHighlighted(section.sectionID, item.sections, index, false),
+                  'dimmed-point': expandedTrack === item.trackID && !isHighlighted(section.sectionID, item.sections, index, false)
+                }"
+              ></div>
+              <div
+                class="station-name"
+                :class="{
+                  'highlighted': expandedTrack === item.trackID && isHighlighted(section.sectionID, item.sections, index, false),
+                  'dimmed': expandedTrack === item.trackID && !isHighlighted(section.sectionID, item.sections, index, false)
+                }"
+              >
                 {{ getStationName(section.endStationID) }}
               </div>
             </div>
           </div>
-
-          <div v-for="section in item.sections" :key="section.sectionID">
-            <div
-              v-for="warning in section.warnings"
-              :key="warning.warningID"
-              class="warning-message"
-            >
-              ⚠️ Achtung: {{ warning.warningName }} im Abschnitt
-              {{ getStationName(section.startStationID) }} -
-              {{ getStationName(section.endStationID) }}
-            </div>
-          </div>
         </div>
       </template>
-    </List>
+    </ScotTrackList>
 
     <ScotDialog
       :visible="createDialogVisible || editDialogVisible"
       :type="createDialogVisible ? 'create' : 'edit'"
       :header="createDialogVisible ? 'Strecke erstellen' : 'Strecke bearbeiten'"
+      :disable-action="!isTrackValid"
       @update:visible="closeDialog"
       @action="saveTrack"
       @cancel="closeDialog"
@@ -64,33 +126,44 @@
         v-model:track="currentTrack"
         :sections="sections"
         :trainStations="trainStations"
-        :errorMessage="errorMessage"
+        @validate="updateTrackValidity"
       />
     </ScotDialog>
   </div>
 </template>
 
 <script setup>
-import {ref, computed, onMounted} from "vue";
-import {useTrackStore} from "@/stores/track";
-import {useSectionStore} from "@/stores/section";
-import {useTrainStationStore} from "@/stores/train-station";
-import List from "~/components/ScotList.vue";
-import ScotDialog from "~/components/ScotDialog.vue";
-import ScotTrack from "~/components/ScotTrack.vue";
+import {ref, computed, onMounted} from 'vue';
+import {useToast} from 'primevue/usetoast';
+import {useTrackStore} from '@/stores/track';
+import {useSectionStore} from '@/stores/section';
+import {useTrainStationStore} from '@/stores/train-station';
+import List from '~/components/ScotTrackList.vue';
+import ScotDialog from '~/components/ScotDialog.vue';
+import ScotTrack from '~/components/ScotTrack.vue';
 
+const toast = useToast();
 const trackStore = useTrackStore();
 const sectionStore = useSectionStore();
 const trainStationStore = useTrainStationStore();
 
-const tracks = computed(() => trackStore.tracks);
+const tracks = computed(() =>
+    trackStore.tracks.map((track) => ({
+      ...track,
+      sections: sortSections(track.sections),
+    }))
+);
+
 const sections = computed(() => sectionStore.sections);
 const trainStations = computed(() => trainStationStore.trainStations);
 
 const createDialogVisible = ref(false);
 const editDialogVisible = ref(false);
 const currentTrack = ref({});
-const errorMessage = ref("");
+const isTrackValid = ref(false);
+
+const expandedSection = ref(null);
+const expandedTrack = ref(null);
 
 function getTrackKey(track) {
   return track.trackID;
@@ -98,18 +171,85 @@ function getTrackKey(track) {
 
 function getStationName(id) {
   const station = trainStations.value.find((s) => s.stationID === id);
-  return station ? station.stationName : "Unbekannt";
+  return station ? station.stationName : 'Unbekannt';
+}
+
+function sortSections(sections) {
+  if (!sections.length) return sections;
+
+  const sectionMap = new Map();
+  sections.forEach((section) => {
+    sectionMap.set(section.startStationID, section);
+  });
+
+  const sortedSections = [];
+  let current = sections.find(
+      (section) =>
+          !sections.some((s) => s.endStationID === section.startStationID)
+  );
+
+  while (current) {
+    sortedSections.push(current);
+    current = sectionMap.get(current.endStationID);
+  }
+
+  return sortedSections;
+}
+
+function isHighlighted(sectionID, sections, index, isStart = true) {
+  const sortedSections = sortSections(sections);
+  const currentIndex = sortedSections.findIndex((section) => section.sectionID === sectionID);
+
+  if (currentIndex === -1) return false;
+
+  if (isStart) {
+    const isCurrentStart = expandedSection.value === sectionID;
+    const isNextStart =
+      currentIndex - 1 < sortedSections.length && expandedSection.value === sortedSections[currentIndex - 1]?.sectionID;
+
+    return isCurrentStart || isNextStart;
+  } else {
+    const isCurrentEnd = expandedSection.value === sortedSections[currentIndex]?.sectionID;
+    const isNextStart =
+      currentIndex + 1 < sortedSections.length && expandedSection.value === sortedSections[currentIndex + 1]?.sectionID;
+
+    return isCurrentEnd || isNextStart;
+  }
+}
+
+function toggleSectionDetails(sectionID, trackID) {
+  if (expandedSection.value === sectionID && expandedTrack.value === trackID) {
+    expandedSection.value = null;
+    expandedTrack.value = null;
+  } else {
+    expandedSection.value = sectionID;
+    expandedTrack.value = trackID;
+  }
+}
+
+function handleTrackToggle(expandedTrackId) {
+  expandedTrack.value = expandedTrackId;
+}
+
+function clearFocus() {
+  expandedSection.value = null;
+  expandedTrack.value = null;
 }
 
 function toggleCreateDialog() {
-  currentTrack.value = {trackName: "", sectionIDs: []};
-  errorMessage.value = "";
+  currentTrack.value = {trackName: '', sectionIDs: []};
+  isTrackValid.value = false;
   createDialogVisible.value = true;
 }
 
 function toggleEditDialog(track) {
-  currentTrack.value = {...track, sectionIDs: track.sections.map((s) => s.sectionID)};
-  errorMessage.value = "";
+  currentTrack.value = {
+    ...track,
+    sectionIDs: track.sections.map((s) => s.sectionID),
+  };
+  isTrackValid.value =
+      !!currentTrack.value.trackName.trim() &&
+      currentTrack.value.sectionIDs.length > 0;
   editDialogVisible.value = true;
 }
 
@@ -117,23 +257,56 @@ async function saveTrack() {
   try {
     if (createDialogVisible.value) {
       await trackStore.createTrack(currentTrack.value);
+      showToast('Strecke wurde erfolgreich erstellt', 'success');
     } else {
-      await trackStore.editTrack(currentTrack.value.trackID, currentTrack.value);
+      await trackStore.editTrack(
+          currentTrack.value.trackID,
+          currentTrack.value
+      );
+      showToast('Strecke wurde erfolgreich bearbeitet', 'success');
     }
     closeDialog();
   } catch (error) {
-    errorMessage.value = error.response?.data?.message || "Ein unbekannter Fehler ist aufgetreten.";
+    showToast(
+        error.response?.data?.message || 'Ein unbekannter Fehler ist aufgetreten.',
+        'error'
+    );
   }
 }
 
 async function deleteTrack(track) {
-  await trackStore.deleteTrack(track.trackID);
+  try {
+    await trackStore.deleteTrack(track.trackID);
+    showToast('Strecke wurde erfolgreich gelöscht', 'success');
+  } catch (error) {
+    showToast('Fehler beim Löschen der Strecke', 'error');
+  }
 }
 
 function closeDialog() {
   createDialogVisible.value = false;
   editDialogVisible.value = false;
-  errorMessage.value = "";
+}
+
+function updateTrackValidity(isValid) {
+  isTrackValid.value = isValid;
+}
+
+function showToast(message, type = 'success') {
+  toast.add({
+    severity: type,
+    summary: type === 'success' ? 'Erfolg' : 'Fehler',
+    detail: message,
+    life: 3000,
+  });
+}
+
+function handleTrackVisualizationClick(event) {
+  const clickedElement = event.target;
+
+  if (!clickedElement.classList.contains('section-line')) {
+    clearFocus();
+  }
 }
 
 onMounted(() => {
@@ -142,3 +315,179 @@ onMounted(() => {
   trainStationStore.getTrainStations();
 });
 </script>
+
+<style scoped>
+.track-visualization {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: 20px;
+}
+
+.station {
+  display: flex;
+  align-items: center;
+}
+
+.station-point {
+  width: 12px;
+  height: 12px;
+  background-color: #1769AA;
+  border-radius: 50%;
+  margin-right: 10px;
+  transition: background-color 0.3s ease;
+}
+
+[data-theme="dark"] .station-point {
+  background-color: #0E3C63;
+}
+
+.highlighted-point {
+  background-color: #0056A7;
+}
+
+[data-theme="dark"] .highlighted-point {
+  background-color: #004080;
+}
+
+.dimmed-point {
+  background-color: #ccc;
+}
+
+[data-theme="dark"] .dimmed-point {
+  background-color: #4A4A4A;
+}
+
+.station-name {
+  font-size: 15px;
+  color: black;
+}
+
+[data-theme="dark"] .station-name {
+  color: #C0C0C0;
+}
+
+.station-name.highlighted {
+  font-weight: bold;
+}
+
+.station-name.dimmed {
+  color: #999;
+}
+
+[data-theme="dark"] .station-name.dimmed {
+  color: #666;
+}
+
+.section-container {
+  display: flex;
+  align-items: center;
+}
+
+.section-line {
+  width: 5px;
+  background-color: #1769AA;
+  margin-left: 3.4px;
+  margin-right: 20px;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
+[data-theme="dark"] .section-line {
+  background-color: #0E3C63;
+}
+
+.section-line.dimmed-line {
+  background-color: #ccc;
+}
+
+[data-theme="dark"] .section-line.dimmed-line {
+  background-color: #4A4A4A;
+}
+
+.warning-line {
+  background-color: #D32F2F;
+}
+
+[data-theme="dark"] .warning-line {
+  background-color: #8B1A1A;
+}
+
+.section-details {
+  display: flex;
+  flex-direction: column;
+  margin-left: 15px;
+  font-size: 5px;
+  color: #333;
+}
+
+[data-theme="dark"] .section-details {
+  color: #C0C0C0;
+}
+
+.details-layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.top-details {
+  display: flex;
+  gap: 20px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+}
+
+.icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.gray-icon {
+  font-size: 12px;
+  color: #b0b0b0;
+}
+
+[data-theme="dark"] .gray-icon {
+  color: #7A7A7A;
+}
+
+.detail-value {
+  font-size: 13px;
+}
+
+[data-theme="dark"] .detail-value {
+  color: #C0C0C0;
+}
+
+.warnings-container {
+  margin-top: 5px;
+}
+
+.warnings-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.warnings-list li {
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 1px;
+}
+
+[data-theme="dark"] .warnings-list li {
+  color: #cbd5e0;
+}
+
+.warning-name {
+  font-weight: normal;
+}
+
+.warning-description {
+  display: inline-block;
+}
+</style>

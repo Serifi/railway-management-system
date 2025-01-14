@@ -33,10 +33,6 @@
         placeholder="Enddatum wählen"
       />
     </div>
-
-    <div v-if="errorMessage" class="error-message col-span-2">
-      {{ errorMessage }}
-    </div>
   </div>
 </template>
 
@@ -53,16 +49,12 @@ const props = defineProps({
       warningName: '',
       description: '',
       startDate: null,
-      endDate: null
-    })
+      endDate: null,
+    }),
   },
-  errorMessage: {
-    type: String,
-    default: ''
-  }
 });
 
-const emits = defineEmits(['update:warning']);
+const emits = defineEmits(['update:warning', 'validate']);
 
 const warningData = ref({ ...props.warning });
 
@@ -74,25 +66,29 @@ function formatDateTime(date) {
   return `${datePart} ${time}`;
 }
 
-watch(warningData, (updatedWarning) => {
-  const formattedWarning = {
-    ...updatedWarning,
-    startDate: formatDateTime(updatedWarning.startDate),
-    endDate: formatDateTime(updatedWarning.endDate)
-  };
-  emits('update:warning', formattedWarning);
-}, { deep: true });
+watch(
+  warningData,
+  (updatedWarning) => {
+    const formattedWarning = {
+      ...updatedWarning,
+      startDate: formatDateTime(updatedWarning.startDate),
+      endDate: updatedWarning.endDate ? formatDateTime(updatedWarning.endDate) : null,
+    };
+    emits('update:warning', formattedWarning);
+
+    const isValid = !!updatedWarning.warningName && !!updatedWarning.startDate;
+    emits('validate', isValid);
+  },
+  { deep: true }
+);
 </script>
 
 <style scoped>
-label {
-  font-weight: bold;
-  margin-bottom: 0.25rem;
+textarea {
+  color: var(--text-color) !important;
 }
 
-.error-message {
-  color: red;
-  font-size: 14px;
-  margin-top: 10px;
+textarea::placeholder {
+  color: rgba(var(--text-color), 0.7) !important;
 }
 </style>

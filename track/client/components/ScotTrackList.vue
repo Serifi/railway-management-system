@@ -28,32 +28,50 @@
   <div
     v-for="item in paginatedItems"
     :key="getKey(item)"
-    class="flex p-6 rounded transition-colors duration-200 border-b"
+    class="relative flex flex-col p-6 rounded transition-colors duration-200 border-b"
     @mouseover="hover = getKey(item)"
     @mouseleave="hover = null"
   >
-    <div class="flex flex-col space-y-4 flex-grow">
+    <div
+      class="flex justify-between items-center cursor-pointer"
+      @click="toggleExpanded(item)"
+    >
       <div class="text-lg font-bold">
         <slot name="title" :item="item">{{ item.title }}</slot>
       </div>
+      <i
+        class="pi"
+        :class="{
+          'pi-chevron-down': expandedItem === getKey(item),
+          'pi-chevron-right': expandedItem !== getKey(item),
+        }"
+      ></i>
+    </div>
+
+    <div v-if="expandedItem === getKey(item)" class="mt-4 relative">
       <div class="text-sm text-gray-400 whitespace-pre-line">
         <slot name="description" :item="item">{{ item.description }}</slot>
       </div>
-    </div>
 
-    <div v-if="hover === getKey(item) && isAdmin" class="flex flex-col justify-center space-y-2">
-      <ScotButton
-        label="Bearbeiten"
-        icon="pi pi-pencil"
-        variant="green"
-        @click="emitEdit(item)"
-      />
-      <ScotButton
-        label="Löschen"
-        icon="pi pi-trash"
-        variant="red"
-        @click="confirmDeletion($event, item)"
-      />
+      <div
+        v-if="hover === getKey(item) && isAdmin"
+        class="absolute inset-0 flex flex-col justify-center items-end space-y-2 pr-4 pointer-events-none"
+      >
+        <div class="pointer-events-auto flex flex-col space-y-2">
+          <ScotButton
+            label="Bearbeiten"
+            icon="pi pi-pencil"
+            variant="green"
+            @click="emitEdit(item)"
+          />
+          <ScotButton
+            label="Löschen"
+            icon="pi pi-trash"
+            variant="red"
+            @click="confirmDeletion($event, item)"
+          />
+        </div>
+      </div>
     </div>
   </div>
 
@@ -77,6 +95,7 @@ const userStore = useUserStore();
 const isAdmin = computed(() => userStore.getUserRole === "Admin");
 
 const hover = ref(null);
+const expandedItem = ref(null);
 
 const emits = defineEmits(["create", "createWarning", "edit", "delete"]);
 const props = defineProps({
@@ -145,6 +164,11 @@ const confirmDeletion = (event, item) => {
     },
     accept: () => emits("delete", item),
   });
+};
+
+const toggleExpanded = (item) => {
+  const itemKey = props.getKey(item);
+  expandedItem.value = expandedItem.value === itemKey ? null : itemKey;
 };
 
 const onPageChange = (event) => (currentPage.value = event.page);

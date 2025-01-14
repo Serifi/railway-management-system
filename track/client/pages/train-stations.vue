@@ -3,20 +3,15 @@
     :items="trainStations"
     :getKey="getTrainStationKey"
     pageType="Bahnhof"
-    :showWarningButton="false"
     @create="toggleCreateDialog"
     @edit="toggleEditDialog"
     @delete="deleteTrainStation"
   >
-    <template #title="{ item }">
-      {{ item.stationName }}
-    </template>
-
+    <template #title="{ item }">{{ item.stationName }}</template>
     <template #description="{ item }">
       <span v-html="item.address.replace(/,/g, '<br>')"></span>
     </template>
   </List>
-
   <ScotDialog
     :visible="createDialogVisible"
     type="create"
@@ -28,7 +23,6 @@
   >
     <ScotTrainStation @update:trainStation="updateTrainStation" />
   </ScotDialog>
-
   <ScotDialog
     :visible="editDialogVisible"
     type="edit"
@@ -38,58 +32,85 @@
     @action="editTrainStation"
     @cancel="toggleEditDialog"
   >
-    <ScotTrainStation :trainStation="trainStation" @update:trainStation="updateTrainStation"/>
+    <ScotTrainStation :trainStation="trainStation" @update:trainStation="updateTrainStation" />
   </ScotDialog>
 </template>
 
 <script setup>
-import {ref, computed, onMounted} from 'vue';
-import {useTrainStationStore} from '@/stores/train-station.js';
-import {useToast} from 'primevue/usetoast';
+import { ref, computed, onMounted } from 'vue';
+import { useTrainStationStore } from '@/stores/train-station.js';
+import { useToast } from 'primevue/usetoast';
 import List from '~/components/ScotList.vue';
 import ScotTrainStation from '~/components/ScotTrainStation.vue';
 import ScotDialog from '~/components/ScotDialog.vue';
 
 const toast = useToast();
-
 const createDialogVisible = ref(false);
 const editDialogVisible = ref(false);
 const trainStationStore = useTrainStationStore();
 const trainStations = computed(() => trainStationStore.trainStations);
-const trainStation = ref(null);
-const disableAction = ref(false);
+const trainStation = ref({ stationName: '', address: '' });
+const disableAction = ref(true);
+
+function handleError(error) {
+  if (error.response?.status === 400 && error.response?.data?.message) {
+    toast.add({ severity: 'error', summary: 'Fehler', detail: error.response.data.message, life: 3000 });
+  } else if (error.response?.status === 404) {
+    toast.add({ severity: 'error', summary: 'Nicht gefunden', detail: 'Bahnhof wurde nicht gefunden.', life: 3000 });
+  } else {
+    toast.add({ severity: 'error', summary: 'Fehler', detail: 'Ein Fehler ist aufgetreten.', life: 3000 });
+  }
+}
 
 function updateTrainStation(currentStation) {
   trainStation.value = currentStation;
-  disableAction.value = trainStation.value === null;
+  disableAction.value = !currentStation || !currentStation.stationName || !currentStation.address;
 }
 
 function toggleCreateDialog() {
   createDialogVisible.value = !createDialogVisible.value;
-  if (createDialogVisible.value) disableAction.value = true;
+  trainStation.value = { stationName: '', address: '' };
+  disableAction.value = true;
 }
 
-function createTrainStation() {
-  trainStationStore.createTrainStation(trainStation.value);
-  toggleCreateDialog();
-  toast.add({severity: 'success', summary: 'Erfolgreich', detail: 'Bahnhof wurde erfolgreich erstellt', life: 3000});
+async function createTrainStation() {
+  try {
+    await trainStationStore.createTrainStation(trainStation.value);
+    toggleCreateDialog();
+    toast.add({severity: 'success', summary: 'Erfolgreich', detail: 'Bahnhof wurde erfolgreich erstellt', life: 3000});
+  } catch (error) {
+    handleError(error);
+  }
 }
 
-async function toggleEditDialog(currentStation) {
-  trainStation.value = currentStation;
+function toggleEditDialog(currentStation) {
+  trainStation.value = currentStation || {stationName: '', address: ''};
   editDialogVisible.value = !editDialogVisible.value;
-  if (editDialogVisible.value) disableAction.value = false;
+  disableAction.value = !trainStation.value.stationName || !trainStation.value.address;
 }
 
-function editTrainStation() {
-  trainStationStore.editTrainStation(trainStation.value);
-  toggleEditDialog(null);
-  toast.add({severity: 'success', summary: 'Erfolgreich', detail: 'Bahnhof wurde erfolgreich bearbeitet', life: 3000});
+async function editTrainStation() {
+  try {
+    await trainStationStore.editTrainStation(trainStation.value);
+    toggleEditDialog();
+    toast.add({
+      severity: 'success',
+      summary: 'Erfolgreich',
+      detail: 'Bahnhof wurde erfolgreich bearbeitet',
+      life: 3000
+    });
+  } catch (error) {
+    handleError(error);
+  }
 }
 
-function deleteTrainStation(currentStation) {
-  trainStationStore.deleteTrainStation(currentStation.stationID);
-  toast.add({severity: 'success', summary: 'Erfolgreich', detail: 'Bahnhof wurde erfolgreich gelöscht', life: 3000});
+async function deleteTrainStation(currentStation) {
+  try {
+    await trainStationStore.deleteTrainStation(currentStation.stationID);
+    toast.add({severity: 'success', summary: 'Erfolgreich', detail: 'Bahnhof wurde erfolgreich gelöscht', life: 3000});
+  } catch (error) {
+    handleError(error);
+  }
 }
 
 function getTrainStationKey(station) {

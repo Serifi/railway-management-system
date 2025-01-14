@@ -11,7 +11,7 @@ export const useTrackStore = defineStore('trackStore', {
         const response = await axios.get('http://127.0.0.1:5000/track/tracks');
         this.tracks = response.data;
       } catch (error) {
-        console.error('Fehler beim Abrufen der Tracks:', error.response?.data || error);
+        console.error('Fehler beim Abrufen der Tracks:', error.response?.data?.message || error.message);
       }
     },
 
@@ -20,8 +20,8 @@ export const useTrackStore = defineStore('trackStore', {
         const response = await axios.get(`http://127.0.0.1:5000/track/tracks/${trackID}`);
         return response.data;
       } catch (error) {
-        console.error(`Fehler beim Abrufen des Tracks mit ID ${trackID}:`, error.response?.data || error);
-        return null;
+        console.error(`Fehler beim Abrufen des Tracks mit ID ${trackID}:`, error.response?.data?.message || error.message);
+        throw error;
       }
     },
 
@@ -31,7 +31,7 @@ export const useTrackStore = defineStore('trackStore', {
         await this.getTracks();
         return response.data;
       } catch (error) {
-        console.error('Fehler beim Erstellen des Tracks:', error.response?.data || error);
+        console.error('Fehler beim Erstellen des Tracks:', error.response?.data?.message || error.message);
         throw error;
       }
     },
@@ -42,7 +42,7 @@ export const useTrackStore = defineStore('trackStore', {
         await this.getTracks();
         return response.data;
       } catch (error) {
-        console.error(`Fehler beim Bearbeiten des Tracks mit ID ${trackID}:`, error.response?.data || error);
+        console.error(`Fehler beim Bearbeiten des Tracks mit ID ${trackID}:`, error.response?.data?.message || error.message);
         throw error;
       }
     },
@@ -52,7 +52,7 @@ export const useTrackStore = defineStore('trackStore', {
         await axios.delete(`http://127.0.0.1:5000/track/tracks/${trackID}`);
         await this.getTracks();
       } catch (error) {
-        console.error(`Fehler beim Löschen des Tracks mit ID ${trackID}:`, error.response?.data || error);
+        console.error(`Fehler beim Löschen des Tracks mit ID ${trackID}:`, error.response?.data?.message || error.message);
         throw error;
       }
     },

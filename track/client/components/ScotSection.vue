@@ -77,23 +77,19 @@
         panel-style="z-index: 9999"
       />
     </div>
-
-    <div v-if="errorMessage" class="error-message col-span-2">
-      {{ errorMessage }}
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps({
   section: {
     type: Object,
     default: () => ({
-      usageFee: 0,
-      length: 0,
-      maxSpeed: 0,
+      usageFee: null,
+      length: null,
+      maxSpeed: null,
       trackGauge: '',
       startStationID: null,
       endStationID: null,
@@ -107,58 +103,39 @@ const props = defineProps({
   warnings: {
     type: Array,
     required: true
-  },
-  errorMessage: {
-    type: String,
-    default: ''
   }
 });
 
-const emits = defineEmits(['update:section']);
-const sectionData = ref({});
+const emits = defineEmits(['update:section', 'validate']);
 
-onMounted(() => {
-  initializeSectionData();
-});
-
-watch(
-  () => props.section,
-  initializeSectionData,
-  { deep: true, immediate: true }
-);
-
-function initializeSectionData() {
-  sectionData.value = { ...props.section };
-}
-
-watch(
-  sectionData,
-  (updatedSection) => {
-    emits('update:section', {
-      ...updatedSection,
-      warnings: updatedSection.warningIDs.map((id) =>
-        props.warnings.find((w) => w.warningID === id)
-      )
-    });
-  },
-  { deep: true }
-);
+const sectionData = ref({ ...props.section });
 
 const trackGaugeOptions = [
   { label: '1000mm', value: '1000' },
   { label: '1435mm', value: '1435' }
 ];
+
+watch(
+  sectionData,
+  (updatedSection) => {
+    emits('update:section', updatedSection);
+
+    const isValid =
+      updatedSection.usageFee !== null &&
+      updatedSection.length !== null &&
+      updatedSection.maxSpeed !== null &&
+      updatedSection.trackGauge &&
+      updatedSection.startStationID &&
+      updatedSection.endStationID;
+    emits('validate', isValid);
+  },
+  { deep: true }
+);
 </script>
 
 <style scoped>
 label {
   font-weight: bold;
   margin-bottom: 0.25rem;
-}
-
-.error-message {
-  color: red;
-  font-size: 14px;
-  margin-top: 10px;
 }
 </style>

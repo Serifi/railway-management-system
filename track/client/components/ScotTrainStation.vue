@@ -4,7 +4,6 @@
       <label for="stationName" class="mb-1">Stationsname</label>
       <InputText id="stationName" v-model="station.stationName" placeholder="Text eingeben..." />
     </div>
-
     <div class="flex flex-col col-span-2">
       <label for="address" class="mb-1">Adresse</label>
       <InputText id="address" v-model="station.address" placeholder="Text eingeben..." />
@@ -13,26 +12,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue';
 
-const emits = defineEmits(['update:trainStation'])
+const emits = defineEmits(['update:trainStation']);
 const props = defineProps({
-  trainStation: {
-    type: Object,
-    default: () => ({
-      stationName: '',
-      address: '',
-    }),
-  }
-})
+  trainStation: {type: Object, default: () => ({stationName: '', address: ''})},
+});
 
-const station = ref({ ...props.trainStation })
+const station = ref({...props.trainStation});
 
 watch(
     [() => station.value.stationName, () => station.value.address],
     ([stationName, address]) => {
-      if (stationName && address) emits('update:trainStation', station.value)
-      else emits('update:trainStation', null)
+      if (stationName && address) emits('update:trainStation', station.value);
+      else emits('update:trainStation', null);
     }
-)
+);
 </script>
