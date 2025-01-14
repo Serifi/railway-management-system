@@ -1,7 +1,11 @@
 # Projekt Setup
 Zunächst muss die jeweilige Applikation im Terminal geöffnet werden, um anschließend die notwendigen Befehle ausführen zu können.
 
-<img width="599" alt="Struktur" src="https://github.com/user-attachments/assets/0cc191c9-5136-4854-8b1f-d95bb8a6639c" />
+> [!NOTE]  
+> Voraussetzungen für das Ausführen sind jedoch die, vorzugsweise globale, Installation von **Python 3** und **Node 22**.
+> 
+> **Python**: [https://www.python.org/downloads/](https://www.python.org/downloads/)  
+> **Node**: [https://nodejs.org/en/download](https://nodejs.org/en/download)
 
 ## Server
 
