@@ -1,4 +1,3 @@
-// stores/employee.js
 import { defineStore } from 'pinia'
 import apiClient from '@/utils/api'
 

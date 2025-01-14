@@ -1,4 +1,5 @@
 <template>
+  <!-- Button with dynamic classes and click handling -->
   <button @click="handleClick" :class="buttonClasses" :disabled="disabled" type="button">
     <div class="flex items-center space-x-2">
       <i :class="icon" class="!text-[12px]"/>
@@ -11,14 +12,22 @@
 import { computed } from 'vue'
 
 const props = defineProps({
+  // Label displayed on the button
   label: {
     type: String,
     required: true
   },
+  // Icon displayed on the button
   icon: {
     type: String,
     required: true
   },
+  // Flag to indicate whether the button is disabled.
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
+  // Visual variant of the button (accepted values: 'blue', 'green', 'red', 'yellow', 'gray')
   variant: {
     type: String,
     required: true,
@@ -29,10 +38,6 @@ const props = defineProps({
       'yellow',
       'gray'
     ].includes(value)
-  },
-  disabled: {
-    type: Boolean,
-    default: false,
   }
 })
 

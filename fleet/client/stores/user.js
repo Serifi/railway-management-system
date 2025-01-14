@@ -1,4 +1,3 @@
-// stores/user.js
 import { defineStore } from 'pinia'
 import apiClient from '@/utils/api'
 
@@ -46,7 +45,7 @@ export const useUserStore = defineStore('user', {
                 })
                 if (response.data.token) {
                     this.token = response.data.token
-                    if (process.client) { // Sicherstellen, dass wir auf der Client-Seite sind
+                    if (process.client) {
                         localStorage.setItem('auth_token', this.token)
                         localStorage.setItem('username', username) // Username speichern
                     }
@@ -59,7 +58,7 @@ export const useUserStore = defineStore('user', {
                 console.error("Login failed:", error.response?.data || error)
                 this.user = null
                 this.token = null
-                if (process.client) { // Sicherstellen, dass wir auf der Client-Seite sind
+                if (process.client) {
                     localStorage.removeItem('auth_token')
                     localStorage.removeItem('username')
                 }
@@ -70,7 +69,7 @@ export const useUserStore = defineStore('user', {
         logout() {
             this.user = null
             this.token = null
-            if (process.client) { // Sicherstellen, dass wir auf der Client-Seite sind
+            if (process.client) {
                 localStorage.removeItem('auth_token')
                 localStorage.removeItem('username')
             }

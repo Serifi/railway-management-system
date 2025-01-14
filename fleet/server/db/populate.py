@@ -16,20 +16,11 @@ from datetime import datetime, timedelta
 import random
 
 def drop_and_create_tables():
-    """Drops all tables and recreates them."""
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
-    print("All tables have been dropped and recreated.")
+    print("Tables have been dropped and recreated.")
 
 def generate_valid_ssn(existing_ssns):
-    """
-    Generates a valid Austrian SSN following this format:
-    - First four digits: random from 0-9 (e.g., 5244)
-    - Then two digits for the day (01-31) (e.g., 24)
-    - Then two digits for the month (01-12) (e.g., 11)
-    - Then two digits for the year (00-99) (e.g., 02)
-    Example: 5244241102
-    """
     while True:
         first_four = ''.join(str(random.randint(0, 9)) for _ in range(4))
         day = random.randint(1, 31)
@@ -41,11 +32,9 @@ def generate_valid_ssn(existing_ssns):
             return ssn
 
 def populate_employees(session):
-    """Populates the Employee table with diverse and valid data."""
     employees = []
     existing_ssns = set()
 
-    # Reserved SSNs for specific tests
     reserved_ssns = {
         "5244241102",
         "5244241103",
@@ -54,7 +43,6 @@ def populate_employees(session):
     }
     existing_ssns.update(reserved_ssns)
 
-    # Create reserved employees
     reserved_employees = [
         Employee(
             ssn=ssn,
@@ -69,8 +57,7 @@ def populate_employees(session):
     ]
     employees.extend(reserved_employees)
 
-    # Create additional employees
-    for i in range(len(reserved_employees) + 1, 21):  # Total of 20 employees
+    for i in range(len(reserved_employees) + 1, 21):
         ssn = generate_valid_ssn(existing_ssns)
         first_name = f"FirstName{i}"
         last_name = f"LastName{i}"
@@ -94,22 +81,19 @@ def populate_employees(session):
     print(f"{len(employees)} employees added.")
 
 def populate_carriages(session):
-    """Creates 10 Railcars and the corresponding PassengerCars."""
     railcars = []
     passenger_cars = []
 
     track_gauge_counts = {'1435': 0, '1000': 0}
 
-    # Step 1: Create Railcars
     for _ in range(10):
         gauge = random.choice(['1435', '1000'])
 
-        # Create the Carriage
         c = Carriage(
             trackGauge=gauge,
             type="Railcar"
         )
-        # Create Railcar linked via relationship
+
         r = Railcar(
             carriage=c,
             maxTractiveForce=random.randint(1000, 5000)
@@ -120,7 +104,6 @@ def populate_carriages(session):
         railcars.append(r)
         track_gauge_counts[gauge] += 1
 
-    # Step 2: Create PassengerCars (2 per Railcar) based on gauge counts
     for gauge, count in track_gauge_counts.items():
         for _ in range(count * 2):
             c = Carriage(
@@ -136,19 +119,14 @@ def populate_carriages(session):
             session.add(p)
             passenger_cars.append(p)
 
-    session.flush()  # Flush after creating Carriage & Railcar/PassengerCar objects
+    session.flush()
 
     print(f"{len(railcars)} Railcars and {len(passenger_cars)} PassengerCars created.")
 
 def calculate_total_weight(passenger_cars):
-    """Calculates the total maxWeight of all PassengerCars."""
     return sum(pc.maxWeight for pc in passenger_cars)
 
 def populate_trains(session):
-    """
-    Assigns 2 PassengerCars to each Train (Railcar)
-    matching the same trackGauge and checks maxTractiveForce constraints.
-    """
     railcars = session.query(Railcar).all()
     passenger_cars = session.query(PassengerCar).all()
 
@@ -159,7 +137,7 @@ def populate_trains(session):
             railcarID=rc.carriageID
         )
         session.add(train)
-        session.flush()  # Assign trainID
+        session.flush()
 
         gauge = rc.carriage.trackGauge
         compatible_pcs = [pc for pc in passenger_cars if pc.carriage.trackGauge == gauge]
@@ -176,11 +154,9 @@ def populate_trains(session):
             )
             session.add(assoc)
 
-        # Remove these PassengerCars from the pool
         for pc in assigned:
             passenger_cars.remove(pc)
 
-        # Check maxTractiveForce
         total_w = calculate_total_weight(assigned)
         if total_w > rc.maxTractiveForce:
             print(f"Warning: Train {train.trainID} exceeds maxTractiveForce of {rc.maxTractiveForce}.")
@@ -191,7 +167,6 @@ def populate_trains(session):
     print(f"{len(trains)} Trains with their PassengerCars assigned.")
 
 def populate_maintenances(session):
-    """Populates the Maintenance table with valid data."""
     maintenance_employees = session.query(Employee).filter_by(department=Department.Maintenance).all()
     trains = session.query(Train).all()
 
@@ -213,21 +188,19 @@ def populate_maintenances(session):
         maintenances.append(m)
 
     session.add_all(maintenances)
-    print(f"{len(maintenances)} Maintenance entries added.")
+    print(f"{len(maintenances)} Maintenances added.")
 
 def populate():
-    """Seeds the database with test data."""
     with SessionLocal() as session:
         drop_and_create_tables()
 
-        # Order: Employees -> Carriages -> Trains -> Maintenances
         populate_employees(session)
         populate_carriages(session)
         populate_trains(session)
         populate_maintenances(session)
 
         session.commit()
-    print("Database ready.")
+    print("Database ready!")
 
 if __name__ == "__main__":
     populate()

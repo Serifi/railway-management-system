@@ -9,10 +9,8 @@ library.add(fas)
 
 export default defineNuxtPlugin((nuxtApp) => {
     useUserStore().initialize()
-
     nuxtApp.vueApp
         .component('FontAwesomeIcon', FontAwesomeIcon)
         .component('CountryFlag', CountryFlag)
-
-    nuxtApp.provide('apiClient', apiClient)
+        .provide('apiClient', apiClient)
 })

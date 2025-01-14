@@ -1,8 +1,6 @@
-// stores/maintenance.js
 import { defineStore } from 'pinia'
 import apiClient from '@/utils/api'
 import { useTrainStore } from '@/stores/train'
-import { useEmployeeStore } from '@/stores/employee'
 
 const BASE_PATH = '/fleet/maintenances'
 
@@ -21,7 +19,6 @@ export const useMaintenanceStore = defineStore('maintenance', {
             }
         },
 
-        // Initialisierung des Stores und Laden der notwendigen Daten
         async initialize() {
             try {
                 await this.getTrains()
@@ -78,7 +75,6 @@ export const useMaintenanceStore = defineStore('maintenance', {
             }
         },
 
-        // Methoden zur Nutzung der Train- und Employee-Stores
         async getTrains() {
             const trainStore = useTrainStore()
             try {
