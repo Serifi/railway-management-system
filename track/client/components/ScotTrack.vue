@@ -1,5 +1,7 @@
+<!-- Komponente zur Eingabe und Bearbeitung von Strecken -->
 <template>
   <div class="flex flex-col gap-4">
+    <!-- Eingabefeld für Streckennamen -->
     <div class="flex flex-col">
       <label class="font-bold mb-1">Streckenname</label>
       <InputText
@@ -9,6 +11,7 @@
       />
     </div>
 
+    <!-- Auswahl der Abschnitte -->
     <div class="flex flex-col">
       <label class="font-bold mb-1">Abschnitte wählen</label>
       <MultiSelect
@@ -34,14 +37,8 @@ const props = defineProps({
     type: Object,
     default: () => ({ trackName: '', sectionIDs: [] }),
   },
-  sections: {
-    type: Array,
-    required: true,
-  },
-  trainStations: {
-    type: Array,
-    required: true,
-  },
+  sections: { type: Array, required: true }, // Liste der Abschnitte
+  trainStations: { type: Array, required: true }, // Liste der Bahnhöfe
 });
 
 const emits = defineEmits(['update:track', 'validate']);
@@ -56,18 +53,22 @@ const sectionOptions = computed(() =>
   }))
 );
 
+/* Gefilterte Abschnitte basierend auf Spurweite */
 const filteredSectionOptions = ref(sectionOptions.value);
 
+/* Hilfsfunktion zur Ermittlung des Bahnhofnamens */
 function getStationName(stationID) {
   const station = props.trainStations.find((s) => s.stationID === stationID);
   return station ? station.stationName : 'Unbekannt';
 }
 
+/* Validierung der Eingaben */
 function validateTrack() {
   const isValid = !!trackData.value.trackName.trim() && trackData.value.sectionIDs.length > 0;
   emits('validate', isValid);
 }
 
+/* Überwachung der ausgewählten Abschnitte, um weitere Auswahlmöglichkeiten einzugrenzen */
 watch(
   () => trackData.value.sectionIDs,
   (selectedIDs) => {
@@ -87,10 +88,11 @@ watch(
   { immediate: true }
 );
 
+/* Überwachung der Streckendaten und Validierung */
 watch(
   () => trackData.value,
   (newTrack) => {
-    emits('update:track', newTrack);
+    emits('update:track', newTrack); // Aktuelle Daten weitergeben
     validateTrack();
   },
   { deep: true }

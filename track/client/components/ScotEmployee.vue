@@ -1,5 +1,4 @@
 <!-- Komponente zur Verwaltung der Eingabefelder für Mitarbeiterdaten -->
-
 <template>
   <div class="grid grid-cols-2 gap-4">
     <!-- Sozialversicherungsnummer -->

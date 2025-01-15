@@ -1,6 +1,7 @@
 <template>
   <div @click="handleTrackVisualizationClick">
-    <ScotTrackList
+    <!-- Anzeige der Liste von Strecken -->
+    <List
       :items="tracks"
       :getKey="getTrackKey"
       pageType="Strecke"
@@ -10,12 +11,15 @@
       @toggle="handleTrackToggle"
     >
       <template #title="{ item }">
+        <!-- Namens de Strecke -->
         <h2>{{ item.trackName }}</h2>
       </template>
 
       <template #description="{ item }">
         <div class="track-visualization" @click="handleTrackVisualizationClick">
+          <!-- Darstellung der Abschnitte eines Tracks -->
           <div v-for="(section, index) in item.sections" :key="section.sectionID">
+            <!-- Startbahnhof eines Abschnitts -->
             <div class="station">
               <div
                 class="station-point"
@@ -36,6 +40,7 @@
             </div>
 
             <div class="section-container">
+              <!-- Abschnitt mit Länge, Warnungen und weiteren Details -->
               <div
                 class="section-line"
                 :class="{
@@ -50,6 +55,7 @@
                 class="section-details"
                 v-if="expandedSection === section.sectionID && expandedTrack === item.trackID"
               >
+                <!-- Detaillierte Informationen zum Abschnitt -->
                 <div class="details-layout">
                   <div class="top-details">
                     <div class="detail-row">
@@ -73,6 +79,7 @@
                   </div>
                   <div class="warnings-container" v-if="section.warnings.length">
                     <ul class="warnings-list">
+                      <!-- Liste der Warnungen für den Abschnitt -->
                       <li v-for="warning in section.warnings" :key="warning.warningID" class="warning-item">
                         <span class="icon-wrapper">
                           <i class="pi pi-exclamation-triangle gray-icon"></i>
@@ -90,6 +97,7 @@
               </div>
             </div>
 
+            <!-- Endbahnhof eines Abschnitts -->
             <div v-if="index === item.sections.length - 1" class="station">
               <div
                 class="station-point"
@@ -111,8 +119,9 @@
           </div>
         </div>
       </template>
-    </ScotTrackList>
+    </List>
 
+    <!-- Dialog zur Erstellung oder Bearbeitung einer Strecke -->
     <ScotDialog
       :visible="createDialogVisible || editDialogVisible"
       :type="createDialogVisible ? 'create' : 'edit'"
@@ -133,11 +142,11 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted} from 'vue';
-import {useToast} from 'primevue/usetoast';
-import {useTrackStore} from '@/stores/track';
-import {useSectionStore} from '@/stores/section';
-import {useTrainStationStore} from '@/stores/train-station';
+import { ref, computed, onMounted } from 'vue';
+import { useToast } from 'primevue/usetoast';
+import { useTrackStore } from '@/stores/track';
+import { useSectionStore } from '@/stores/section';
+import { useTrainStationStore } from '@/stores/train-station';
 import List from '~/components/ScotTrackList.vue';
 import ScotDialog from '~/components/ScotDialog.vue';
 import ScotTrack from '~/components/ScotTrack.vue';
@@ -148,10 +157,10 @@ const sectionStore = useSectionStore();
 const trainStationStore = useTrainStationStore();
 
 const tracks = computed(() =>
-    trackStore.tracks.map((track) => ({
-      ...track,
-      sections: sortSections(track.sections),
-    }))
+  trackStore.tracks.map((track) => ({
+    ...track,
+    sections: sortSections(track.sections),
+  }))
 );
 
 const sections = computed(() => sectionStore.sections);
@@ -174,6 +183,7 @@ function getStationName(id) {
   return station ? station.stationName : 'Unbekannt';
 }
 
+// Sortierung der Abschnitte eines Tracks
 function sortSections(sections) {
   if (!sections.length) return sections;
 
@@ -184,8 +194,8 @@ function sortSections(sections) {
 
   const sortedSections = [];
   let current = sections.find(
-      (section) =>
-          !sections.some((s) => s.endStationID === section.startStationID)
+    (section) =>
+      !sections.some((s) => s.endStationID === section.startStationID)
   );
 
   while (current) {
@@ -196,6 +206,7 @@ function sortSections(sections) {
   return sortedSections;
 }
 
+// Überprüfung, ob ein Abschnitt hervorgehoben werden soll
 function isHighlighted(sectionID, sections, index, isStart = true) {
   const sortedSections = sortSections(sections);
   const currentIndex = sortedSections.findIndex((section) => section.sectionID === sectionID);
@@ -217,6 +228,7 @@ function isHighlighted(sectionID, sections, index, isStart = true) {
   }
 }
 
+// Anzeigen/Verbergen von Abschnittdetails
 function toggleSectionDetails(sectionID, trackID) {
   if (expandedSection.value === sectionID && expandedTrack.value === trackID) {
     expandedSection.value = null;
@@ -227,32 +239,37 @@ function toggleSectionDetails(sectionID, trackID) {
   }
 }
 
+// Funktion zur Behandlung der Track-Interaktion
 function handleTrackToggle(expandedTrackId) {
   expandedTrack.value = expandedTrackId;
 }
 
+// Zurücksetzen des Fokus
 function clearFocus() {
   expandedSection.value = null;
   expandedTrack.value = null;
 }
 
+// Öffnen des Dialogs zur Erstellung
 function toggleCreateDialog() {
-  currentTrack.value = {trackName: '', sectionIDs: []};
+  currentTrack.value = { trackName: '', sectionIDs: [] };
   isTrackValid.value = false;
   createDialogVisible.value = true;
 }
 
+// Öffnen des Dialogs zur Bearbeitung
 function toggleEditDialog(track) {
   currentTrack.value = {
     ...track,
     sectionIDs: track.sections.map((s) => s.sectionID),
   };
   isTrackValid.value =
-      !!currentTrack.value.trackName.trim() &&
-      currentTrack.value.sectionIDs.length > 0;
+    !!currentTrack.value.trackName.trim() &&
+    currentTrack.value.sectionIDs.length > 0;
   editDialogVisible.value = true;
 }
 
+// Speichern (Erstellen oder Bearbeiten)
 async function saveTrack() {
   try {
     if (createDialogVisible.value) {
@@ -260,20 +277,21 @@ async function saveTrack() {
       showToast('Strecke wurde erfolgreich erstellt', 'success');
     } else {
       await trackStore.editTrack(
-          currentTrack.value.trackID,
-          currentTrack.value
+        currentTrack.value.trackID,
+        currentTrack.value
       );
       showToast('Strecke wurde erfolgreich bearbeitet', 'success');
     }
     closeDialog();
   } catch (error) {
     showToast(
-        error.response?.data?.message || 'Ein unbekannter Fehler ist aufgetreten.',
-        'error'
+      error.response?.data?.message || 'Ein unbekannter Fehler ist aufgetreten.',
+      'error'
     );
   }
 }
 
+// Löschen einer Strecke
 async function deleteTrack(track) {
   try {
     await trackStore.deleteTrack(track.trackID);
@@ -283,15 +301,18 @@ async function deleteTrack(track) {
   }
 }
 
+// Schließen von Dialog
 function closeDialog() {
   createDialogVisible.value = false;
   editDialogVisible.value = false;
 }
 
+// Aktualisierung der Validität einer Strecke
 function updateTrackValidity(isValid) {
   isTrackValid.value = isValid;
 }
 
+// Anzeige von Toast
 function showToast(message, type = 'success') {
   toast.add({
     severity: type,

@@ -1,16 +1,28 @@
+<!-- Komponente für Navigation mit Desktop- und Mobile-Ansicht -->
 <template>
-  <!-- Desktop -->
+  <!-- Desktop-Navigation -->
   <nav class="hidden lg:flex space-x-8">
-    <NuxtLink  v-for="item in navItems"  :key="item.page"  :to="`/${item.page}`"
-        class="nav-link desktop"  :class="{ 'nav-active': isActive(item.page), 'nav-hover': !isActive(item.page) }">
+    <NuxtLink
+      v-for="item in navItems"
+      :key="item.page"
+      :to="`/${item.page}`"
+      class="nav-link desktop"
+      :class="{ 'nav-active': isActive(item.page), 'nav-hover': !isActive(item.page) }"
+    >
       <span>{{ item.name }}</span>
     </NuxtLink>
   </nav>
 
+  <!-- Mobile-Navigation -->
   <nav class="fixed bottom-0 left-0 right-0 h-12 border-t lg:hidden">
     <div class="flex justify-around">
-      <NuxtLink v-for="item in navItems"  :key="item.page"  :to="`/${item.page}`"
-          class="nav-link mobile" :class="{ 'text-color': isActive(item.page) }">
+      <NuxtLink
+        v-for="item in navItems"
+        :key="item.page"
+        :to="`/${item.page}`"
+        class="nav-link mobile"
+        :class="{ 'text-color': isActive(item.page) }"
+      >
         <FontAwesomeIcon :icon="item.icon" />
       </NuxtLink>
     </div>
@@ -18,13 +30,15 @@
 </template>
 
 <script setup>
-import {useRoute} from 'vue-router'
-import {useNavigationStore} from '@/stores/navigation'
-import {computed} from 'vue'
+import { useRoute } from 'vue-router'
+import { useNavigationStore } from '@/stores/navigation'
+import { computed } from 'vue'
 
+/* Zugriff auf den Navigation Store und die aktuelle Route */
 const navigationStore = useNavigationStore()
 const route = useRoute()
 
+/* Navigationselemente und Markierung des aktiven Elements */
 const navItems = computed(() => navigationStore.getNavItems)
 const isActive = (page) => route.path === `/${page}`
 </script>

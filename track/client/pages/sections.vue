@@ -1,4 +1,5 @@
 <template>
+  <!-- Anzeige der Liste von Abschnitten -->
   <List
     :items="sectionsWithStationNames"
     :getKey="getSectionKey"
@@ -10,9 +11,11 @@
     @delete="deleteSection"
   >
     <template #title="{ item }">
+      <!-- Start- und Endbahnhof des Abschnitts -->
       {{ item.startStationName }} - {{ item.endStationName }}
     </template>
     <template #description="{ item }">
+      <!-- Details zum Abschnitt -->
       <div>
         <p>Preis: {{ item.usageFee }}€</p>
         <p>Distanz: {{ item.length }} km</p>
@@ -22,6 +25,7 @@
     </template>
   </List>
 
+  <!-- Dialog zur Erstellung/Bearbeitung eines Abschnitts -->
   <ScotDialog
     :visible="createDialogVisible || editDialogVisible"
     :type="createDialogVisible ? 'create' : 'edit'"
@@ -39,6 +43,7 @@
     />
   </ScotDialog>
 
+  <!-- Dialog zur Erstellung einer Warnung -->
   <ScotDialog
     :visible="warningDialogVisible"
     type="create"
@@ -53,7 +58,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useSectionStore } from '@/stores/section.js';
 import { useTrainStationStore } from '@/stores/train-station.js';
@@ -73,6 +78,7 @@ const sections = computed(() => sectionStore.sections);
 const stations = computed(() => stationStore.trainStations);
 const warnings = computed(() => warningStore.warnings);
 
+// Aktuelle Abschnitts- und Warnungsdaten
 const section = ref({
   usageFee: null,
   length: null,
@@ -80,13 +86,13 @@ const section = ref({
   trackGauge: '',
   startStationID: null,
   endStationID: null,
-  warningIDs: []
+  warningIDs: [],
 });
 const newWarning = ref({
   warningName: '',
   description: '',
   startDate: '',
-  endDate: ''
+  endDate: '',
 });
 
 const createDialogVisible = ref(false);
@@ -95,37 +101,37 @@ const warningDialogVisible = ref(false);
 const isWarningValid = ref(false);
 const isSectionValid = ref(false);
 
+// Aktualisierung der Abschnitt-Validität
 function updateSectionValidity(isValid) {
   isSectionValid.value = isValid;
 }
 
+// Aktualisierung der Warnungs-Validität
 function updateWarningValidity(isValid) {
   isWarningValid.value = isValid;
 }
 
-onMounted(() => {
-  sectionStore.getSections();
-  stationStore.getTrainStations();
-  warningStore.getWarnings();
-});
-
-const sectionsWithStationNames = computed(() => {
-  return sections.value.map((section) => ({
+// Abschnitte mit Bahnhofsbezeichnungen
+const sectionsWithStationNames = computed(() =>
+  sections.value.map((section) => ({
     ...section,
     startStationName: getStationName(section.startStationID),
-    endStationName: getStationName(section.endStationID)
-  }));
-});
+    endStationName: getStationName(section.endStationID),
+  }))
+);
 
+// Schlüssel für einen Abschnitt
 function getSectionKey(section) {
   return section.sectionID;
 }
 
+// Abrufen des Bahnhofsnamens
 function getStationName(id) {
   const station = stations.value.find((s) => s.stationID === id);
   return station ? station.stationName : 'Unbekannt';
 }
 
+// Dialog für Abschnittserstellung öffnen
 function toggleCreateDialog() {
   createDialogVisible.value = true;
   section.value = {
@@ -135,17 +141,14 @@ function toggleCreateDialog() {
     trackGauge: '',
     startStationID: null,
     endStationID: null,
-    warningIDs: []
+    warningIDs: [],
   };
 }
 
+// Dialog für Abschnittbearbeitung öffnen
 function toggleEditDialog(currentSection) {
   editDialogVisible.value = true;
-
-  const warningIDs = currentSection.warnings
-    ? currentSection.warnings.map((warning) => warning.warningID)
-    : [];
-
+  const warningIDs = currentSection.warnings?.map((w) => w.warningID) || [];
   section.value = {
     sectionID: currentSection.sectionID,
     usageFee: currentSection.usageFee,
@@ -154,47 +157,49 @@ function toggleEditDialog(currentSection) {
     trackGauge: currentSection.trackGauge,
     startStationID: currentSection.startStationID,
     endStationID: currentSection.endStationID,
-    warningIDs: warningIDs
+    warningIDs,
   };
 }
 
+// Dialog schließen
 function closeDialog() {
   createDialogVisible.value = false;
   editDialogVisible.value = false;
 }
 
+// Dialog für Warnungserstellung öffnen
 function toggleWarningDialog() {
   warningDialogVisible.value = !warningDialogVisible.value;
   newWarning.value = {
     warningName: '',
     description: '',
     startDate: '',
-    endDate: ''
+    endDate: '',
   };
 }
 
+// Warnung erstellen
 async function createWarning() {
   try {
     await warningStore.createWarning(newWarning.value);
-
     toast.add({
       severity: 'success',
       summary: 'Erfolg',
       detail: 'Warnung wurde erfolgreich erstellt',
-      life: 3000
+      life: 3000,
     });
-
     toggleWarningDialog();
   } catch (error) {
     toast.add({
       severity: 'error',
       summary: 'Fehler',
       detail: error.response?.data?.message || 'Ein unbekannter Fehler ist aufgetreten.',
-      life: 3000
+      life: 3000,
     });
   }
 }
 
+// Abschnitt speichern (erstellen oder bearbeiten)
 async function saveSection() {
   try {
     if (createDialogVisible.value) {
@@ -203,19 +208,17 @@ async function saveSection() {
         severity: 'success',
         summary: 'Erfolg',
         detail: 'Abschnitt wurde erfolgreich erstellt',
-        life: 3000
+        life: 3000,
       });
     } else {
       const { sectionID, ...sectionData } = section.value;
-
       if (!sectionID) return;
-
       await sectionStore.editSection(sectionID, sectionData);
       toast.add({
         severity: 'success',
         summary: 'Erfolg',
         detail: 'Abschnitt wurde erfolgreich bearbeitet',
-        life: 3000
+        life: 3000,
       });
     }
     closeDialog();
@@ -224,11 +227,12 @@ async function saveSection() {
       severity: 'error',
       summary: 'Fehler',
       detail: error.response?.data?.message || 'Ein unbekannter Fehler ist aufgetreten.',
-      life: 3000
+      life: 3000,
     });
   }
 }
 
+// Abschnitt löschen
 async function deleteSection(section) {
   try {
     await sectionStore.deleteSection(section.sectionID);
@@ -236,15 +240,22 @@ async function deleteSection(section) {
       severity: 'success',
       summary: 'Erfolg',
       detail: 'Abschnitt wurde erfolgreich gelöscht',
-      life: 3000
+      life: 3000,
     });
   } catch (error) {
     toast.add({
       severity: 'error',
       summary: 'Fehler',
       detail: error.response?.data?.message || 'Ein unbekannter Fehler ist aufgetreten.',
-      life: 3000
+      life: 3000,
     });
   }
 }
+
+// Daten beim Laden der Komponente abrufen
+onMounted(() => {
+  sectionStore.getSections();
+  stationStore.getTrainStations();
+  warningStore.getWarnings();
+});
 </script>
