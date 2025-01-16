@@ -389,6 +389,7 @@ onMounted(() => {
 }
 
 .station-name.highlighted {
+  font-size: 15.5px;
   font-weight: bold;
 }
 
