@@ -1,8 +1,8 @@
-# Projekt Setup
-Zunächst muss die jeweilige Applikation im Terminal geöffnet werden, um anschließend die notwendigen Befehle ausführen zu können.
+# Installationsanleitung
+Anfangs muss die jeweilige Applikation im Terminal geöffnet werden, um die notwendigen Befehle ausführen zu können.
 
 > [!NOTE]  
-> Voraussetzungen für das Ausführen sind jedoch die, vorzugsweise globale, Installation von **Python 3** und **Node 22**.
+> Voraussetzung für die Ausführung ist eine, vorzugsweise globale, Installation von **Python 3.13** und **Node 23.1.0**
 > 
 > **Python**: [https://www.python.org/downloads/](https://www.python.org/downloads/)  
 > **Node**: [https://nodejs.org/en/download](https://nodejs.org/en/download)
@@ -10,70 +10,64 @@ Zunächst muss die jeweilige Applikation im Terminal geöffnet werden, um anschl
 ## Server
 
 #### 1. Virtuelles Verzeichnis (Virtual Environment – venv) erstellen:  
-Isolierte Python-Umgebung, um Abhängigkeiten getrennt vom System zu verwalten
+Erstellung einer isolierten Python-Umgebung, um Abhängigkeiten getrennt vom System zu verwalten
 ```bash
 python3 -m venv venv
 ```
 
 #### 2. venv aktivieren
-Aktiviert das virtuelle Verzeichnis, damit alle nachfolgenden Python-Befehle in dieser Umgebung ausgeführt werden
+Aktivierung des virtuellen Verzeichnis, um alle nachfolgenden Befehle in dieser Umgebung auszuführen
 ```bash
 source venv/bin/activate
 ```
 
 #### 3. flask installieren
-Installiert Flask-Framework für den Aufbau des Servers
+Installation von Flask, um den Server aufzubauen
 ```bash
 pip install flask
 ```
 
 #### 4. flask_cors installieren
-Installiert Flask-CORS-Bibliothek, um vom Frontend sicher auf die API des Backends zuzugreifen
+Installation von Flask-CORS, um vom Frontend sicher auf die API des Backends zuzugreifen
 ```bash
 pip install flask_cors
 ```
 
-
 #### 5. SQLAlchemy installieren
-Installiert SQLAlchemy, um die Python-Objekte direkt mit den Datenbanktabellen zu verknüpfen
+Installation von SQLAlchemy, um die Python-Objekte mit den Datenbanktabellen zu verknüpfen
 ```bash
 pip install sqlalchemy
 ```
 
-
 #### 6. bcrypt installieren
-Installiert bcrypt, für das sichere Passwort-Hashing und -Verifizierung
+Installation von bcrypt, um die Passwörter zu verschlüsseln
 ```bash
 pip install bcrypt
 ```
 
-
 #### 7. Server starten
-Startet den Server mit der angegebenen Python-Datei
+Start des Servers
 ```bash
 python server/app.py
 ```
 
-
 ## Client
-Um auch den Client ausführen zu können, ist es hier von Vorteil erneut ein Terminal Fenster für die jeweilige Applikation zu öffnen.
+Um auch den Client ausführen zu können, ist es hier von Vorteil erneut ein Terminal für die jeweilige Applikation zu öffnen.
 
 #### 1. Verzeichnis wechseln
-In das Client-Verzeichnis wechseln, um den Frontend-Code auszuführen
+Man muss in das Verzeichnis des Clients wechseln, um das Frontend auszuführen
 ```bash
 cd client
 ```
 
-
 #### 2. Abhängigkeiten installieren
-Installiert alle im Projekt definierten Abhängigkeiten
+Installation aller im Projekt festgelegten Abhängigkeiten
 ```bash
 npm install
 ```
 
-
 #### 3. Client starten
-Startet das Frontend
+Start des Clients
 ```bash
 npm run dev
 ```
