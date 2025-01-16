@@ -1,7 +1,7 @@
 <!-- Komponente zur Eingabe und Bearbeitung von Strecken -->
 <template>
   <div class="flex flex-col gap-4">
-    <!-- Eingabefeld für Streckennamen -->
+    <!-- Streckenname -->
     <div class="flex flex-col">
       <label class="font-bold mb-1">Streckenname</label>
       <InputText
@@ -11,18 +11,28 @@
       />
     </div>
 
-    <!-- Auswahl der Abschnitte -->
+    <!-- Abschnitte auswählen -->
     <div class="flex flex-col">
       <label class="font-bold mb-1">Abschnitte wählen</label>
       <MultiSelect
         v-model="trackData.sectionIDs"
-        :options="filteredSectionOptions"
+        :options="groupedSections"
         optionLabel="label"
         optionValue="sectionID"
+        optionGroupLabel="trackGaugeLabel"
+        optionGroupChildren="items"
         placeholder="Abschnitte auswählen..."
         @change="validateTrack"
         filter
-      />
+      >
+        <!-- Anzeige der Gruppierung mittels Spurweite -->
+        <template #optiongroup="slotProps">
+          <div class="flex items-center">
+            <i class="pi pi-arrows-h mr-2"></i>
+            <div>{{ slotProps.option.trackGaugeLabel }}mm</div>
+          </div>
+        </template>
+      </MultiSelect>
     </div>
   </div>
 </template>
@@ -45,59 +55,51 @@ const emits = defineEmits(['update:track', 'validate']);
 
 const trackData = ref({ ...props.track });
 
-const sectionOptions = computed(() =>
-  props.sections.map((section) => ({
-    label: `${getStationName(section.startStationID)} - ${getStationName(section.endStationID)}`,
-    sectionID: section.sectionID,
-    trackGauge: section.trackGauge,
-  }))
-);
+/* Gruppierung der Abschnitte nach Spurweite */
+const groupedSections = computed(() => {
+  const groups = {};
 
-/* Gefilterte Abschnitte basierend auf Spurweite */
-const filteredSectionOptions = ref(sectionOptions.value);
+  props.sections.forEach((section) => {
+    const gauge = section.trackGauge || 'Unbekannte Spurweite';
+    if (!groups[gauge]) {
+      groups[gauge] = {
+        trackGaugeLabel: `${gauge}`,
+        items: [],
+      };
+    }
+    groups[gauge].items.push({
+      label: `${getStationName(section.startStationID)} - ${getStationName(section.endStationID)}`, // Abschnitt von Start- bis Endbahnhof
+      sectionID: section.sectionID,
+    });
+  });
 
-/* Hilfsfunktion zur Ermittlung des Bahnhofnamens */
+  return Object.values(groups);
+});
+
+/* Funktion zur Ermittlung des Bahnhofsnamens anhand der ID */
 function getStationName(stationID) {
   const station = props.trainStations.find((s) => s.stationID === stationID);
   return station ? station.stationName : 'Unbekannt';
 }
 
-/* Validierung der Eingaben */
+/* Validierung der Streckendaten */
 function validateTrack() {
-  const isValid = !!trackData.value.trackName.trim() && trackData.value.sectionIDs.length > 0;
+  const isValid =
+    !!trackData.value.trackName.trim() && trackData.value.sectionIDs.length > 0; // Überprüfung auf leeren Namen oder leere Abschnittsauswahl
   emits('validate', isValid);
 }
 
-/* Überwachung der ausgewählten Abschnitte, um weitere Auswahlmöglichkeiten einzugrenzen */
-watch(
-  () => trackData.value.sectionIDs,
-  (selectedIDs) => {
-    if (selectedIDs.length === 0) {
-      filteredSectionOptions.value = sectionOptions.value;
-    } else {
-      const selectedSections = sectionOptions.value.filter((option) =>
-        selectedIDs.includes(option.sectionID)
-      );
-      const allowedTrackGauges = new Set(selectedSections.map((section) => section.trackGauge));
-
-      filteredSectionOptions.value = sectionOptions.value.filter((option) =>
-        allowedTrackGauges.has(option.trackGauge)
-      );
-    }
-  },
-  { immediate: true }
-);
-
-/* Überwachung der Streckendaten und Validierung */
+/* Überwachung der Streckendaten und automatische Validierung */
 watch(
   () => trackData.value,
   (newTrack) => {
-    emits('update:track', newTrack); // Aktuelle Daten weitergeben
+    emits('update:track', newTrack);
     validateTrack();
   },
   { deep: true }
 );
 
+/* Überwachung von Änderungen an den übergebenen Streckendaten */
 watch(
   () => props.track,
   (newTrack) => {
