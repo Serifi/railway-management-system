@@ -1,63 +1,14 @@
-import os
 import traceback
 from datetime import datetime, timedelta, time
 from zoneinfo import ZoneInfo
 
 from flask import render_template, request, jsonify
-from sqlalchemy import null
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy.sql.functions import current_date
+import requests
 
 from app.models import Stopplan, Track, TrainStation, RideExecution, Employee, Train
 from app import app, db
 from flask_cors import CORS, cross_origin
-from werkzeug.utils import secure_filename
-import json
 CORS(app)
-
-# file_path = os.path.join(os.path.dirname(__file__), 'tracks.json')
-# with open(file_path, 'r') as file:
-#     data = json.load(file)
-
-#redirect, send_from_directory, url_for, request, flash, current_app
-
-
-@app.route('/tracks')
-def getTracks():
-    tracks = Track.query.all()
-    track_list = []
-    for track in tracks:
-        section_list = []
-        for section in track.sections:
-            start_station = section.start_station
-            end_station = section.end_station
-
-
-            section_list.append({
-                'id': section.id,
-                'usageFee': section.usageFee,
-                'length': section.length,
-                'maxSpeed': section.maxSpeed,
-                'trackGauge': section.trackGauge,
-                'start_station': {
-                    'id': start_station.id,
-                    'name': start_station.name,
-                    'address': start_station.address
-                },
-                'end_station': {
-                    'id': end_station.id,
-                    'name': end_station.name,
-                    'address': end_station.address
-                }
-            })
-
-        track_list.append({
-            'id': track.id,
-            'name': track.name,
-            'sections': section_list
-        })
-    return jsonify(track_list)
-
 
 @app.route('/stopplans')
 def get_aLl_stopplans():
@@ -137,8 +88,6 @@ def deleteStopplan(stopplanID):
     return jsonify({'message': 'Stopplan deleted'}), 200
     #else:
         #return jsonify({'message': 'Stopplan is used'}), 200
-
-
 
 
 @app.route('/create_stopplan/', methods=['POST'])
@@ -671,6 +620,3 @@ def get_all_employees():
             'rideExecutions': rideExecution_list
         })
     return (jsonify(employee_list))
-
-
-

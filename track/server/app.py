@@ -33,4 +33,5 @@ def add_cors_headers(response):
 
 # Starten der App
 if __name__ == "__main__":
-    app.run(debug=True)
+    # App starten mit benutzerdefiniertem Port und Host
+    app.run(debug=True, host='127.0.0.1', port=8000)
