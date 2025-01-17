@@ -9,7 +9,7 @@
   "maxTractiveForce": "Maximum Tractive Force",
   "numberOfSeats": "Number of Seats",
   "maxWeight": "Maximum Weight",
-  "weight": "Weight",
+  "weight": "Total Weight",
   "socialSecurityNumber": "Social Security Number",
   "firstName": "First Name",
   "lastName": "Last Name",
@@ -70,5 +70,9 @@
   "trainDeleted": "Train was successfully deleted.",
   "trainDeleteError": "An error occurred while deleting the train.",
   "standardGauge": "Standard Gauge",
-  "narrowGauge": "Narrow Gauge"
+  "narrowGauge": "Narrow Gauge",
+  "trackGaugeWarning": "Track gauge of the carriages must match",
+  "weightWarning": "Tractive force is insufficient for the total weight",
+  "railcarAssignmentWarning": "The selected railcar is already assigned to another train.",
+  "passengerCarAssignmentWarning": "One or more selected passenger cars are already assigned to another train."
 }

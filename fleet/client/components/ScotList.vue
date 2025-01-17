@@ -82,34 +82,40 @@ const getTitle = (item) => {
 
 const filteredItems = computed(() =>
     props.items.filter(item => {
-          const matchesSearch = !searchQuery.value ||
-              Object.values(item).some(val => String(val).toLowerCase().includes(searchQuery.value.toLowerCase()))
+      const matchesSearch = !searchQuery.value ||
+          Object.values(item).some(val => String(val).toLowerCase().includes(searchQuery.value.toLowerCase()))
 
-          let matchesFilter = true;
-          for (const key in filters) {
-            const filter = filters[key];
-            if (key === 'status') {
-              if (typeof filter === 'boolean' && item.active !== filter) {
-                matchesFilter = false
-                break
-              }
-            } else if (typeof filter === 'string' || typeof filter === 'number') {
-              if (filter && item[key] !== filter) {
-                matchesFilter = false
-                break;
-              }
-            } else if (typeof filter === 'object' && filter !== null) {
-              const from = filter.from !== null && filter.from !== undefined ? filter.from : -Infinity
-              const to = filter.to !== null && filter.to !== undefined ? filter.to : Infinity
-              if (item[key] < from || item[key] > to) {
-                matchesFilter = false
-                break
-              }
-            }
+      let matchesFilter = true;
+      for (const key in filters) {
+        const filter = filters[key];
+        if (key === 'status') {
+          if (typeof filter === 'boolean' && item.active !== filter) {
+            matchesFilter = false;
+            break;
           }
+        } else if (Array.isArray(filter)) {
+          // Annahme: Filter ist ein Array von IDs
+          if (!filter.every(id => item.passenger_cars.some(car => car.carriageID === id))) {
+            matchesFilter = false;
+            break;
+          }
+        } else if (typeof filter === 'string' || typeof filter === 'number') {
+          if (filter && item[key] !== filter) {
+            matchesFilter = false;
+            break;
+          }
+        } else if (typeof filter === 'object' && filter !== null) {
+          const from = filter.from !== null && filter.from !== undefined ? filter.from : -Infinity
+          const to = filter.to !== null && filter.to !== undefined ? filter.to : Infinity
+          if (item[key] < from || item[key] > to) {
+            matchesFilter = false
+            break;
+          }
+        }
+      }
 
-          return matchesSearch && matchesFilter
-        }).sort((a, b) => getTitle(a).localeCompare(getTitle(b), undefined, { sensitivity: 'base' }))
+      return matchesSearch && matchesFilter
+    }).sort((a, b) => getTitle(a).localeCompare(getTitle(b), undefined, { sensitivity: 'base' }))
 )
 
 const firstRecord = computed(() => currentPage.value * rowsPerPage.value);

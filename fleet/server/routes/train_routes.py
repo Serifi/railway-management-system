@@ -1,5 +1,3 @@
-# train_routes.py
-
 from flask import Blueprint, request, jsonify
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
@@ -53,6 +51,24 @@ def validate_track_gauge(railcar, passenger_cars):
 def calculate_total_weight(passenger_cars):
     """Calculate the total maxWeight of all passenger cars."""
     return fsum(pc.maxWeight for pc in passenger_cars)
+
+
+def is_railcar_assigned(session, railcar_id, current_train_id=None):
+    """ Check if the railcar is already assigned to another train. """
+    query = session.query(Train).filter_by(railcarID=railcar_id)
+    if current_train_id:
+        query = query.filter(Train.trainID != current_train_id)
+    existing_train = query.first()
+    return existing_train is not None
+
+
+def is_passenger_car_assigned(session, passenger_car_id, current_train_id=None):
+    """ Check if the passenger car is already assigned to another train. """
+    query = session.query(TrainPassengerCar).filter_by(passengerCarID=passenger_car_id)
+    if current_train_id:
+        query = query.filter(TrainPassengerCar.trainID != current_train_id)
+    existing_assoc = query.first()
+    return existing_assoc is not None
 
 
 @train_blueprint.route('/', methods=['GET'])
@@ -111,8 +127,8 @@ def create_train():
                 return jsonify({"message": f"Railcar {railcar_id} not found"}), 404
 
             # Ensure the Railcar is not already in use
-            existing_train = session.query(Train).filter_by(railcarID=railcar_id).first()
-            if existing_train:
+            if is_railcar_assigned(session, railcar_id):
+                existing_train = session.query(Train).filter_by(railcarID=railcar_id).first()
                 return jsonify({"message": f"Railcar {railcar_id} is already assigned to Train {existing_train.trainID}"}), 400
 
             # Initialize the Train
@@ -123,6 +139,13 @@ def create_train():
             if passenger_cars_data:
                 # Extract PassengerCar IDs
                 pc_ids = [item['carriageID'] for item in passenger_cars_data]
+
+                # Check if any PassengerCar is already assigned
+                for pc_id in pc_ids:
+                    if is_passenger_car_assigned(session, pc_id):
+                        existing_assoc = session.query(TrainPassengerCar).filter_by(passengerCarID=pc_id).first()
+                        return jsonify({"message": f"PassengerCar {pc_id} is already assigned to Train {existing_assoc.trainID}"}), 400
+
                 # Fetch PassengerCar objects
                 passenger_cars = session.query(PassengerCar).filter(PassengerCar.carriageID.in_(pc_ids)).all()
 
@@ -190,8 +213,8 @@ def update_train(train_id):
                     return jsonify({"message": f"Railcar {new_railcar_id} not found"}), 404
 
                 # Check if the new railcar is already assigned to another train
-                existing_train = session.query(Train).filter_by(railcarID=new_railcar_id).first()
-                if existing_train and existing_train.trainID != train_id:
+                if is_railcar_assigned(session, new_railcar_id, current_train_id=train_id):
+                    existing_train = session.query(Train).filter_by(railcarID=new_railcar_id).first()
                     return jsonify({"message": f"Railcar {new_railcar_id} is already assigned to Train {existing_train.trainID}"}), 400
 
                 # Validate trackGauge consistency with existing passenger cars
@@ -211,6 +234,13 @@ def update_train(train_id):
             if 'passenger_cars' in data:
                 passenger_cars_data = data['passenger_cars']
                 pc_ids = [pc_data['carriageID'] for pc_data in passenger_cars_data]
+
+                # Check if any PassengerCar is already assigned to another train
+                for pc_id in pc_ids:
+                    if is_passenger_car_assigned(session, pc_id, current_train_id=train_id):
+                        existing_assoc = session.query(TrainPassengerCar).filter_by(passengerCarID=pc_id).first()
+                        return jsonify({"message": f"PassengerCar {pc_id} is already assigned to Train {existing_assoc.trainID}"}), 400
+
                 # Fetch PassengerCar objects
                 passenger_cars = session.query(PassengerCar).filter(PassengerCar.carriageID.in_(pc_ids)).all()
 

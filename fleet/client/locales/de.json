@@ -9,7 +9,7 @@
   "maxTractiveForce": "Maximale Zugkraft",
   "numberOfSeats": "Anzahl der Sitzplätze",
   "maxWeight": "Maximales Gewicht",
-  "weight": "Gewicht",
+  "weight": "Gesamtgewicht",
   "socialSecurityNumber": "Sozialversicherungsnummer",
   "firstName": "Vorname",
   "lastName": "Nachname",
@@ -70,5 +70,9 @@
   "trainDeleted": "Zug wurde erfolgreich gelöscht.",
   "trainDeleteError": "Beim Löschen des Zuges ist ein Fehler aufgetreten.",
   "standardGauge": "Normalspur",
-  "narrowGauge": "Schmalspur"
+  "narrowGauge": "Schmalspur",
+  "trackGaugeWarning": "Spurbreite der Wägen muss übereinstimmen",
+  "weightWarning": "Zugkraft reicht für das Gewicht nicht aus",
+  "railcarAssignmentWarning": "Der ausgewählte Triebwagen ist bereits einem anderen Zug zugeordnet.",
+  "passengerCarAssignmentWarning": "Einer oder mehrere ausgewählte Personenwagen sind bereits einem anderen Zug zugeordnet."
 }

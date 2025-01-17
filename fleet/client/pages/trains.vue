@@ -6,6 +6,11 @@
       <Tag :severity="item.active ? 'success' : 'danger'" :value="$t(item.active ? 'active' : 'inactive')" class="ml-2 !py-[0px]"/>
     </template>
     <template #description="{ item }">
+      ID: {{ item.trainID }} <br>
+      {{ $t('trackGauge') }}: {{ item.railcar.trackGauge }} <br>
+      {{ $t('maxTractiveForce') }}: {{ item.railcar.maxTractiveForce }} <br>
+      {{ $t('weight') }}: {{ item.totalWeight }} <br>
+      {{ $t('numberOfSeats') }}: {{ item.totalSeats }} <br>
       <div class="wagon-container">
         <!-- Railcar -->
         <div class="wagon">
@@ -15,8 +20,7 @@
 
         <!-- Passenger Cars -->
         <div class="wagon"
-             v-for="passengerCar in sortedPassengerCars(item.passenger_cars)"
-             :key="passengerCar.carriageID">
+             v-for="passengerCar in sortedPassengerCars(item.passenger_cars)" :key="passengerCar.carriageID">
           <img :src="passengerCarImage" :alt="$t('passengerCar')" class="wagon-image"/>
           <div class="wagon-id">{{ passengerCar.carriageID }}</div>
         </div>
@@ -33,12 +37,12 @@
 
         <div class="flex flex-col space-y-1">
           <label for="railcar">{{ $t('railcar') }}</label>
-          <Select id="railcar" v-model="filters.railcarID" :options="railcars" optionLabel="carriageID" optionValue="carriageID" :placeholder="$t('selectPlaceholder')" showClear/>
+          <Select id="railcar" v-model="filters.railcarID" :options="railcars" optionLabel="carriageID" optionValue="carriageID" :placeholder="$t('selectPlaceholder')" filter showClear/>
         </div>
 
         <div class="flex flex-col space-y-1">
           <label for="passengerCars">{{ $t('passengerCar') }}</label>
-          <MultiSelect id="passengerCars" v-model="filters.passengerCarIDs" :options="passengerCars" optionLabel="carriageID" optionValue="carriageID" :placeholder="$t('selectPlaceholder')" showClear/>
+          <MultiSelect id="passengerCars" v-model="filters.passengerCarIDs" :options="passengerCars" optionLabel="carriageID" optionValue="carriageID" :placeholder="$t('selectPlaceholder')" filter showClear/>
         </div>
       </div>
     </template>
@@ -80,8 +84,8 @@ const sortedPassengerCars = (passengerCars) => {
 
 const { t } = useI18n()
 const statusOptions = [
-  { label: t('active'), value: 'active' },
-  { label: t('inactive'), value: 'inactive' }
+  { label: t('active'), value: true },
+  { label: t('inactive'), value: false }
 ]
 
 function initializeFilters(filters) {
@@ -168,5 +172,6 @@ watch(train, (newVal) => {
 onMounted(async () => {
   await trainStore.getCarriagesByType()
   await trainStore.getTrains()
+  console.log(trains.value)
 });
 </script>

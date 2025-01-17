@@ -24,9 +24,16 @@ export const useTrainStore = defineStore('train', {
                         new Date(maintenance.from_time) <= now &&
                         new Date(maintenance.to_time) >= now
                 })
+
+                const totalWeight = train.passenger_cars.reduce((sum, pc) => sum + (pc.maxWeight || 0), 0)
+                const totalSeats = train.passenger_cars.reduce((sum, pc) => sum + (pc.numberOfSeats || 0), 0)
+
                 return {
                     ...train,
-                    active: !isUnderMaintenance
+                    railcarID: train.railcar ? train.railcar.carriageID : null,
+                    active: !isUnderMaintenance,
+                    totalWeight,
+                    totalSeats
                 }
             })
         }

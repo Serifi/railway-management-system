@@ -129,10 +129,10 @@ def update_carriage(carriage_id):
                 joinedload(Carriage.passenger_car_detail)
             ).filter_by(carriageID=carriage_id).first()
 
-            # Prevent updates if the carriage is assigned to a train
             if not carriage:
                 return jsonify({"message": f"Carriage #{carriage_id} not found"}), 404
 
+            # Prevent updates if the carriage is assigned to a train
             if is_carriage_assigned(session, carriage_id):
                 return jsonify({"message": f"Cannot edit carriage #{carriage_id} assigned to a train"}), 400
 
