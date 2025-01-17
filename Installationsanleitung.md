@@ -39,6 +39,10 @@ Installation von SQLAlchemy, um die Python-Objekte mit den Datenbanktabellen zu 
 pip install sqlalchemy
 ```
 
+```bash
+pip install flask_sqlalchemy
+```
+
 #### 6. bcrypt installieren
 Installation von bcrypt, um die Passwörter zu verschlüsseln
 ```bash
