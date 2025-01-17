@@ -1,13 +1,18 @@
+<!-- Layout mit Header, Navigation, Hauptinhalt und Benutzerprofilverwaltung -->
 <template>
   <div class="flex flex-col min-h-screen">
+    <!-- Header -->
     <header class="flex items-center justify-between py-4 border-b">
+      <!-- Logo und Titel -->
       <div class="flex items-center space-x-4 me-4">
         <img src="../assets/images/icon.png" alt="Icon" class="w-12 h-12">
         <span class="text-xl font-bold">Scotty</span>
       </div>
 
+      <!-- Navigation -->
       <Navigation />
 
+      <!-- Benutzerprofil und Theme-Toggle -->
       <div class="flex items-center space-x-4 mx-4">
         <!-- Dark Mode Toggle -->
         <div class="theme-switch" @click="toggleDarkMode">
@@ -17,6 +22,7 @@
           </div>
         </div>
 
+        <!-- Benutzerprofil anzeigen -->
         <div class="w-px h-8 bg-gray-300"></div>
         <div class="flex items-center space-x-4 cursor-pointer" @click="showUserPanel">
           <i class="pi pi-user text-xl" />
@@ -27,6 +33,7 @@
         </div>
       </div>
 
+      <!-- Benutzerprofil-Popover -->
       <Popover ref="userPanel" appendTo="body">
         <div class="flex flex-col">
           <div class="flex items-center p-2 space-x-2 rounded hover:bg-gray-200 transition duration-300 cursor-pointer" @click="editProfile">
@@ -41,12 +48,15 @@
       </Popover>
     </header>
 
+    <!-- Hauptinhalt -->
     <main class="flex-grow p-8">
       <NuxtPage />
     </main>
 
+    <!-- Toast-Komponente für Benachrichtigungen -->
     <Toast />
 
+    <!-- Dialog zur Profilbearbeitung -->
     <ScotDialog
       :visible="profileDialogVisible"
       type="edit"
@@ -76,6 +86,7 @@ import ScotDialog from '~/components/ScotDialog.vue';
 import ScotEmployee from '~/components/ScotEmployee.vue';
 import bcrypt from 'bcryptjs';
 
+/* Stores und Toast */
 const userStore = useUserStore();
 const employeeStore = useEmployeeStore();
 const toast = useToast();
@@ -84,12 +95,12 @@ const userPanel = ref(null);
 const profileDialogVisible = ref(false);
 const employee = ref({});
 const disableAction = ref(false);
+const isDarkMode = ref(false);
 
 const userFullName = computed(() => userStore.getFullName);
 const userRole = computed(() => userStore.getUserRole);
 
-const isDarkMode = ref(false);
-
+/* Verwaltung des Themes */
 function toggleDarkMode() {
   isDarkMode.value = !isDarkMode.value;
   if (isDarkMode.value) {
@@ -115,6 +126,7 @@ onMounted(() => {
   }
 });
 
+/* Deaktivierte Felder basierend auf Benutzerrolle */
 const determineDisabledFields = computed(() => {
   if (userRole.value === 'Admin') {
     return ['ssn'];
@@ -122,6 +134,7 @@ const determineDisabledFields = computed(() => {
   return ['ssn', 'role', 'department'];
 });
 
+/* Benutzeraktionen */
 function showUserPanel() {
   userPanel.value.toggle(event);
 }
@@ -134,11 +147,16 @@ function logout() {
 function editProfile() {
   const loggedInUser = userStore.user;
   if (loggedInUser) {
-    employee.value = {...loggedInUser, password: ''};
+    employee.value = { ...loggedInUser, password: '' };
     profileDialogVisible.value = true;
     disableAction.value = false;
   } else {
-    toast.add({severity: 'error', summary: 'Fehler', detail: 'Profil konnte nicht geladen werden.', life: 3000});
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler',
+      detail: 'Profil konnte nicht geladen werden.',
+      life: 3000,
+    });
   }
 }
 
@@ -162,9 +180,14 @@ async function saveProfile() {
 
     await employeeStore.editEmployee(employee.value);
 
-    userStore.user = {...userStore.user, ...employee.value};
+    userStore.user = { ...userStore.user, ...employee.value };
 
-    toast.add({severity: 'success', summary: 'Erfolgreich', detail: 'Profil wurde aktualisiert.', life: 3000});
+    toast.add({
+      severity: 'success',
+      summary: 'Erfolgreich',
+      detail: 'Profil wurde aktualisiert.',
+      life: 3000,
+    });
     profileDialogVisible.value = false;
     resetEmployeeData();
   } catch (error) {
@@ -177,18 +200,35 @@ function resetEmployeeData() {
   disableAction.value = false;
 }
 
+/* Passwort-Hashing */
 async function hashPassword(password) {
   const salt = await bcrypt.genSalt(10);
   return bcrypt.hash(password, salt);
 }
 
+/* Fehlerbehandlung */
 function handleError(error) {
   if (error.response?.status === 400 && error.response?.data?.message) {
-    toast.add({severity: 'error', summary: 'Fehler', detail: error.response.data.message, life: 3000});
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler',
+      detail: error.response.data.message,
+      life: 3000,
+    });
   } else if (error.response?.status === 401) {
-    toast.add({severity: 'error', summary: 'Nicht autorisiert', detail: 'Zugriff verweigert.', life: 3000});
+    toast.add({
+      severity: 'error',
+      summary: 'Nicht autorisiert',
+      detail: 'Zugriff verweigert.',
+      life: 3000,
+    });
   } else {
-    toast.add({severity: 'error', summary: 'Fehler', detail: 'Ein Fehler ist aufgetreten.', life: 3000});
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler',
+      detail: 'Ein Fehler ist aufgetreten.',
+      life: 3000,
+    });
   }
 }
 </script>

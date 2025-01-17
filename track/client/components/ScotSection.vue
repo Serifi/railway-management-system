@@ -1,5 +1,7 @@
+<!-- Komponente zur Eingabe und Bearbeitung von Abschnitten -->
 <template>
   <div class="grid grid-cols-2 gap-4">
+    <!-- Preis -->
     <div class="flex flex-col">
       <label for="usageFee">Preis (€)</label>
       <InputText
@@ -10,6 +12,7 @@
       />
     </div>
 
+    <!-- Distanz -->
     <div class="flex flex-col">
       <label for="length">Distanz (km)</label>
       <InputText
@@ -20,6 +23,7 @@
       />
     </div>
 
+    <!-- Maximale Geschwindigkeit -->
     <div class="flex flex-col">
       <label for="maxSpeed">Max. Geschwindigkeit (km/h)</label>
       <InputText
@@ -30,6 +34,7 @@
       />
     </div>
 
+    <!-- Spurweite -->
     <div class="flex flex-col">
       <label for="trackGauge">Spurweite</label>
       <Dropdown
@@ -42,6 +47,7 @@
       />
     </div>
 
+    <!-- Startbahnhof -->
     <div class="flex flex-col">
       <label>Startbahnhof</label>
       <Dropdown
@@ -53,6 +59,7 @@
       />
     </div>
 
+    <!-- Endbahnhof -->
     <div class="flex flex-col">
       <label>Endbahnhof</label>
       <Dropdown
@@ -64,6 +71,7 @@
       />
     </div>
 
+    <!-- Warnungen -->
     <div class="flex flex-col col-span-2">
       <label>Warnungen auswählen</label>
       <MultiSelect
@@ -96,30 +104,28 @@ const props = defineProps({
       warningIDs: []
     })
   },
-  trainStations: {
-    type: Array,
-    required: true
-  },
-  warnings: {
-    type: Array,
-    required: true
-  }
+  trainStations: { type: Array, required: true }, // Liste der verfügbaren Bahnhöfe
+  warnings: { type: Array, required: true } // Liste der verfügbaren Warnungen
 });
 
 const emits = defineEmits(['update:section', 'validate']);
 
+/* Lokale Datenkopie der Abschnittsdaten */
 const sectionData = ref({ ...props.section });
 
+/* Optionen für Spurweiten */
 const trackGaugeOptions = [
   { label: '1000mm', value: '1000' },
   { label: '1435mm', value: '1435' }
 ];
 
+/* Überwachung von Änderungen an Abschnittsdaten */
 watch(
   sectionData,
   (updatedSection) => {
     emits('update:section', updatedSection);
 
+    // Validierung der Eingabedaten
     const isValid =
       updatedSection.usageFee !== null &&
       updatedSection.length !== null &&

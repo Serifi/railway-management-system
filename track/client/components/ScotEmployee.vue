@@ -1,23 +1,52 @@
+<!-- Komponente zur Verwaltung der Eingabefelder für Mitarbeiterdaten -->
 <template>
   <div class="grid grid-cols-2 gap-4">
+    <!-- Sozialversicherungsnummer -->
     <div class="flex flex-col col-span-2">
       <label for="ssn" class="mb-1">Sozialversicherungsnummer</label>
       <div class="flex flex-col lg:flex-row justify-between space-y-2 lg:space-y-0">
-        <InputOtp id="ssn1" v-model="ssn1" :length="4" integerOnly :class="{ 'input-otp-disabled': isDisabled('ssn') }" :disabled="isDisabled('ssn')" />
-        <InputOtp id="ssn2" v-model="ssn2" :length="6" integerOnly :class="{ 'input-otp-disabled': isDisabled('ssn') }" :disabled="isDisabled('ssn')" />
+        <InputOtp
+          id="ssn1"
+          v-model="ssn1"
+          :length="4"
+          integerOnly
+          :class="{ 'input-otp-disabled': isDisabled('ssn') }"
+          :disabled="isDisabled('ssn')"
+        />
+        <InputOtp
+          id="ssn2"
+          v-model="ssn2"
+          :length="6"
+          integerOnly
+          :class="{ 'input-otp-disabled': isDisabled('ssn') }"
+          :disabled="isDisabled('ssn')"
+        />
       </div>
     </div>
 
+    <!-- Vorname -->
     <div class="flex flex-col col-span-2 lg:col-span-1">
       <label for="firstName" class="mb-1">Vorname</label>
-      <InputText id="firstName" v-model="employee.firstName" placeholder="Text eingeben..." :disabled="isDisabled('firstName')" />
+      <InputText
+        id="firstName"
+        v-model="employee.firstName"
+        placeholder="Text eingeben..."
+        :disabled="isDisabled('firstName')"
+      />
     </div>
 
+    <!-- Nachname -->
     <div class="flex flex-col col-span-2 lg:col-span-1">
       <label for="lastName" class="mb-1">Nachname</label>
-      <InputText id="lastName" v-model="employee.lastName" placeholder="Text eingeben..." :disabled="isDisabled('lastName')" />
+      <InputText
+        id="lastName"
+        v-model="employee.lastName"
+        placeholder="Text eingeben..."
+        :disabled="isDisabled('lastName')"
+      />
     </div>
 
+    <!-- Benutzername -->
     <div class="flex flex-col col-span-2 lg:col-span-2">
       <label for="username" class="mb-1">Benutzername</label>
       <InputText
@@ -28,6 +57,7 @@
       />
     </div>
 
+    <!-- Passwort -->
     <div class="flex flex-col col-span-2">
       <label for="password" class="mb-1">Passwort</label>
       <div class="flex items-center space-x-2">
@@ -50,10 +80,14 @@
             </ul>
           </template>
         </Password>
-        <i class="pi pi-sparkles text-blue-500 cursor-pointer" @click="generatePassword" />
+        <i
+          class="pi pi-sparkles text-blue-500 cursor-pointer"
+          @click="generatePassword"
+        />
       </div>
     </div>
 
+    <!-- Rolle -->
     <div class="flex flex-col col-span-2 lg:col-span-1">
       <label for="role" class="mb-1">Rolle</label>
       <Dropdown
@@ -68,6 +102,7 @@
       />
     </div>
 
+    <!-- Abteilung -->
     <div class="flex flex-col col-span-2 lg:col-span-1">
       <label for="department" class="mb-1">Abteilung</label>
       <Dropdown
@@ -90,7 +125,7 @@ import { ref, watch } from "vue";
 const emits = defineEmits(["update:employee"]);
 const props = defineProps({
   employee: {
-    type: Object,
+    type: Object, // Mitarbeiterdaten
     default: () => ({
       firstName: "",
       lastName: "",
@@ -102,11 +137,11 @@ const props = defineProps({
     }),
   },
   disabledFields: {
-    type: Array,
+    type: Array, // Felder, die deaktiviert werden sollen
     default: () => [],
   },
   enableUsernameEdit: {
-    type: Boolean,
+    type: Boolean, // Steuerung, ob der Benutzername bearbeitet werden kann
     default: false,
   },
 });
@@ -122,6 +157,8 @@ const departmentOptions = [
   { label: "Bordpersonal", value: "Crew" },
   { label: "Wartung", value: "Maintenance" },
 ];
+
+/* Funktion zur Überprüfung, ob ein Feld deaktiviert ist */
 const isDisabled = (field) => props.disabledFields.includes(field);
 
 watch(
@@ -134,6 +171,7 @@ watch(
   { immediate: true }
 );
 
+/* Änderungen an Eingabewerten beobachten */
 watch(
   [
     () => ssn1.value,
@@ -156,11 +194,14 @@ watch(
   }
 );
 
+/* Funktion zur Passwortgenerierung */
 function generatePassword() {
   const length = 16;
-  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+[]{}|;:,.<>?";
+  const charset =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+[]{}|;:,.<>?";
   let password = "";
-  for (let i = 0; i < length; i++) password += charset[Math.floor(Math.random() * charset.length)];
+  for (let i = 0; i < length; i++)
+    password += charset[Math.floor(Math.random() * charset.length)];
   employee.value.password = password;
 }
 </script>

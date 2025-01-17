@@ -1,3 +1,4 @@
+<!-- Komponente zur Darstellung von Strecken, analog zu ScotList -->
 <template>
   <div class="flex justify-between mb-4">
     <IconField>
@@ -25,6 +26,7 @@
     </div>
   </div>
 
+  <!-- Listenelemente -->
   <div
     v-for="item in paginatedItems"
     :key="getKey(item)"
@@ -32,6 +34,7 @@
     @mouseover="hover = getKey(item)"
     @mouseleave="hover = null"
   >
+    <!-- Titel und Expand-Icon -->
     <div
       class="flex justify-between items-center cursor-pointer"
       @click="toggleExpanded(item)"
@@ -48,6 +51,7 @@
       ></i>
     </div>
 
+    <!-- Erweiterte Inhalte -->
     <div v-if="expandedItem === getKey(item)" class="mt-4 relative">
       <div class="text-sm text-gray-400 whitespace-pre-line">
         <slot name="description" :item="item">{{ item.description }}</slot>
@@ -76,7 +80,6 @@
   </div>
 
   <ConfirmPopup />
-
   <Paginator
     :rows="rowsPerPage"
     :totalRecords="filteredItems.length"
@@ -97,34 +100,22 @@ const isAdmin = computed(() => userStore.getUserRole === "Admin");
 const hover = ref(null);
 const expandedItem = ref(null);
 
+/* Props und Events */
 const emits = defineEmits(["create", "createWarning", "edit", "delete"]);
 const props = defineProps({
-  items: {
-    type: Array,
-    required: true,
-  },
-  rowsPerPage: {
-    type: Number,
-    default: 10,
-  },
-  getKey: {
-    type: Function,
-    required: true,
-  },
+  items: { type: Array, required: true },
+  rowsPerPage: { type: Number, default: 10 },
+  getKey: { type: Function, required: true },
   pageType: {
     type: String,
     required: true,
     validator: (value) =>
-      ["Abschnitt", "Strecke", "Bahnhof", "Mitarbeiter"].includes(value),
+      ["Abschnitt", "Strecke", "Bahnhof", "Mitarbeiter"].includes(value)
   },
-  showWarningButton: {
-    type: Boolean,
-    default: false,
-  },
+  showWarningButton: { type: Boolean, default: false },
 });
 
 const pagePlaceholder = computed(() => props.pageType);
-
 const searchQuery = ref("");
 const filteredItems = computed(() => {
   if (!searchQuery.value) return props.items;

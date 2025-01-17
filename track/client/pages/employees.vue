@@ -1,4 +1,5 @@
 <template>
+  <!-- Liste der Mitarbeiter -->
   <List
     :items="employees"
     :getKey="getEmployeeKey"
@@ -7,9 +8,12 @@
     @edit="toggleEditDialog"
     @delete="deleteEmployee"
   >
+    <!-- Vorname und Nachname -->
     <template #title="{ item }">
       {{ `${item.firstName} ${item.lastName}` }}
     </template>
+
+    <!-- Abteilung und Rolle -->
     <template #description="{ item }">
       <div>
         <p>Abteilung: {{ item.department }}</p>
@@ -18,6 +22,7 @@
     </template>
   </List>
 
+  <!-- Dialog zum Erstellen eines Mitarbeiters -->
   <ScotDialog
     :visible="createDialogVisible"
     type="create"
@@ -30,6 +35,7 @@
     <ScotEmployee :enableUsernameEdit="enableUsernameEdit" @update:employee="updateEmployee" />
   </ScotDialog>
 
+  <!-- Dialog zum Bearbeiten eines Mitarbeiters -->
   <ScotDialog
     :visible="editDialogVisible"
     type="edit"
@@ -63,9 +69,7 @@ const createDialogVisible = ref(false);
 const editDialogVisible = ref(false);
 const employeeStore = useEmployeeStore();
 const userStore = useUserStore();
-
 const loggedInUserSSN = computed(() => userStore.getSSN);
-
 const employees = computed(() =>
   employeeStore.employees.filter(emp => emp.ssn !== loggedInUserSSN.value)
 );
@@ -73,10 +77,6 @@ const employees = computed(() =>
 const employee = ref({});
 const disableAction = ref(false);
 const enableUsernameEdit = ref(false);
-
-employeeStore.triggerEditDialog = (targetEmployee) => {
-  toggleEditDialog(targetEmployee);
-};
 
 const isFormValid = computed(() => {
   return (
@@ -90,11 +90,13 @@ const isFormValid = computed(() => {
   );
 });
 
+// Funktion zum Aktualisieren der Mitarbeiterdaten
 function updateEmployee(currentEmployee) {
   employee.value = currentEmployee;
-  disableAction.value = employee.value === null;
+  disableAction.value = !currentEmployee;
 }
 
+// Dialog zum Erstellen eines Mitarbeiters umschalten
 function toggleCreateDialog() {
   createDialogVisible.value = !createDialogVisible.value;
   if (!createDialogVisible.value) {
@@ -102,6 +104,7 @@ function toggleCreateDialog() {
   }
 }
 
+// Dialog zum Bearbeiten eines Mitarbeiters umschalten
 async function toggleEditDialog(currentEmployee) {
   if (editDialogVisible.value) {
     resetEmployeeData();
@@ -115,6 +118,7 @@ async function toggleEditDialog(currentEmployee) {
   }
 }
 
+// Neuen Mitarbeiter erstellen
 async function createEmployee() {
   try {
     if (employee.value.password) {
@@ -128,48 +132,55 @@ async function createEmployee() {
   }
 }
 
+// Bestehenden Mitarbeiter bearbeiten
 async function editEmployee() {
   try {
     if (employee.value.password) {
       employee.value.password = await hashPassword(employee.value.password);
     }
     await employeeStore.editEmployee(employee.value);
-    toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Mitarbeiter bearbeitet', life: 3000 });
+    toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Mitarbeiter bearbeitet', life: 3000});
     toggleEditDialog(null);
   } catch (error) {
     handleError(error);
   }
 }
 
+// Mitarbeiter löschen
 function deleteEmployee(currentEmployee) {
   employeeStore.deleteEmployee(currentEmployee.ssn);
-  toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Mitarbeiter gelöscht', life: 3000 });
+  toast.add({severity: 'success', summary: 'Erfolgreich', detail: 'Mitarbeiter gelöscht', life: 3000});
 }
 
+// Schlüssel für Mitarbeiter in der Liste generieren
 function getEmployeeKey(employee) {
   return employee.ssn;
 }
 
+// Zurücksetzen der aktuellen Mitarbeiterdaten
 function resetEmployeeData() {
   employee.value = {};
   disableAction.value = false;
   enableUsernameEdit.value = false;
 }
 
+// Fehlerbehandlung
 function handleError(error) {
   if (error.response?.status === 400 && error.response?.data?.message) {
     enableUsernameEdit.value = true;
-    toast.add({ severity: 'error', summary: 'Fehler', detail: error.response.data.message, life: 3000 });
+    toast.add({severity: 'error', summary: 'Fehler', detail: error.response.data.message, life: 3000});
   } else {
     toast.add({severity: 'error', summary: 'Fehler', detail: 'Ein Fehler ist aufgetreten.', life: 3000});
   }
 }
 
+// Passwort hashen
 async function hashPassword(password) {
   const salt = await bcrypt.genSalt(10);
   return bcrypt.hash(password, salt);
 }
 
+// Mitarbeiterliste laden
 onMounted(() => {
   employeeStore.getEmployees();
 });
