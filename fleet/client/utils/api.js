@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-// Axios instance with a base URL and Headers
+// Axios db with a base URL and Headers
 const apiClient = axios.create({
     baseURL: 'http://127.0.0.1:5000',
     headers: {
@@ -38,5 +38,5 @@ apiClient.interceptors.response.use(
     }
 )
 
-// Export the Axios instance
+// Export the Axios db
 export default apiClient

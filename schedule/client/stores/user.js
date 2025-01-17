@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import axios from "axios";
 
 export const useUserStore = defineStore('user', {
     state: () => ({
@@ -6,10 +7,14 @@ export const useUserStore = defineStore('user', {
             ssn: "",
             firstName: "",
             lastName: "",
-            role: ""
+            role: "",
+            department: "",
+            rideExecutions: []
         },
         dummyUsers: [
-            { username: "argjent", password: "argjent", ssn: "0000241102", firstName: "Argjent", lastName: "Serifi", role: "Admin" }
+            //{ username: "argjent", password: "password", ssn: "0000241102", firstName: "Argjent", lastName: "Serifi", role: "Admin" },
+            //{ username: "ömer", password: "password", ssn: "0000291102", firstName: "Ömer", lastName: "Türkoglu", role: "Admin" }
+
         ]
     }),
     getters: {
@@ -18,18 +23,30 @@ export const useUserStore = defineStore('user', {
         getDummyUsers: (state) => state.dummyUsers
     },
     actions: {
-        authenticate(username, password) {
+         async authenticate(username, password) {
+            await this.fetchEmployees();
             const user = this.dummyUsers.find(u => u.username === username && u.password === password)
             if (user) {
                 this.user = {
                     ssn: user.ssn,
                     firstName: user.firstName,
                     lastName: user.lastName,
-                    role: user.role
+                    role: user.role,
+                    department: user.department,
+                    rideExecutions: user.rideExecutions
                 }
                 return true
             }
             return false
+        },
+        async fetchEmployees() {
+            try {
+                const response = await axios.get("http://127.0.0.1:5000/employees");
+                console.log('API Response:', response.data);
+                this.dummyUsers = response.data;
+            } catch (error) {
+                console.error("Fehler beim Laden der Daten", error);
+            }
         }
     }
 })

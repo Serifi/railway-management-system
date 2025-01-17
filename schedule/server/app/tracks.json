@@ -1,0 +1,102 @@
+[
+  {
+    "trackID": "001",
+    "trackName": "Wels Hauptbahnhof - Wien Westbahnhof",
+    "sections": [
+      {
+        "sectionID": "001",
+        "usageFee": 14.99,
+        "length": 250.25,
+        "maxSpeed": 150,
+        "trackGauge": "1435",
+
+
+        "startStation": {
+          "stationID": "001",
+          "stationName": "Wels Hauptbahnhof",
+          "address": "Bahnhofstrasse 31, 4600 Wels"
+        },
+        "endStation": {
+          "stationID": "002",
+          "stationName": "Linz Hauptbahnhof",
+          "address": "Bahnhofsplatz 3-6, 4020 Linz"
+        },
+
+
+        "warnings": [
+          {
+            "warningID": "001",
+            "warningName": "Sperre",
+            "description": "Amstetten Hauptbahnhof - St. Poelten Hauptbahnhof ist gesperrt!",
+            "startDate": "2024-10-29 18:00:00",
+            "endDate": "2024-10-30 18:00:00"
+          }
+        ]
+      },
+      {
+        "sectionID": "002",
+        "usageFee": 34.99,
+        "length": 180,
+        "maxSpeed": 200,
+        "trackGauge": "1435",
+
+
+        "startStation": {
+          "stationID": "002",
+          "stationName": "Linz Hauptbahnhof",
+          "address": "Bahnhofsplatz 3-6, 4020 Linz"
+        },
+        "endStation": {
+          "stationID": "003",
+          "stationName": "Wien Westbahnhof",
+          "address": "Europaplatz 2, 1150 Wien"
+        },
+
+
+        "warnings": []
+      }
+    ]
+  },
+
+
+
+
+
+
+  {
+    "trackID": "002",
+    "trackName": "Linz Hauptbahnhof - Wels Hauptbahnhof",
+    "sections": [
+      {
+        "sectionID": "003",
+        "usageFee": 14.99,
+        "length": 275,
+        "maxSpeed": 150,
+        "trackGauge": "1435",
+
+
+        "startStation": {
+          "stationID": "002",
+          "stationName": "Linz Hauptbahnhof",
+          "address": "Bahnhofsplatz 3-6, 4020 Linz"
+        },
+        "endStation": {
+          "stationID": "001",
+          "stationName": "Wels Hauptbahnhof",
+          "address": "Bahnhofstrasse 31, 4600 Wels"
+        },
+
+
+        "warnings": [
+          {
+            "warningID": "002",
+            "warningName": "Geschwindigkeitsbegrenzung",
+            "description": "Max. Geschwindigkeit auf 100 km/h begrenzt",
+            "startDate": "2024-11-27 14:30:00",
+            "endDate": "2024-12-04 20:00:00"
+          }
+        ]
+      }
+    ]
+  }
+]

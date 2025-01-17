@@ -83,7 +83,7 @@ def create_employee():
             department = Department[data['department']]
             role = Role[data['role']]
 
-            # Create Employee instance
+            # Create Employee db
             emp = Employee(
                 ssn=data['ssn'],
                 firstName=data['firstName'],
