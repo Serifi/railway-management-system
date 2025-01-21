@@ -40,7 +40,7 @@ pip install requests
 ### 6. requests installieren
 ```bash
 pip install requests
-``
+```
 
 #### 7. SQLAlchemy installieren
 Installation von SQLAlchemy, um die Python-Objekte mit den Datenbanktabellen zu verknüpfen
