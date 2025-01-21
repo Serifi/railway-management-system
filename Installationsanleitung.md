@@ -32,12 +32,12 @@ Installation von Flask-CORS, um vom Frontend sicher auf die API des Backends zuz
 ```bash
 pip install flask_cors
 ```
-### 5. flask_migrate installieren
+#### 5. flask_migrate installieren
 ```bash
 pip install requests
 ```
 
-### 6. requests installieren
+#### 6. requests installieren
 ```bash
 pip install requests
 ```
