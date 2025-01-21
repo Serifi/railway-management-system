@@ -32,8 +32,17 @@ Installation von Flask-CORS, um vom Frontend sicher auf die API des Backends zuz
 ```bash
 pip install flask_cors
 ```
+### 5. flask_migrate installieren
+```bash
+pip install requests
+```
 
-#### 5. SQLAlchemy installieren
+### 6. requests installieren
+```bash
+pip install requests
+``
+
+#### 7. SQLAlchemy installieren
 Installation von SQLAlchemy, um die Python-Objekte mit den Datenbanktabellen zu verknüpfen
 ```bash
 pip install sqlalchemy
@@ -43,13 +52,13 @@ pip install sqlalchemy
 pip install flask_sqlalchemy
 ```
 
-#### 6. bcrypt installieren
+#### 8. bcrypt installieren
 Installation von bcrypt, um die Passwörter zu verschlüsseln
 ```bash
 pip install bcrypt
 ```
 
-#### 7. Server starten
+#### 9. Server starten
 Start des Servers
 ```bash
 python server/app.py
