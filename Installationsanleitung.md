@@ -64,7 +64,7 @@ Installation von swagger_ui zur Dokumentation der Endpunkte
 pip install flask_swagger_ui
 ```
 
-#### 9. Server starten
+#### 10. Server starten
 Start des Servers
 ```bash
 python server/app.py
