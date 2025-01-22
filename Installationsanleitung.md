@@ -58,7 +58,13 @@ Installation von bcrypt, um die Passwörter zu verschlüsseln
 pip install bcrypt
 ```
 
-#### 9. Server starten
+#### 9. flask_swagger_ui installieren
+Installation von swagger_ui zur Dokumentation der Endpunkte
+```bash
+pip install flask_swagger_ui
+```
+
+#### 10. Server starten
 Start des Servers
 ```bash
 python server/app.py
