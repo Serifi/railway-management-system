@@ -34,7 +34,7 @@ pip install flask_cors
 ```
 #### 5. flask_migrate installieren
 ```bash
-pip install requests
+pip install flask_migrate
 ```
 
 #### 6. requests installieren
