@@ -1,6 +1,6 @@
 <template>
   <List :items="employees" :getKey="getEmployeeKey" :rowsPerPage="5"
-        @create="toggleCreateDialog" @edit="toggleEditDialog" @delete="deleteEmployee">
+        @create="toggleCreateDialog" @edit="toggleEditDialog" >
     <template #title="{ item }">
       {{ `${item.firstName} ${item.lastName}` }}
     </template>
@@ -11,7 +11,7 @@
   </List>
 
   <Dialog v-model:visible="createDialogVisible" header="Mitarbeiter:in erstellen" class="w-2/3">
-    <ScotEmployee/>
+
 
     <template #footer>
       <ScotButton label="Abbrechen" icon="pi pi-times" variant="gray" @click="toggleCreateDialog"/>
@@ -29,29 +29,20 @@
 
 <script setup>
 import {ref, computed} from 'vue'
-import { useEmployeeStore } from '@/stores/employee'
-import { useToast } from 'primevue/usetoast'
 import List from '~/components/ScotList.vue'
-import ScotEmployee from '~/components/ScotStopplan.vue'
 
-const toast = useToast()
 const createDialogVisible = ref(false)
 const editDialogVisible = ref(false)
-//const employeeStore = useEmployeeStore()
 const userStore = useUserStore()
 const employees = computed(() => userStore.dummyUsers)
 const employee = ref(null)
 
-//onMounted(() => userStore.fetchEmployees())
 
 function toggleCreateDialog() {
   createDialogVisible.value = !createDialogVisible.value
 }
 
-function createEmployee() {
-  employeeStore.createEmployee(null)
-  toggleCreateDialog()
-}
+
 
 function toggleEditDialog(currentEmployee) {
   employee.value = currentEmployee
@@ -63,10 +54,7 @@ function editEmployee() {
   toggleEditDialog(null)
 }
 
-function deleteEmployee(currentEmployee) {
-  employeeStore.deleteEmployee(currentEmployee.ssn)
-  toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Aktion wurde erfolgreich abgeschlossen', life: 3000 })
-}
+
 
 function getEmployeeKey(employee) {
   return employee.ssn

@@ -37,14 +37,26 @@ const password = ref("")
 const wrongCredentials = ref(false)
 const disableButton = ref(true)
 
-function login() {
-  if (userStore.authenticate(username.value, password.value)) {
-    router.push("/rideExecutions")
-  } else {
-    wrongCredentials.value = true
-    setTimeout(() => (wrongCredentials.value = false), 3000)
+async function login() {
+  wrongCredentials.value = false; // Zurücksetzen der Fehlermeldung
+  disableButton.value = true;    // Button deaktivieren während der Verarbeitung
+
+  try {
+    const isAuthenticated = await userStore.authenticate(username.value, password.value);
+    if (isAuthenticated) {
+      router.push("/rideExecutions"); // Navigation bei Erfolg
+    } else {
+      wrongCredentials.value = true; // Fehlermeldung anzeigen
+      setTimeout(() => (wrongCredentials.value = false), 3000); // Fehler nach 3 Sekunden zurücksetzen
+    }
+  } catch (error) {
+    console.error("Ein Fehler ist aufgetreten:", error);
+    wrongCredentials.value = true;
+  } finally {
+    disableButton.value = false; // Button wieder aktivieren
   }
 }
+
 
 watch([username, password], () => disableButton.value = !username.value || !password.value)
 </script>

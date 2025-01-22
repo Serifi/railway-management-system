@@ -9,6 +9,7 @@ export const useStopplanStore = defineStore('stopplan', {
     }),
 
     actions: {
+        //Haltepläne vom Server holen
         async fetchStopplans() {
             try {
                 const response = await axios.get('http://127.0.0.1:5000/stopplans');
@@ -18,7 +19,7 @@ export const useStopplanStore = defineStore('stopplan', {
                 console.error("Fehler beim Laden der Daten:", error);
             }
         },
-
+        //Halteplan nach ID holen
         async fetchStopplanByID(id) {
             try {
                 const response = await axios.get(`http://127.0.0.1:5000/stopplan/${id}`);
@@ -28,7 +29,7 @@ export const useStopplanStore = defineStore('stopplan', {
                 console.error("Fehler beim Laden der Daten:", error);
             }
         },
-
+        //Tracks vom Server holen
         async fetchTracks() {
             try {
                 const response = await axios.get('http://127.0.0.1:8000/track/tracks');
@@ -42,7 +43,7 @@ export const useStopplanStore = defineStore('stopplan', {
                 console.error("Fehler beim Laden der Tracks:", error);
             }
         },
-
+        //züge vom Server holen
         async fetchTrainStationById(stationID) {
             try {
                 const response = await axios.get(`http://127.0.0.1:8000/track/train-stations/${stationID}`);
@@ -52,7 +53,7 @@ export const useStopplanStore = defineStore('stopplan', {
                 return null;
             }
         },
-
+        //halteplan löschen
         async deleteStopplan(id) {
             try {
                 const response = await axios.delete(`http://127.0.0.1:5000/stopplan/${id}`);
@@ -66,7 +67,7 @@ export const useStopplanStore = defineStore('stopplan', {
                 console.error("Fehler beim Löschen des Stopplans:", error);
             }
         },
-
+        //Halteplan erstellen
         async createStopplan(stopplanData) {
             try {
                 const response = await axios.post('http://127.0.0.1:5000/create_stopplan/', stopplanData);
@@ -77,7 +78,7 @@ export const useStopplanStore = defineStore('stopplan', {
                 console.error("Fehler beim Erstellen des Stopplans:", error.response?.data || error.message);
             }
         },
-
+        //Halteplan bearbeiten
         async editStopplan(stopplanData, stopplanId) {
             try {
                 const response = await axios.put(`http://127.0.0.1:5000/stopplan/${stopplanId}`, stopplanData);

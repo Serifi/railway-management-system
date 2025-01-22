@@ -3,6 +3,7 @@ import axios from "axios";
 
 export const useUserStore = defineStore('user', {
     state: () => ({
+        // Aktuell eingeloggter Benutzer
         user: {
             ssn: "",
             firstName: "",
@@ -12,8 +13,7 @@ export const useUserStore = defineStore('user', {
             rideExecutions: []
         },
         dummyUsers: [
-            //{ username: "argjent", password: "password", ssn: "0000241102", firstName: "Argjent", lastName: "Serifi", role: "Admin" },
-            //{ username: "ömer", password: "password", ssn: "0000291102", firstName: "Ömer", lastName: "Türkoglu", role: "Admin" }
+
 
         ]
     }),
@@ -23,10 +23,12 @@ export const useUserStore = defineStore('user', {
         getDummyUsers: (state) => state.dummyUsers
     },
     actions: {
+        // Authentifiziert einen Benutzer basierend auf Benutzername und Passwort
          async authenticate(username, password) {
             await this.fetchEmployees();
             const user = this.dummyUsers.find(u => u.username === username && u.password === password)
             if (user) {
+                // Setzt den Zustand für den aktuell eingeloggten Benutzer
                 this.user = {
                     ssn: user.ssn,
                     firstName: user.firstName,
@@ -40,6 +42,7 @@ export const useUserStore = defineStore('user', {
             return false
         },
         async fetchEmployees() {
+             //Employees vom Server holen
             try {
                 const response = await axios.get("http://127.0.0.1:5000/employees");
                 console.log('API Response:', response.data);

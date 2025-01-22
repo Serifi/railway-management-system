@@ -1,185 +1,182 @@
 <template>
+  <!-- Stepper-Komponente, die den aktuellen Schritt anzeigt -->
   <Stepper value="1" class="custom-stepper">
     <StepList style="gap: 10px; justify-content: space-between;">
+      <!-- Schritt 1: Halteplan Details -->
       <Step value="1">Halteplan Details</Step>
+      <!-- Schritt 2: Bahnhöfe -->
       <Step value="2">Bahnhöfe</Step>
     </StepList>
   </Stepper>
+
   <div>
+    <!-- Anzeige des ersten Schritts -->
     <div v-if="currentStep === 1">
-      <!-- Erster Schritt  -->
       <div class="flex flex-col">
+        <!-- Eingabefeld für den Namen des Halteplans -->
         <label for="name" class="mb-1">Name des Halteplans</label>
-        <InputText id="name" v-model="stopplan.name" placeholder="Text eingeben..." />
-      </div>
-      <br>
-      <div class="flex flex-col">
-        <label for="track" class="mb-1">Strecke</label>
-        <Dropdown
-            id="track"
-            v-model="stopplan.track"
-            :options="tracks"
-            optionLabel="name"
-            placeholder="Auswahl treffen..."
+        <InputText
+          id="name"
+          v-model="stopplan.name"
+          placeholder="Text eingeben..."
         />
       </div>
       <br>
+      <div class="flex flex-col">
+        <!-- Dropdown für die Auswahl der Strecke -->
+        <label for="track" class="mb-1">Strecke</label>
+        <Dropdown
+          id="track"
+          v-model="stopplan.track"
+          :options="tracks"
+          optionLabel="name"
+          placeholder="Auswahl treffen..."
+        />
+      </div>
+      <br>
+      <!-- Button zum Wechseln zum nächsten Schritt -->
       <ScotButton
-          label="Weiter"
-          icon="pi pi-arrow-right"
-          variant="blue"
-          :disabled="!stopplan.track"
-          @click="nextStep"
+        label="Weiter"
+        icon="pi pi-arrow-right"
+        variant="blue"
+        :disabled="!stopplan.track"
+        @click="nextStep"
       />
     </div>
 
+    <!-- Anzeige des zweiten Schritts -->
     <div v-else-if="currentStep === 2">
-      <!-- Zweiter Schritt -->
       <div class="flex flex-col">
+        <!-- MultiSelect für die Auswahl von Bahnhöfen -->
         <label for="stations" class="mb-1">Bahnhöfe</label>
         <MultiSelect
-            id="stations"
-            v-model="stopplan.trainStations"
-            :options="trainStations"
-            optionLabel="name"
-            placeholder="Bahnhöfe auswählen..."
+          id="stations"
+          v-model="stopplan.trainStations"
+          :options="trainStations"
+          optionLabel="name"
+          placeholder="Bahnhöfe auswählen..."
         />
       </div>
       <br>
       <div class="flex" style="gap: 0.5rem;">
+        <!-- Zurück-Button -->
         <ScotButton
-            label="Zurück"
-            icon="pi pi-arrow-left"
-            variant="gray"
-            @click="prevStep"
+          label="Zurück"
+          icon="pi pi-arrow-left"
+          variant="gray"
+          @click="prevStep"
         />
+        <!-- Bearbeiten-Button -->
         <ScotButton
-            label="Bearbeiten"
-            icon="pi pi-pencil"
-            variant="blue"
-            @click="updateStopplan"
+          label="Bearbeiten"
+          icon="pi pi-pencil"
+          variant="blue"
+          @click="updateStopplan"
         />
       </div>
-
-
     </div>
   </div>
 </template>
 
 <script setup>
-
-
 import Stepper from 'primevue/stepper';
 import StepList from 'primevue/steplist';
 import Step from 'primevue/step';
 
+import { computed, onMounted, ref } from 'vue'; // Vue-Funktionen
+import { useStopplanStore } from '~/stores/stopplan.js'; // Store für Haltepläne
+import { useToast } from 'primevue/usetoast'; // Toast für Benachrichtigungen
 
-import {computed, onMounted, ref} from 'vue';
-import {useStopplanStore} from '~/stores/stopplan.js';
-import {useToast} from 'primevue/usetoast'
-
+// Zugriff auf den Store für Haltepläne
 const stopplanStore = useStopplanStore();
+// Tracks werden aus dem Store abgeleitet
 const tracks = computed(() => stopplanStore.tracks);
+
+// Props: Eingabeparameter von der übergeordneten Komponente
 const { stopplanID, stopplanName, stopplanTrackID, stopplanTrainstations } = defineProps({
-  stopplanID: {
-    type: Number,
-    required: true
-  },
-  stopplanName: {
-    type: String,
-    required: true
-  },
-  stopplanTrackID: {
-    type: Number,
-    required: true
-  },
-  stopplanTrainstations: {
-    type: Array,
-    required: true
-  }
+  stopplanID: { type: Number, required: true }, // ID des Halteplans
+  stopplanName: { type: String, required: true }, // Name des Halteplans
+  stopplanTrackID: { type: Number, required: true }, // ID der Strecke
+  stopplanTrainstations: { type: Array, required: true }, // Liste der Bahnhöfe
 });
 
+// Funktion, um die aktuell ausgewählte Strecke zu finden
 function getSelectedTrack() {
   return tracks.value.find((track) => track.id === stopplanTrackID);
 }
-const toast = useToast()
-  const emit = defineEmits(['stopplan-created']);
 
+const toast = useToast();
+const emit = defineEmits(['stopplan-created']);
 
-  const currentStep = ref(1); // Track den aktuellen Schritt
-  const stopplan = ref({
-    name: stopplanName,
-    track: getSelectedTrack(),
-    trainStations: stopplanTrainstations,
-  });
+// Lokale Zustände
+const currentStep = ref(1); // Der aktuelle Schritt im Formular
+const stopplan = ref({
+  name: stopplanName, // Initialer Name des Halteplans
+  track: getSelectedTrack(), // Initiale Strecke
+  trainStations: stopplanTrainstations, // Initiale Bahnhöfe
+});
 
+// Liste der verfügbaren Bahnhöfe
+const trainStations = ref([]);
 
-  const trainStations = ref([]);
+// Initialisierung beim Mounten der Komponente
+onMounted(async () => {
+  await stopplanStore.fetchTracks(); // Lädt die verfügbaren Strecken
+  stopplan.value.track = getSelectedTrack(); // Setzt die Strecke
+  trainStations.value = stopplanTrainstations; // Initialisiert die Bahnhöfe
+});
 
-  onMounted(async () => {
-    await stopplanStore.fetchTracks();
-    stopplan.value.track = getSelectedTrack();
-    trainStations.value = stopplanTrainstations;
-  });
+// Funktion zum Wechseln zum nächsten Schritt
+function nextStep() {
+  if (currentStep.value === 1) {
+    loadStations(stopplan.value.track); // Lädt die Bahnhöfe basierend auf der Strecke
+    currentStep.value = 2; // Wechselt zum zweiten Schritt
+  }
+}
 
-  // Schritt wechseln
-  function nextStep() {
-    if (currentStep.value === 1) {
-      loadStations(stopplan.value.track);
-      currentStep.value = 2;
+// Funktion zum Wechseln zum vorherigen Schritt
+function prevStep() {
+  currentStep.value = 1;
+}
+
+// Funktion zum Laden der Bahnhöfe für die ausgewählte Strecke
+function loadStations(track) {
+  const stationMap = new Map(); // Map für einzigartige Bahnhöfe
+
+  track.sections.forEach((section) => {
+    // Fügt stations hinzu
+    if (section.start_station) {
+      stationMap.set(section.start_station.id, section.start_station);
     }
-  }
-  function prevStep() {
-    currentStep.value = 1;
-  }
+    if (section.end_station) {
+      stationMap.set(section.end_station.id, section.end_station);
+    }
+  });
 
+  trainStations.value = Array.from(stationMap.values()); // Setzt die Bahnhöfe
+}
 
-  function loadStations(track) {
-    const stationMap = new Map();
+// Funktion zum Aktualisieren des Halteplans
+async function updateStopplan() {
+  // Datenobjekt für die Aktualisierung
+  const stopplanData = {
+    name: stopplan.value.name, // Name des Halteplans
+    trackID: stopplan.value.track.id, // ID der Strecke
+    trainStations: stopplan.value.trainStations.map(station => ({ id: station.id })), // Liste der Bahnhof-IDs
+  };
 
+  await stopplanStore.editStopplan(stopplanData, stopplanID); // Aktualisiert den Halteplan im Store
 
-    track.sections.forEach((section) => {
+  // Erfolgsmeldung anzeigen
+  toast.add({
+    severity: 'success',
+    summary: 'Erfolg',
+    detail: `Halteplan "${stopplanData.name}" wurde erfolgreich bearbeitet`,
+    life: 3000,
+  });
 
-      if (section.start_station) {
-        stationMap.set(section.start_station.id, section.start_station);
-      }
-
-
-      if (section.end_station) {
-        stationMap.set(section.end_station.id, section.end_station);
-      }
-    });
-
-
-    trainStations.value = Array.from(stationMap.values());
-  }
-
-  //defineProps(['close']);
-
-
-
-  async function updateStopplan() {
-
-    const stopplanData = {
-      name: stopplan.value.name,
-      trackID: stopplan.value.track.id,
-      trainStations: stopplan.value.trainStations.map(station => ({ id: station.id })),
-    };
-
-
-    await stopplanStore.editStopplan(stopplanData, stopplanID);
-
-    toast.add({
-      severity: 'success',
-      summary: 'Erfolg',
-      detail: `Halteplan "${stopplanData.name}" wurde erfolgreich bearbeitet`,
-      life: 3000
-    });
-
-    emit('stopplan-created');
-
-    stopplan.value = { name: '', track: null, trainStations: [] };
-    currentStep.value = 1;
-  }
-
+  emit('stopplan-created');
+  stopplan.value = { name: '', track: null, trainStations: [] }; // Zurücksetzen des Formulars
+  currentStep.value = 1; // Zurück zum ersten Schritt
+}
 </script>

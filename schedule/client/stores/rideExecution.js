@@ -10,16 +10,16 @@ export const useRideExecutionStore = defineStore('rideExecution', {
     }),
 
     actions: {
+        //Fahrtdurchführung erstellen
         async createRideExecution(rideExecutionData) {
             try {
                 const response = await axios.post('http://127.0.0.1:5000/create_ride_execution/', rideExecutionData);
                 console.log("Erstellte Fahrtdurchführung:", response.data);
-
-                this.fetchRideExecutions()
             } catch (error) {
                 console.error("Fehler beim Erstellen der Fahrtdurchführung:", error.response?.data || error.message);
             }
         },
+        //Fahrtdurchführungen bearbeiten
         async editRideExecution(rideExecutionData, id) {
             try {
                 const response = await axios.put(`http://127.0.0.1:5000/ride_execution/${id}`, rideExecutionData);
@@ -27,15 +27,7 @@ export const useRideExecutionStore = defineStore('rideExecution', {
                 console.error("Fehler beim Bearbeiten der Fahrtdurchführung:", error);
             }
         },
-        async fetchRideExecutions() {
-            try {
-                const response = await axios.get('http://127.0.0.1:5000/ride_executions');
-                console.log('API Response:', response.data);
-                this.rideExecutions = response.data;
-            } catch (error) {
-                console.error("Fehler beim Laden der Daten:", error);
-            }
-        },
+        //Züge vom Server holen
         async fetchTrains(dateAndTimeData) {
             try {
                 const response = await axios.post('http://127.0.0.1:5000/available_trains', dateAndTimeData);
@@ -45,7 +37,7 @@ export const useRideExecutionStore = defineStore('rideExecution', {
                 console.error("Fehler beim Laden der Daten:", error);
             }
         },
-
+        //employees vom Server holen
         async fetchEmployees() {
             try {
                 const response = await axios.get('http://127.0.0.1:5000/employees');
@@ -60,7 +52,7 @@ export const useRideExecutionStore = defineStore('rideExecution', {
                 console.error("Fehler beim Laden der Daten:", error);
             }
         },
-
+        //Fahrtdurchführungen löschen
         async deleteRideExecution(id) {
             try {
                 const response = await axios.delete(`http://127.0.0.1:5000/ride_execution/${id}`);
