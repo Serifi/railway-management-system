@@ -90,3 +90,23 @@ Start des Clients
 ```bash
 npm run dev
 ```
+
+
+### Integration
+
+#### Ports
+
+### Integration
+
+#### Ports
+*Schedule*  
+- Server: 5000  
+- Client: 3000  
+
+*Track*  
+- Server: 5001  
+- Client: 3001  
+
+*Fleet*  
+- Server: 5002  
+- Client: 3002  
