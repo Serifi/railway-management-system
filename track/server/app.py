@@ -26,7 +26,6 @@ CORS(app)
 # CORS-Header zu allen Antworten hinzufügen
 @app.after_request
 def add_cors_headers(response):
-    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')  # Erlauben der Anfragen von localhost:3000
     response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')  # Erlauben von HTTP-Methoden
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization') # Erlauben verschiedener Header
     return response
@@ -34,4 +33,4 @@ def add_cors_headers(response):
 # Starten der App
 if __name__ == "__main__":
     # App starten mit benutzerdefiniertem Port und Host
-    app.run(debug=True, host='127.0.0.1', port=8000)
+    app.run(debug=True, host='127.0.0.1', port=5001)

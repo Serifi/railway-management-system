@@ -25,7 +25,7 @@
               id="track"
               v-model="stopplan.track"
               :options="tracks"
-              optionLabel="name"
+              optionLabel="trackName"
               placeholder="Auswahl treffen..."
             />
           </div>
@@ -52,7 +52,7 @@
               id="stations"
               v-model="stopplan.trainStations"
               :options="trainStations"
-              optionLabel="name"
+              optionLabel="stationName"
               placeholder="Bahnhöfe auswählen..."
             />
           </div>
@@ -100,21 +100,14 @@ const stopplan = ref({
   trainStations: [], // Ausgewählte Bahnhöfe
 });
 
-// ruft Tracks ab
-const tracks = computed(() =>
-  stopplanStore.tracks.map(track => ({
-    id: track.trackID,
-    name: track.trackName,
-    sections: track.sections, // Enthält die Abschnitte der Strecke
-  }))
-);
+const tracks = ref([]) // Liste der Strecken
 
 const trainStations = ref([]); // Liste der verfügbaren Bahnhöfe
 
 // Lifecycle-Hook: Lädt die Tracks beim Mounten der Komponente
 onMounted(async () => {
   await stopplanStore.fetchTracks(); // Ruft die Tracks aus dem Store ab
-  console.log("Geladene Tracks:", tracks.value); // Debugging: Zeigt die geladenen Tracks an
+  tracks.value = stopplanStore.tracks;
 });
 
 // Funktion zum Wechseln zum nächsten Schritt
@@ -131,29 +124,38 @@ function prevStep() {
 }
 
 // Funktion zum Laden der Bahnhöfe für die ausgewählte Strecke
-function loadStations(track) {
+async function loadStations(track) {
   const stationMap = new Map(); // Verwendet eine Map, um Duplikate zu vermeiden
 
-  track.sections.forEach((section) => {
-    // Fügt Startbahnhöfe hinzu
-    if (section.startStationID) {
-      stationMap.set(section.startStationID, { id: section.startStationID, name: `Station ${section.startStationID}` });
+  for (const section of track.sections) {
+    // Startbahnhöfe abrufen
+    if (section.startStationID && !stationMap.has(section.startStationID)) {
+      const station = await stopplanStore.fetchTrainStationById(section.startStationID);
+      if (station) {
+        stationMap.set(section.startStationID, station);
+      }
     }
-    // Fügt Endbahnhöfe hinzu
-    if (section.endStationID) {
-      stationMap.set(section.endStationID, { id: section.endStationID, name: `Station ${section.endStationID}` });
+    // Endbahnhöfe abrufen
+    if (section.endStationID && !stationMap.has(section.endStationID)) {
+      const station = await stopplanStore.fetchTrainStationById(section.endStationID);
+      if (station) {
+        stationMap.set(section.endStationID, station);
+      }
     }
-  });
+  }
 
   trainStations.value = Array.from(stationMap.values()); // Konvertiert die Map in ein Array
+  console.log(trainStations.value)
 }
 
 // Funktion zum Erstellen eines Halteplans
 async function createStopplan() {
   const stopplanData = {
     name: stopplan.value.name, // Name des Halteplans
-    trackID: stopplan.value.track.id, // ID der ausgewählten Strecke
-    trainStations: stopplan.value.trainStations.map(station => ({ id: station.id })), // IDs der ausgewählten Bahnhöfe
+    trackID: stopplan.value.track.trackID, // ID der ausgewählten Strecke
+    trainStations: stopplan.value.trainStations.map(station => ({
+      id: station.stationID, // Korrekte Zuordnung der Station-ID
+    })),
   };
 
   await stopplanStore.createStopplan(stopplanData); // Speichert den Halteplan im Store

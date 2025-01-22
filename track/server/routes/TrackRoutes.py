@@ -79,6 +79,8 @@ def get_tracks():
 @track_blueprint.route('/<int:track_id>', methods=['GET'])
 def get_track_by_id(track_id):
     session = Session()
+
+    # Strecke anhand der ID abrufen
     track = session.query(Track).filter(Track.trackID == track_id).first()
 
     # Überprüfung, ob die Strecke existiert
@@ -86,25 +88,26 @@ def get_track_by_id(track_id):
         return jsonify({"message": f"Track mit ID {track_id} nicht gefunden"}), 404
 
     # Abschnittsdaten der Strecke abrufen
-    sections_query = session.execute("""
+    sections_query = session.execute(text("""
         SELECT section.sectionID, section.usageFee, section.length, section.maxSpeed, section.trackGauge,
                section.startStationID, section.endStationID
         FROM track_section
         JOIN section ON track_section.sectionID = section.sectionID
         WHERE track_section.trackID = :trackID
         ORDER BY track_section.sequence ASC
-    """, {"trackID": track_id}).fetchall()
+    """), {"trackID": track_id}).fetchall()
 
     sections_list = []
     for section in sections_query:
         # Warnungen für jeden Abschnitt abrufen
-        warnings_query = session.execute("""
+        warnings_query = session.execute(text("""
             SELECT warning.warningID, warning.warningName, warning.description, 
                    warning.startDate, warning.endDate
             FROM section_warning
             JOIN warning ON section_warning.warningID = warning.warningID
             WHERE section_warning.sectionID = :sectionID
-        """, {"sectionID": section.sectionID}).fetchall()
+        """), {"sectionID": section.sectionID}).fetchall()
+
         warnings_list = [
             {
                 "warningID": warning.warningID,
@@ -128,6 +131,7 @@ def get_track_by_id(track_id):
             "warnings": warnings_list
         })
 
+    # Streckendaten zusammenstellen und zurückgeben
     return jsonify({
         'trackID': track.trackID,
         'trackName': track.trackName,

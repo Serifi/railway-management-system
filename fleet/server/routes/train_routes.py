@@ -72,8 +72,8 @@ def is_passenger_car_assigned(session, passenger_car_id, current_train_id=None):
 
 
 @train_blueprint.route('/', methods=['GET'])
-@authenticate
-@authorize(roles=['Employee', 'Admin'])
+# @authenticate       Für Integration mit schedule
+# @authorize(roles=['Employee', 'Admin'])
 def get_trains():
     """Retrieve all trains."""
     with SessionLocal() as session:

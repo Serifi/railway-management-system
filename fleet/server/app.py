@@ -21,7 +21,6 @@ CORS(app)
 @app.after_request
 def add_cors_headers(response):
     """ CORS headers in the response to allow communication with the frontend """
-    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
     response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
     return response
@@ -32,4 +31,4 @@ def swagger_json():
     return jsonify(swagger_template)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='127.0.0.1', port=5002)

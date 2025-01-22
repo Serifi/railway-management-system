@@ -8,6 +8,7 @@ import requests
 from app.models import Stopplan, Track, TrainStation, RideExecution, Employee, Train
 from app import app, db
 from flask_cors import CORS, cross_origin
+
 CORS(app)
 
 @app.route('/stopplans')
@@ -100,6 +101,7 @@ def deleteStopplan(stopplanID):
     db.session.commit()  # Änderungen speichern
     return jsonify({'message': 'Stopplan deleted'}), 200
 
+
 @app.route('/create_stopplan/', methods=['POST'])
 def createStopplan():
     try:
@@ -110,17 +112,26 @@ def createStopplan():
         if not data.get('name') or not data.get('trackID'):
             return jsonify({'message': 'Fehlende Daten: name oder trackID'}), 400
 
-        # Strecke anhand der ID abrufen
-        track = Track.query.get(data['trackID'])
-        if not track:
-            return jsonify({'message': 'Track mit der angegebenen trackID existiert nicht'}), 404
+        # API-Endpoint aufrufen, um die Strecke anhand der trackID zu erhalten
+        response = requests.get(f'http://127.0.0.1:5001/track/tracks/{data["trackID"]}')
+
+        # Überprüfen, ob die Strecke gefunden wurde
+        if response.status_code != 200:
+            return jsonify({'message': 'Fehler beim Abrufen der Strecke'}), response.status_code
+
+        track = response.json()  # JSON-Daten der Strecke
 
         # Mindestpreis basierend auf den Abschnitten der Strecke berechnen
         minPrice = 0
-        for section in track.sections:
-            print(f"Section ID: {section.id}, usageFee: {section.usageFee}")
-            minPrice += section.usageFee
-        minPrice = minPrice / len(track.sections)  # Durchschnitt der Gebühren berechnen
+        for section in track['sections']:
+            # Abschnittsinformationen aus dem Dictionary extrahieren
+            sectionID = section['sectionID']
+            usageFee = section['usageFee']
+            print(f"Section ID: {sectionID}, usageFee: {usageFee}")
+            minPrice += usageFee
+
+        if len(track['sections']) > 0:
+            minPrice = minPrice / len(track['sections'])  # Durchschnitt der Gebühren berechnen
 
         # Bahnhöfe aus den übergebenen Daten abrufen
         train_stations = []
@@ -148,12 +159,12 @@ def createStopplan():
             'name': stopplan.name,
             'minPrice': stopplan.minPrice,
             'trackID': stopplan.trackID,
-            'trainStations': [{'id': station.id, 'name': station.name, 'address': station.address} for station in stopplan.trainStations]
+            'trainStations': [{'id': station.id, 'name': station.name, 'address': station.address} for station in
+                              stopplan.trainStations]
         }), 201
 
     except Exception as e:
         return jsonify({'message': f'Fehler beim Erstellen des Stopplans: {str(e)}'}), 500
-
 
 
 @app.route('/stopplan/<int:stopplan_id>', methods=['PUT'])
@@ -380,31 +391,27 @@ def get_available_trains():
     try:
         data = request.get_json()  # JSON-Daten von der Anfrage abrufen
 
-        # Alle Züge aus der Datenbank abrufen
-        all_trains = Train.query.all()
-        unavailable_trains = set()  # Set zur Speicherung belegter Züge
+        # Alle Züge abrufen
+        all_trains = get_all_trains()  # Sicherstellen, dass die Daten korrekt deserialisiert werden
+        unavailable_trains = set()
 
-        # Startdatum erstellen und um einen Tag erhöhen (lokale Logik)
         start_date_obj = datetime.strptime(data['startDate'][:10], '%Y-%m-%d').date()
         start_date_obj += timedelta(days=1)
 
-        if data['endDate']:  # Enddatum, falls vorhanden
+        if data['endDate']:
             end_date_obj = datetime.strptime(data['endDate'][:10], '%Y-%m-%d').date()
 
-        # Zeitangaben von UTC in lokale Zeit umwandeln
         local_timezone = ZoneInfo('Europe/Berlin')
         utc_time = datetime.strptime(data['startTime'], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=ZoneInfo("UTC"))
-        local_start_datetime = utc_time.astimezone(local_timezone).replace(microsecond=0)  # Millisekunden entfernen
+        local_start_datetime = utc_time.astimezone(local_timezone).replace(microsecond=0)
 
-        if data['endTime']:  # Endzeit, falls vorhanden
+        if data['endTime']:
             utc_time2 = datetime.strptime(data['endTime'], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=ZoneInfo("UTC"))
             local_end_datetime = utc_time2.astimezone(local_timezone).replace(microsecond=0)
 
-        # Ausgewählte Wochentage und Zeitintervall
         weekdays = [day['value'] for day in data['selectedDays']] if data['selectedDays'] else []
         zeitIntervall = data['zeitIntervall'] if data['zeitIntervall'] else 0
 
-        # Funktion zur Runden der Zeit auf Minuten
         def round_to_minute(t: time):
             return t.replace(second=0, microsecond=0)
 
@@ -466,32 +473,31 @@ def get_available_trains():
 
         # Verfügbare Züge ermitteln, die nicht im Set der belegten Züge sind
         available_trains = [
-            {'id': train.id, 'name': train.name}
-            for train in all_trains if train.id not in unavailable_trains
+            {'id': train['trainID'], 'name': train['name']}
+            for train in all_trains if train['trainID'] not in unavailable_trains
         ]
 
         return jsonify(available_trains), 200  # Liste der verfügbaren Züge zurückgeben
 
     except Exception as e:
+        print(f"Fehler aufgetreten: {str(e)}")
         traceback.print_exc()
         return jsonify({'message': f'Fehler beim Abrufen der verfügbaren Züge: {str(e)}'}), 500
 
+    # Fallback: Standardantwort, falls keine Ausnahme auftritt, aber kein Return ausgeführt wurde
+    return jsonify({'message': 'Unbekannter Fehler, keine Daten verfügbar.'}), 500
 
-@app.route("/trains")
+
 def get_all_trains():
-    # Alle Züge aus der Datenbank abrufen
-    trains = Train.query.all()
-    train_list = []
+    # Anfrage an den Zug-Endpoint senden
+    response = requests.get('http://127.0.0.1:5002/fleet/trains')
 
-    # Liste der Züge erstellen, mit ID und Name
-    for train in trains:
-        train_list.append({
-            'id': train.id,
-            'name': train.name,
-        })
+    # Überprüfen, ob die Anfrage erfolgreich war
+    if response.status_code != 200:
+        raise Exception(f"Fehler beim Abrufen der Züge: {response.status_code} - {response.text}")
 
-    # Die Liste der Züge als JSON zurückgeben
-    return jsonify(train_list)
+    # JSON-Daten aus der Antwort extrahieren
+    return response.json()
 
 
 @app.route('/ride_executions')

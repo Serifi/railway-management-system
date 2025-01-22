@@ -2,6 +2,7 @@ import Preset from './assets/theme'
 
 export default defineNuxtConfig({
     devtools: { enabled: false },
+    devServer: { port: 3001 },
     modules: [
         '@primevue/nuxt-module',
         '@nuxtjs/tailwindcss',

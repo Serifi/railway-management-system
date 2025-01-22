@@ -18,7 +18,7 @@ export const useTrainStationStore = defineStore('trainStation', {
      */
     async getTrainStations() {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/track/train-stations');
+        const response = await axios.get('http://127.0.0.1:5001/track/train-stations');
         this.trainStations = response.data;
       } catch (error) {
         console.error('Fehler beim Abrufen der Bahnhöfe:', error);
@@ -33,7 +33,7 @@ export const useTrainStationStore = defineStore('trainStation', {
      */
     async createTrainStation(station) {
       try {
-        await axios.post('http://127.0.0.1:5000/track/train-stations', station);
+        await axios.post('http://127.0.0.1:5001/track/train-stations', station);
         await this.getTrainStations();
       } catch (error) {
         console.error('Fehler beim Erstellen des Bahnhofs:', error.response?.data || error);
@@ -48,7 +48,7 @@ export const useTrainStationStore = defineStore('trainStation', {
      */
     async editTrainStation(station) {
       try {
-        await axios.put(`http://127.0.0.1:5000/track/train-stations/${station.stationID}`, station);
+        await axios.put(`http://127.0.0.1:5001/track/train-stations/${station.stationID}`, station);
         await this.getTrainStations();
       } catch (error) {
         console.error('Fehler beim Bearbeiten des Bahnhofs:', error.response?.data || error);
@@ -63,7 +63,7 @@ export const useTrainStationStore = defineStore('trainStation', {
      */
     async deleteTrainStation(stationID) {
       try {
-        await axios.delete(`http://127.0.0.1:5000/track/train-stations/${stationID}`);
+        await axios.delete(`http://127.0.0.1:5001/track/train-stations/${stationID}`);
         await this.getTrainStations();
       } catch (error) {
         console.error('Fehler beim Löschen des Bahnhofs:', error.response?.data || error);

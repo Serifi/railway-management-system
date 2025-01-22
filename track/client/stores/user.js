@@ -41,7 +41,7 @@ export const useUserStore = defineStore('user', {
      */
     async login(username, password) {
       try {
-        await axios.post(`http://127.0.0.1:5000/employees/login`, { username: username, password: password });
+        await axios.post(`http://127.0.0.1:5001/employees/login`, { username: username, password: password });
         this.user = await this.getEmployee(username);
         return true;
       } catch (error) {
@@ -66,7 +66,7 @@ export const useUserStore = defineStore('user', {
      */
     async getEmployee(username) {
       try {
-        const response = await axios.get(`http://127.0.0.1:5000/employees/${username}`);
+        const response = await axios.get(`http://127.0.0.1:5001/employees/${username}`);
         return response.data;
       } catch (error) {
         console.error(`Fehler beim Abrufen des Benutzers mit Benutzername ${username}:`, error);

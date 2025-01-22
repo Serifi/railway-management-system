@@ -2,7 +2,7 @@ import Preset from './assets/theme'
 
 export default defineNuxtConfig({
   devtools: { enabled: false },
-
+  devServer: { port: 3002 },
   app: {
       head: {
           title: 'Scotty',

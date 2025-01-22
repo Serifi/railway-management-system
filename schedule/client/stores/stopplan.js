@@ -4,8 +4,8 @@ import axios from 'axios';
 export const useStopplanStore = defineStore('stopplan', {
     state: () => ({
         stopplans: [],
-        tracks: [],
         stopplan: null,
+        tracks: []
     }),
 
     actions: {
@@ -32,13 +32,9 @@ export const useStopplanStore = defineStore('stopplan', {
         //Tracks vom Server holen
         async fetchTracks() {
             try {
-                const response = await axios.get('http://127.0.0.1:8000/track/tracks');
+                const response = await axios.get('http://127.0.0.1:5001/track/tracks');
                 console.log('API Response:', response.data);
-                this.tracks = response.data.map(track => ({
-                    id: track.trackID,
-                    name: track.trackName,
-                    sections: track.sections,
-                }));
+                this.tracks = response.data;
             } catch (error) {
                 console.error("Fehler beim Laden der Tracks:", error);
             }
@@ -46,7 +42,7 @@ export const useStopplanStore = defineStore('stopplan', {
         //züge vom Server holen
         async fetchTrainStationById(stationID) {
             try {
-                const response = await axios.get(`http://127.0.0.1:8000/track/train-stations/${stationID}`);
+                const response = await axios.get(`http://127.0.0.1:5001/track/train-stations/${stationID}`);
                 return response.data;
             } catch (error) {
                 console.error(`Fehler beim Abrufen der Station mit ID ${stationID}:`, error);
@@ -70,9 +66,10 @@ export const useStopplanStore = defineStore('stopplan', {
         //Halteplan erstellen
         async createStopplan(stopplanData) {
             try {
+                console.log(stopplanData)
                 const response = await axios.post('http://127.0.0.1:5000/create_stopplan/', stopplanData);
-                console.log("Erstellter Stopplan:", response.data);
 
+                console.log("Erstellter Stopplan:", response.data);
                 this.stopplans.push(response.data);
             } catch (error) {
                 console.error("Fehler beim Erstellen des Stopplans:", error.response?.data || error.message);

@@ -18,7 +18,7 @@ export const useTrackStore = defineStore('trackStore', {
      */
     async getTracks() {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/track/tracks');
+        const response = await axios.get('http://127.0.0.1:5001/track/tracks');
         this.tracks = response.data;
       } catch (error) {
         console.error('Fehler beim Abrufen der Tracks:', error.response?.data?.message || error.message);
@@ -32,7 +32,7 @@ export const useTrackStore = defineStore('trackStore', {
      */
     async getTrackById(trackID) {
       try {
-        const response = await axios.get(`http://127.0.0.1:5000/track/tracks/${trackID}`);
+        const response = await axios.get(`http://127.0.0.1:5001/track/tracks/${trackID}`);
         return response.data;
       } catch (error) {
         console.error(`Fehler beim Abrufen des Tracks mit ID ${trackID}:`, error.response?.data?.message || error.message);
@@ -48,7 +48,7 @@ export const useTrackStore = defineStore('trackStore', {
      */
     async createTrack(trackData) {
       try {
-        const response = await axios.post('http://127.0.0.1:5000/track/tracks', trackData);
+        const response = await axios.post('http://127.0.0.1:5001/track/tracks', trackData);
         await this.getTracks();
         return response.data;
       } catch (error) {
@@ -66,7 +66,7 @@ export const useTrackStore = defineStore('trackStore', {
      */
     async editTrack(trackID, trackData) {
       try {
-        const response = await axios.put(`http://127.0.0.1:5000/track/tracks/${trackID}`, trackData);
+        const response = await axios.put(`http://127.0.0.1:5001/track/tracks/${trackID}`, trackData);
         await this.getTracks();
         return response.data;
       } catch (error) {
@@ -82,7 +82,7 @@ export const useTrackStore = defineStore('trackStore', {
      */
     async deleteTrack(trackID) {
       try {
-        await axios.delete(`http://127.0.0.1:5000/track/tracks/${trackID}`);
+        await axios.delete(`http://127.0.0.1:5001/track/tracks/${trackID}`);
         await this.getTracks();
       } catch (error) {
         console.error(`Fehler beim Löschen des Tracks mit ID ${trackID}:`, error.response?.data?.message || error.message);
