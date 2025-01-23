@@ -86,8 +86,8 @@ def get_trains():
 
 
 @train_blueprint.route('/<int:train_id>', methods=['GET'])
-@authenticate
-@authorize(roles=['Employee', 'Admin'])
+# @authenticate       Für Integration mit schedule
+# @authorize(roles=['Employee', 'Admin'])
 def get_train_by_id(train_id):
     """Retrieve a specific train by ID."""
     with SessionLocal() as session:
