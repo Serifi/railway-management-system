@@ -106,12 +106,7 @@ class Employee(db.Model):
 
     rideExecutions = db.relationship('RideExecution', secondary=execution_employee, back_populates='employees')
 
-class Train(db.Model):
-    __tablename__ = 'trains'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
 
-    rideExecutions = db.relationship('RideExecution', back_populates='train')
 
 class RideExecution(db.Model):
     __tablename__ = 'rideExecutions'
@@ -121,9 +116,8 @@ class RideExecution(db.Model):
     delay = db.Column(db.Integer, nullable=True)
     date = db.Column(db.Date, nullable=False)
     time = db.Column(db.Time, nullable=False)
+    trainID = db.Column(db.Integer, nullable=False)
 
     stopplanID = db.Column(db.Integer, db.ForeignKey('stopplans.id'), nullable=False)
     stopplan = db.relationship('Stopplan', back_populates='rideExecutions')
-    trainID = db.Column(db.Integer, db.ForeignKey('trains.id'), nullable=False)
-    train = db.relationship('Train', back_populates='rideExecutions')
     employees = db.relationship('Employee', secondary=execution_employee, back_populates='rideExecutions')

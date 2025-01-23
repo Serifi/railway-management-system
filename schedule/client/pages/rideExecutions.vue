@@ -46,7 +46,7 @@
             <span v-if="!rideExecution.isCanceled && rideExecution.delay > 0" style="color: #db3939; margin-left: 0.4rem;" >+{{rideExecution.delay}}</span>
           </div>
           <div class="text-sm text-gray-400 whitespace-pre-line">
-            <i class="fa-solid fa-train mr-1"></i>Zug: {{ rideExecution.train.name }}<br/>
+            <i class="fa-solid fa-train mr-1"></i>Zug: {{ getTrainName(rideExecution.trainID) }}<br/>
             <!-- Nachricht bei abgesagten Fahrten -->
             <div v-if="rideExecution.isCanceled">
               <CustomMessage />
@@ -147,6 +147,12 @@ const stopplanStore = useStopplanStore();
 // Zugriff auf die Liste der Stoppläne aus dem Store
 const stopplans = stopplanStore.stopplans;
 
+//const trains = computed(() => rideExecutionStore.allTrains); // Alle Züge
+const trains = rideExecutionStore.allTrains;
+const trainList = trains.map(train => ({
+  key: train.trainID,
+  value: train.name
+}));
 // Zustände für die aktuell ausgewählte Fahrtdurchführung
 const selectedRideExecution = ref(null);
 const delay = ref(0); // Verspätung
@@ -156,6 +162,7 @@ const isCanceled = ref(false); // Storniert-Status
 onMounted(() => {
   stopplanStore.fetchStopplans(); // Stoppläne abrufen
   userStore.fetchEmployees(); // Mitarbeiterdaten abrufen
+  rideExecutionStore.fetchAllTrains();
 });
 
 // Hilfsfunktion, um den Schlüssel einer Fahrtdurchführung zu erhalten
@@ -262,6 +269,12 @@ const confirmDeletion = (event, item) => {
     },
   });
 };
+
+
+function getTrainName(trainID) {
+  const train = trainList.find(t => t.key === trainID);
+  return train ? train.value : 'Unbekannter Zug';
+}
 
 
 

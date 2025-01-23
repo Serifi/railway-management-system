@@ -29,7 +29,7 @@
           id="track"
           v-model="stopplan.track"
           :options="tracks"
-          optionLabel="name"
+          optionLabel="trackName"
           placeholder="Auswahl treffen..."
         />
       </div>
@@ -53,7 +53,7 @@
           id="stations"
           v-model="stopplan.trainStations"
           :options="trainStations"
-          optionLabel="name"
+          optionLabel="stationName"
           placeholder="Bahnhöfe auswählen..."
         />
       </div>
@@ -90,7 +90,9 @@ import { useToast } from 'primevue/usetoast'; // Toast für Benachrichtigungen
 // Zugriff auf den Store für Haltepläne
 const stopplanStore = useStopplanStore();
 // Tracks werden aus dem Store abgeleitet
-const tracks = computed(() => stopplanStore.tracks);
+// const tracks = computed(() => stopplanStore.tracks);
+const tracks = ref([]) // Liste der Strecken
+
 
 // Props: Eingabeparameter von der übergeordneten Komponente
 const { stopplanID, stopplanName, stopplanTrackID, stopplanTrainstations } = defineProps({
@@ -124,6 +126,12 @@ onMounted(async () => {
   await stopplanStore.fetchTracks(); // Lädt die verfügbaren Strecken
   stopplan.value.track = getSelectedTrack(); // Setzt die Strecke
   trainStations.value = stopplanTrainstations; // Initialisiert die Bahnhöfe
+  tracks.value = stopplanStore.tracks;
+  console.log(stopplanID)
+  console.log(stopplanName)
+  console.log(stopplanTrackID)
+  console.log(stopplanTrainstations)
+
 });
 
 // Funktion zum Wechseln zum nächsten Schritt
@@ -140,29 +148,56 @@ function prevStep() {
 }
 
 // Funktion zum Laden der Bahnhöfe für die ausgewählte Strecke
-function loadStations(track) {
-  const stationMap = new Map(); // Map für einzigartige Bahnhöfe
+// function loadStations(track) {
+//   const stationMap = new Map(); // Map für einzigartige Bahnhöfe
+//
+//   track.sections.forEach((section) => {
+//     // Fügt stations hinzu
+//     if (section.start_station) {
+//       stationMap.set(section.start_station.id, section.start_station);
+//     }
+//     if (section.end_station) {
+//       stationMap.set(section.end_station.id, section.end_station);
+//     }
+//   });
+//
+//   trainStations.value = Array.from(stationMap.values()); // Setzt die Bahnhöfe
+// }
 
-  track.sections.forEach((section) => {
-    // Fügt stations hinzu
-    if (section.start_station) {
-      stationMap.set(section.start_station.id, section.start_station);
-    }
-    if (section.end_station) {
-      stationMap.set(section.end_station.id, section.end_station);
-    }
-  });
+// Funktion zum Laden der Bahnhöfe für die ausgewählte Strecke
+async function loadStations(track) {
+  const stationMap = new Map(); // Verwendet eine Map, um Duplikate zu vermeiden
 
-  trainStations.value = Array.from(stationMap.values()); // Setzt die Bahnhöfe
+  for (const section of track.sections) {
+    // Startbahnhöfe abrufen
+    if (section.startStationID && !stationMap.has(section.startStationID)) {
+      const station = await stopplanStore.fetchTrainStationById(section.startStationID);
+      if (station) {
+        stationMap.set(section.startStationID, station);
+      }
+    }
+    // Endbahnhöfe abrufen
+    if (section.endStationID && !stationMap.has(section.endStationID)) {
+      const station = await stopplanStore.fetchTrainStationById(section.endStationID);
+      if (station) {
+        stationMap.set(section.endStationID, station);
+      }
+    }
+  }
+
+  trainStations.value = Array.from(stationMap.values()); // Konvertiert die Map in ein Array
+  console.log(trainStations.value)
 }
+
+
 
 // Funktion zum Aktualisieren des Halteplans
 async function updateStopplan() {
   // Datenobjekt für die Aktualisierung
   const stopplanData = {
     name: stopplan.value.name, // Name des Halteplans
-    trackID: stopplan.value.track.id, // ID der Strecke
-    trainStations: stopplan.value.trainStations.map(station => ({ id: station.id })), // Liste der Bahnhof-IDs
+    trackID: stopplan.value.track.trackID, // ID der Strecke
+    trainStations: stopplan.value.trainStations.map(station => ({ id: station.stationID })), // Liste der Bahnhof-IDs
   };
 
   await stopplanStore.editStopplan(stopplanData, stopplanID); // Aktualisiert den Halteplan im Store

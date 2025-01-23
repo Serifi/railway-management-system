@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 from flask import render_template, request, jsonify
 import requests
 
-from app.models import Stopplan, Track, TrainStation, RideExecution, Employee, Train
+from app.models import Stopplan, Track, TrainStation, RideExecution, Employee
 from app import app, db
 from flask_cors import CORS, cross_origin
 
@@ -51,10 +51,7 @@ def get_aLl_stopplans():
                 'date': ride_execution.date.strftime('%d.%m.%Y'),  # Datum formatieren
                 'time': ride_execution.time.strftime('%H:%M'),  # Zeit formatieren
                 'stopplanID': ride_execution.stopplanID,
-                'train': {
-                    'id': ride_execution.train.id,
-                    'name': ride_execution.train.name
-                },
+                'trainID': ride_execution.trainID,
                 'employees': employee_list
             })
 
@@ -262,11 +259,10 @@ def create_ride_execution():
         # Start- und Endzeit in lokale Zeit umrechnen
         utc_time = datetime.strptime(data['startTime'], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=ZoneInfo("UTC"))
         local_timezone = ZoneInfo('Europe/Berlin')
-        local_start_datetime = utc_time.astimezone(local_timezone).replace(microsecond=0)
-
+        local_start_datetime = utc_time.astimezone(local_timezone).replace(second=0, microsecond=0)
         if data['endTime']:
             utc_time2 = datetime.strptime(data['endTime'], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=ZoneInfo("UTC"))
-            local_end_datetime = utc_time2.astimezone(local_timezone).replace(microsecond=0)
+            local_end_datetime = utc_time2.astimezone(local_timezone).replace(second=0, microsecond=0)
 
         # Listen für Fahrtdurchführungen erstellen
         current_date = start_date_obj
@@ -365,10 +361,7 @@ def create_ride_execution():
             'date': ride_execution.date.strftime('%d.%m.%Y'),
             'time': ride_execution.time.strftime('%H:%M'),
             'stopplanID': ride_execution.stopplanID,
-            'train': {
-                'id': ride_execution.train.id,
-                'name': ride_execution.train.name,
-            },
+            'trainID': ride_execution.trainID,
             'employees': [{
                 'ssn': employee.ssn,
                 'firstName': employee.firstName,
@@ -403,11 +396,14 @@ def get_available_trains():
 
         local_timezone = ZoneInfo('Europe/Berlin')
         utc_time = datetime.strptime(data['startTime'], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=ZoneInfo("UTC"))
-        local_start_datetime = utc_time.astimezone(local_timezone).replace(microsecond=0)
-
+        # local_start_datetime = utc_time.astimezone(local_timezone).replace(microsecond=0)
+        # if data['endTime']:
+        #     utc_time2 = datetime.strptime(data['endTime'], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=ZoneInfo("UTC"))
+        #     local_end_datetime = utc_time2.astimezone(local_timezone).replace(microsecond=0)
+        local_start_datetime = utc_time.astimezone(local_timezone).replace(second=0, microsecond=0)
         if data['endTime']:
             utc_time2 = datetime.strptime(data['endTime'], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=ZoneInfo("UTC"))
-            local_end_datetime = utc_time2.astimezone(local_timezone).replace(microsecond=0)
+            local_end_datetime = utc_time2.astimezone(local_timezone).replace(second=0, microsecond=0)
 
         weekdays = [day['value'] for day in data['selectedDays']] if data['selectedDays'] else []
         zeitIntervall = data['zeitIntervall'] if data['zeitIntervall'] else 0
@@ -530,10 +526,7 @@ def get_all_ride_executions():
             'date': ride_execution.date.strftime('%d.%m.%Y'),  # Datum im Format dd.MM.yyyy
             'time': ride_execution.time.strftime('%H:%M'),  # Uhrzeit im Format HH:mm
             'stopplanID': ride_execution.stopplanID,
-            'train': {
-                'id': ride_execution.train.id,
-                'name': ride_execution.train.name
-            },
+            'trainID': ride_execution.trainID,
             'employees': employee_list
         })
 
@@ -589,10 +582,7 @@ def update_ride_execution(ride_execution_id):
                 'isCanceled': ride_execution.isCanceled,
                 'delay': ride_execution.delay,
                 'stopplanID': ride_execution.stopplanID,
-                'train': {
-                    'id': ride_execution.train.id,
-                    'name': ride_execution.train.name
-                }
+                'trainID': ride_execution.trainID
             }
         }), 200
     except Exception as e:
@@ -623,10 +613,7 @@ def get_all_employees():
                 'stopplan': {
                     'name': ride_execution.stopplan.name,
                 },
-                'train': {
-                    'id': ride_execution.train.id,
-                    'name': ride_execution.train.name
-                },
+                'trainID': ride_execution.trainID
             })
 
         # Die Mitarbeiterdaten mit Fahrten zusammenstellen

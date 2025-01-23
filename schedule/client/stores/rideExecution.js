@@ -3,6 +3,7 @@ import axios from 'axios';
 
 export const useRideExecutionStore = defineStore('rideExecution', {
     state: () => ({
+        allTrains: [],
         rideExecutions: [],
         stopplans2: [],
         trains: [],
@@ -33,6 +34,15 @@ export const useRideExecutionStore = defineStore('rideExecution', {
                 const response = await axios.post('http://127.0.0.1:5000/available_trains', dateAndTimeData);
                 console.log('API Response:', response.data);
                 this.trains = response.data;
+            } catch (error) {
+                console.error("Fehler beim Laden der Daten:", error);
+            }
+        },
+        async fetchAllTrains(){
+            try {
+                const response = await axios.get('http://127.0.0.1:5002/fleet/trains');
+                console.log('API Response:', response.data);
+                this.allTrains = response.data;
             } catch (error) {
                 console.error("Fehler beim Laden der Daten:", error);
             }
