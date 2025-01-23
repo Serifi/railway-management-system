@@ -112,18 +112,19 @@ def create_carriage():
             session.rollback()
             return jsonify({"message": str(e)}), 400
 
+
 @carriage_blueprint.route('/<int:carriage_id>', methods=['PUT'])
 @authenticate
 @authorize(roles=['Admin'])
 def update_carriage(carriage_id):
-    """ Update an existing carriage """
+    """ Update an existing carriage and switch type if necessary. """
     data = request.get_json()
     if not data:
         return jsonify({"message": "No data provided for update"}), 400
 
     with SessionLocal() as session:
         try:
-            # Load the carriage and type-specific details
+            # Load the carriage with any type-specific attributes
             carriage = session.query(Carriage).options(
                 joinedload(Carriage.railcar_detail),
                 joinedload(Carriage.passenger_car_detail)
@@ -136,25 +137,84 @@ def update_carriage(carriage_id):
             if is_carriage_assigned(session, carriage_id):
                 return jsonify({"message": f"Cannot edit carriage #{carriage_id} assigned to a train"}), 400
 
-            # Update general fields
-            for field in ['trackGauge', 'type']:
-                if field in data:
-                    setattr(carriage, field, data[field])
+            old_type = carriage.type
 
-            # Update type-specific details
-            if carriage.type == "Railcar" and carriage.railcar_detail:
-                if 'maxTractiveForce' in data:
-                    carriage.railcar_detail.maxTractiveForce = data['maxTractiveForce']
-            elif carriage.type == "PassengerCar" and carriage.passenger_car_detail:
-                for field in ['numberOfSeats', 'maxWeight']:
-                    if field in data:
-                        setattr(carriage.passenger_car_detail, field, data[field])
+            # Update general carriage fields, if given
+            if 'trackGauge' in data:
+                carriage.trackGauge = data['trackGauge']
+            if 'type' in data:
+                carriage.type = data['type']
+
+            new_type = carriage.type
+
+            # If the type changed, remove old type-specific row, then insert the new one
+            if old_type != new_type:
+                # Delete the old type-specific row, if any ---
+                if carriage.railcar_detail:
+                    session.delete(carriage.railcar_detail)
+                if carriage.passenger_car_detail:
+                    session.delete(carriage.passenger_car_detail)
+
+                session.flush()
+
+                # Insert the new type-specific row
+                if new_type == "Railcar":
+                    if 'maxTractiveForce' not in data:
+                        raise ValueError("maxTractiveForce is required for a Railcar.")
+                    new_railcar = Railcar(
+                        carriageID=carriage.carriageID,
+                        maxTractiveForce=data['maxTractiveForce']
+                    )
+                    session.add(new_railcar)
+
+                elif new_type == "PassengerCar":
+                    # Check required fields
+                    if 'numberOfSeats' not in data or 'maxWeight' not in data:
+                        raise ValueError("numberOfSeats and maxWeight are required for a PassengerCar.")
+                    new_passenger_car = PassengerCar(
+                        carriageID=carriage.carriageID,
+                        numberOfSeats=data['numberOfSeats'],
+                        maxWeight=data['maxWeight']
+                    )
+                    session.add(new_passenger_car)
+
+            else:
+                # If type has not changed, just update the existing row, if it exists
+                if new_type == "Railcar":
+                    if carriage.railcar_detail and 'maxTractiveForce' in data:
+                        carriage.railcar_detail.maxTractiveForce = data['maxTractiveForce']
+                    elif not carriage.railcar_detail:
+                        # If it's missing, create a new railcar entry
+                        if 'maxTractiveForce' not in data:
+                            raise ValueError("maxTractiveForce is required to create a missing Railcar entry.")
+                        session.add(Railcar(
+                            carriageID=carriage.carriageID,
+                            maxTractiveForce=data['maxTractiveForce']
+                        ))
+
+                elif new_type == "PassengerCar":
+                    if carriage.passenger_car_detail:
+                        if 'numberOfSeats' in data:
+                            carriage.passenger_car_detail.numberOfSeats = data['numberOfSeats']
+                        if 'maxWeight' in data:
+                            carriage.passenger_car_detail.maxWeight = data['maxWeight']
+                    else:
+                        # If it's missing, create a new passenger_car entry
+                        if 'numberOfSeats' not in data or 'maxWeight' not in data:
+                            raise ValueError("numberOfSeats and maxWeight are required to create a missing PassengerCar entry.")
+                        session.add(PassengerCar(
+                            carriageID=carriage.carriageID,
+                            numberOfSeats=data['numberOfSeats'],
+                            maxWeight=data['maxWeight']
+                        ))
 
             session.commit()
-            return jsonify({"message": f"Carriage with ID #{carriage.carriageID} is now updated"}), 200
+            return jsonify({"message": f"Carriage with ID #{carriage.carriageID} is updated"}), 200
+
         except (ValueError, IntegrityError) as e:
             session.rollback()
             return jsonify({"message": str(e)}), 400
+
 
 @carriage_blueprint.route('/<int:carriage_id>', methods=['DELETE'])
 @authenticate

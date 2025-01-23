@@ -23,12 +23,12 @@
     </template>
   </List>
 
-  <ScotDialog :visible="createDialogVisible" type="create" :header="$t('createEmployee')" :disable-action="disableAction"
+  <ScotDialog :visible="createDialogVisible" type="create" :header="$t('createEmployee')"
               @update:visible="createDialogVisible = $event" @action="createEmployee" @cancel="toggleCreateDialog">
     <ScotEmployee @update:employee="updateEmployee"/>
   </ScotDialog>
-
-  <ScotDialog :visible="editDialogVisible" type="edit" :header="$t('editEmployee')" :disable-action="disableAction"
+  <!-- :disable-action="disableAction" -->
+  <ScotDialog :visible="editDialogVisible" type="edit" :header="$t('editEmployee')"
               @update:visible="editDialogVisible = $event" @action="editEmployee" @cancel="toggleEditDialog">
     <ScotEmployee :employee="employee" :disabledFields="['ssn']" @update:employee="updateEmployee"/>
   </ScotDialog>

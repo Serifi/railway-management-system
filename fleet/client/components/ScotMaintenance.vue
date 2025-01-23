@@ -7,8 +7,9 @@
     </div>
 
     <div class="flex flex-col space-y-1">
-      <label for="employees">{{ $t('employee') }}</label>
-      <MultiSelect id="employees" v-model="maintenance.employeeSSNs" :options="employees" optionLabel="username" optionValue="ssn" :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('employeeSSNs')"/>
+      <label for="employee">{{ $t('employee') }}</label>
+      <!-- Geänderte Komponente von MultiSelect zu Select und Anpassung des v-model -->
+      <Select id="employee" v-model="maintenance.employeeSSN" :options="employees" optionLabel="username" optionValue="ssn" :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('employeeSSN')"/>
     </div>
 
     <div class="flex flex-col space-y-1">
@@ -25,6 +26,8 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
+import { useTrainStore } from '@/stores/train' // Import des trainStore
+import { useEmployeeStore } from '@/stores/employee' // Import des employeeStore
 import { useMaintenanceStore } from '@/stores/maintenance'
 
 const emits = defineEmits(['update:maintenance'])
@@ -33,7 +36,7 @@ const props = defineProps({
     type: Object,
     default: () => ({
       trainID: null,
-      employeeSSNs: [],
+      employeeSSN: null, // Geändertes Feld
       from_time: '',
       to_time: ''
     })
@@ -46,22 +49,24 @@ const props = defineProps({
 
 const maintenance = ref({ ...props.maintenance })
 const maintenanceStore = useMaintenanceStore()
-const trains = computed(() => maintenanceStore.trains)
-const employees = computed(() => maintenanceStore.employees)
+const trainStore = useTrainStore() // Nutzung des trainStore
+const employeeStore = useEmployeeStore() // Nutzung des employeeStore
+const trains = computed(() => trainStore.trains)
+const employees = computed(() => employeeStore.employees)
 
 const isDisabled = (field) => props.disabledFields.includes(field)
 
 watch(
     [
       () => maintenance.value.trainID,
-      () => maintenance.value.employeeSSNs,
+      () => maintenance.value.employeeSSN, // Geändertes Feld
       () => maintenance.value.from_time,
       () => maintenance.value.to_time
     ],
-    ([trainID, employeeSSNs, from_time, to_time]) => {
+    ([trainID, employeeSSN, from_time, to_time]) => {
       let allFieldsFilled = false
 
-      if (trainID && employeeSSNs.length > 0 && from_time && to_time) {
+      if (trainID && employeeSSN && from_time && to_time) {
         allFieldsFilled = true
       }
 
@@ -69,4 +74,9 @@ watch(
     },
     { deep: true }
 )
+
+onMounted(async () => {
+  await trainStore.getTrains()
+  await employeeStore.getEmployees()
+})
 </script>

@@ -111,7 +111,6 @@ function onTypeChange(filters) {
 
 function updateCarriage(currentCarriage) {
   carriage.value = currentCarriage
-  disableAction.value = carriage.value === null
 }
 
 function toggleCreateDialog() {
@@ -174,7 +173,7 @@ function getCarriageKey(carriage) {
 
 watch(carriage, (newVal) => {
   if (originalCarriage.value)
-    disableAction.value = JSON.stringify(newVal) === JSON.stringify(originalCarriage.value)
+    disableAction.value = (newVal === null) || (JSON.stringify(newVal) === JSON.stringify(originalCarriage.value))
 }, { deep: true })
 
 onMounted(() => carriageStore.getCarriages())

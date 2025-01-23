@@ -1,6 +1,6 @@
+// stores/maintenance.js
 import { defineStore } from 'pinia'
 import apiClient from '@/utils/api'
-import { useTrainStore } from '@/stores/train'
 
 const BASE_PATH = '/fleet/maintenances'
 
@@ -21,8 +21,6 @@ export const useMaintenanceStore = defineStore('maintenance', {
 
         async initialize() {
             try {
-                await this.getTrains()
-                //await this.getEmployees()
                 await this.getMaintenances()
             } catch (error) {
                 console.error('Error initializing maintenance store:', error)
@@ -44,7 +42,13 @@ export const useMaintenanceStore = defineStore('maintenance', {
 
         async createMaintenance(maintenance) {
             try {
-                const data = await this.handleRequest(apiClient.post(BASE_PATH, maintenance))
+                const payload = {
+                    employeeSSN: maintenance.employeeSSN, // Geändertes Feld
+                    trainID: maintenance.trainID,
+                    from_time: maintenance.from_time,
+                    to_time: maintenance.to_time
+                }
+                const data = await this.handleRequest(apiClient.post(BASE_PATH, payload))
                 await this.getMaintenances()
                 return data
             } catch (error) {
@@ -55,7 +59,13 @@ export const useMaintenanceStore = defineStore('maintenance', {
 
         async editMaintenance(maintenance) {
             try {
-                const data = await this.handleRequest(apiClient.put(`${BASE_PATH}/${maintenance.maintenanceID}`, maintenance))
+                const payload = {
+                    employeeSSN: maintenance.employeeSSN, // Geändertes Feld
+                    trainID: maintenance.trainID,
+                    from_time: maintenance.from_time,
+                    to_time: maintenance.to_time
+                }
+                const data = await this.handleRequest(apiClient.put(`${BASE_PATH}/${maintenance.maintenanceID}`, payload))
                 await this.getMaintenances()
                 return data
             } catch (error) {
@@ -74,25 +84,5 @@ export const useMaintenanceStore = defineStore('maintenance', {
                 throw error
             }
         },
-
-        async getTrains() {
-            const trainStore = useTrainStore()
-            try {
-                await trainStore.getTrains()
-            } catch (error) {
-                console.error('Error fetching trains from trainStore:', error)
-                throw error
-            }
-        },
-
-        /*async getEmployeees() {
-            const employeeStore = useEmployeeStore()
-            try {
-                await employeeStore.getEmployees()
-            } catch (error) {
-                console.error('Error fetching employees from employeeStore:', error)
-                throw error
-            }
-        }*/
     },
 })

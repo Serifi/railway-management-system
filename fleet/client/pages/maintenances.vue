@@ -6,7 +6,7 @@
     </template>
     <template #description="{ item }">
       <span>
-        {{ $t('trainID') }}: {{ item.trainID }}<br/>
+        {{ $t('trainID') }}: {{ getTrainName(item.trainID) }}<br/>
         {{ $t('timePeriod') }}: {{ formatDate(item.from_time) }} - {{ formatDate(item.to_time) }}<br/>
       </span>
     </template>
@@ -20,8 +20,9 @@
         </div>
 
         <div class="flex flex-col space-y-1">
-          <label for="employee">{{ $t('employees') }}</label>
-          <MultiSelect id="employee" v-model="filters.employeeSSNs" :options="employees" optionLabel="username" optionValue="ssn" :placeholder="$t('selectPlaceholder')" showClear/>
+          <label for="employee">{{ $t('employee') }}</label>
+          <!-- Geänderte Komponente von MultiSelect zu Select und Anpassung des v-model -->
+          <Select id="employee" v-model="filters.employeeSSN" :options="employees" optionLabel="username" optionValue="ssn" :placeholder="$t('selectPlaceholder')" showClear/>
         </div>
 
         <div class="flex flex-col space-y-1">
@@ -51,24 +52,28 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useMaintenanceStore } from '@/stores/maintenance'
+import { useTrainStore } from '@/stores/train' // Import des trainStore
+import { useEmployeeStore } from '@/stores/employee' // Import des employeeStore
 import { useToast } from 'primevue/usetoast'
 
-const toast = useToast();
+const toast = useToast()
 const createDialogVisible = ref(false)
 const editDialogVisible = ref(false)
 const maintenanceStore = useMaintenanceStore()
+const trainStore = useTrainStore() // Nutzung des trainStore
+const employeeStore = useEmployeeStore() // Nutzung des employeeStore
 const maintenances = computed(() => maintenanceStore.maintenances)
 const maintenance = ref(null)
 const disableAction = ref(false)
-const trains = computed(() => maintenanceStore.trains)
-const employees = computed(() => maintenanceStore.employees)
+const trains = computed(() => trainStore.trains)
+const employees = computed(() => employeeStore.employees)
 
 function initializeFilters(filters) {
   if (!filters.trainID) {
     filters.trainID = null
   }
-  if (!filters.employeeSSNs) {
-    filters.employeeSSNs = []
+  if (!filters.employeeSSN) { // Geändertes Feld
+    filters.employeeSSN = null
   }
   if (!filters.from_time) {
     filters.from_time = null
@@ -82,6 +87,11 @@ function initializeFilters(filters) {
 function formatDate(dateStr) {
   const date = new Date(dateStr)
   return date.toLocaleString()
+}
+
+function getTrainName(trainID) {
+  const train = trains.value.find(t => t.trainID === trainID)
+  return train ? train.name : 'Unbekannt'
 }
 
 function updateMaintenance(currentMaintenance) {
@@ -136,33 +146,9 @@ function getMaintenanceKey(maintenance) {
   return maintenance.maintenanceID
 }
 
-function resetFilters(filters) {
-  Object.keys(filters).forEach(key => {
-    if (typeof filters[key] === 'object' && filters[key] !== null) {
-      Object.keys(filters[key]).forEach(subKey => {
-        filters[key][subKey] = null
-      })
-    } else {
-      filters[key] = null
-    }
-  })
-}
-
 onMounted(async () => {
-  await maintenanceStore.getTrains()
-  //await maintenanceStore.getEmployees()
+  await trainStore.getTrains()
+  await employeeStore.getEmployees()
   await maintenanceStore.getMaintenances()
 });
 </script>
-
-<style>
-.p-confirm-popup-accept,
-.p-confirm-popup-reject {
-  padding: 4px;
-  margin: 4px;
-}
-
-.p-confirm-popup-accept{
-  background-color: #FF9999 !important;
-}
-</style>
