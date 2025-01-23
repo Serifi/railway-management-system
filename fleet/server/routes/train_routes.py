@@ -6,6 +6,7 @@ from models.train import Train, TrainPassengerCar
 from models.carriage import Railcar, PassengerCar
 from models.maintenance import Maintenance
 from auth import authenticate, authorize
+from datetime import datetime
 from math import fsum
 
 train_blueprint = Blueprint('train_routes', __name__)
@@ -31,11 +32,18 @@ def serialize_train(train):
         for assoc in train.passenger_cars_associations
     ]
 
+    # Determine if the train is available (no ongoing maintenance)
+    now = datetime.utcnow()
+    available = not any(
+        m.from_time <= now <= m.to_time for m in train.maintenances
+    )
+
     return {
         "trainID": train.trainID,
         "name": train.name,
         "railcar": railcar_data,
-        "passenger_cars": passenger_cars
+        "passenger_cars": passenger_cars,
+        "available": available
     }
 
 
@@ -79,7 +87,8 @@ def get_trains():
     with SessionLocal() as session:
         trains = session.query(Train).options(
             joinedload(Train.railcar).joinedload(Railcar.carriage),
-            joinedload(Train.passenger_cars_associations).joinedload(TrainPassengerCar.passenger_car).joinedload(PassengerCar.carriage)
+            joinedload(Train.passenger_cars_associations).joinedload(TrainPassengerCar.passenger_car).joinedload(PassengerCar.carriage),
+            joinedload(Train.maintenances)
         ).all()
         serialized_trains = [serialize_train(train) for train in trains]
         return jsonify(serialized_trains), 200
@@ -93,7 +102,8 @@ def get_train_by_id(train_id):
     with SessionLocal() as session:
         train = session.query(Train).options(
             joinedload(Train.railcar).joinedload(Railcar.carriage),
-            joinedload(Train.passenger_cars_associations).joinedload(TrainPassengerCar.passenger_car).joinedload(PassengerCar.carriage)
+            joinedload(Train.passenger_cars_associations).joinedload(TrainPassengerCar.passenger_car).joinedload(PassengerCar.carriage),
+            joinedload(Train.maintenances)
         ).filter_by(trainID=train_id).first()
 
         if not train:

@@ -3,7 +3,7 @@
             @create="toggleCreateDialog" @edit="toggleEditDialog" @delete="deleteTrain">
     <template #title="{ item }">
       {{ item.name }}
-      <Tag :severity="item.active ? 'success' : 'danger'" :value="$t(item.active ? 'active' : 'inactive')" class="ml-2 !py-[0px]"/>
+      <Tag :severity="item.available ? 'success' : 'danger'" :value="$t(item.active ? 'active' : 'inactive')" class="ml-2 !py-[0px]"/>
     </template>
     <template #description="{ item }">
       ID: {{ item.trainID }} <br>
@@ -72,7 +72,7 @@ const toast = useToast();
 const createDialogVisible = ref(false)
 const editDialogVisible = ref(false)
 const trainStore = useTrainStore()
-const trains = computed(() => trainStore.trainsWithStatus)
+const trains = computed(() => trainStore.trains)
 const train = ref(null)
 const originalTrain = ref(null)
 const disableAction = ref(false)

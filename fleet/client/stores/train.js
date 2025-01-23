@@ -1,7 +1,6 @@
 // stores/train.js
 import { defineStore } from 'pinia'
 import apiClient from '@/utils/api'
-import { useMaintenanceStore } from '@/stores/maintenance'
 import { useCarriageStore } from '@/stores/carriage'
 
 const BASE_PATH = '/fleet/trains'
@@ -13,31 +12,6 @@ export const useTrainStore = defineStore('train', {
         railcars: [],
         passengerCars: [],
     }),
-    getters: {
-        trainsWithStatus: (state) => {
-            const now = new Date()
-            const maintenanceStore = useMaintenanceStore()
-            const maintenances = maintenanceStore.maintenances
-            return state.trains.map(train => {
-                const isUnderMaintenance = maintenances.some(maintenance => {
-                    return maintenance.trainID === train.trainID &&
-                        new Date(maintenance.from_time) <= now &&
-                        new Date(maintenance.to_time) >= now
-                })
-
-                const totalWeight = train.passenger_cars.reduce((sum, pc) => sum + (pc.maxWeight || 0), 0)
-                const totalSeats = train.passenger_cars.reduce((sum, pc) => sum + (pc.numberOfSeats || 0), 0)
-
-                return {
-                    ...train,
-                    railcarID: train.railcar ? train.railcar.carriageID : null,
-                    active: !isUnderMaintenance,
-                    totalWeight,
-                    totalSeats
-                }
-            })
-        }
-    },
     actions: {
         async handleRequest(promise) {
             try {
@@ -52,7 +26,11 @@ export const useTrainStore = defineStore('train', {
             this.trainsLoading = true
             try {
                 const data = await this.handleRequest(apiClient.get(BASE_PATH))
-                this.trains = data
+                this.trains = data.map(train => ({
+                    ...train,
+                    totalWeight: train.passenger_cars.reduce((sum, pc) => sum + (pc.maxWeight || 0), 0),
+                    totalSeats: train.passenger_cars.reduce((sum, pc) => sum + (pc.numberOfSeats || 0), 0)
+                }))
             } catch (error) {
                 console.error('Error fetching trains:', error)
                 throw error
