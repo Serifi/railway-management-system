@@ -9,7 +9,8 @@
     <div class="flex flex-col space-y-1">
       <label for="employee">{{ $t('employee') }}</label>
       <!-- Geänderte Komponente von MultiSelect zu Select und Anpassung des v-model -->
-      <Select id="employee" v-model="maintenance.employeeSSN" :options="employees" optionLabel="username" optionValue="ssn" :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('employeeSSN')"/>
+      <Select id="employee" v-model="maintenance.employeeSSN" :options="employees" :optionLabel="getEmployeeDisplayName"
+              optionValue="ssn" :placeholder="$t('selectPlaceholder')" filter showClear/>
     </div>
 
     <div class="flex flex-col space-y-1">
@@ -55,6 +56,10 @@ const trains = computed(() => trainStore.trains)
 const employees = computed(() => employeeStore.employees)
 
 const isDisabled = (field) => props.disabledFields.includes(field)
+
+function getEmployeeDisplayName(employee) {
+  return `${employee.firstName} ${employee.lastName}`
+}
 
 watch(
     [

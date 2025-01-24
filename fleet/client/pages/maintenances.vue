@@ -6,8 +6,10 @@
     </template>
     <template #description="{ item }">
       <span>
-        {{ $t('trainID') }}: {{ getTrainName(item.trainID) }}<br/>
-        {{ $t('timePeriod') }}: {{ formatDate(item.from_time) }} - {{ formatDate(item.to_time) }}<br/>
+        {{ $t('trainID') }}: {{ item.trainID }}<br/>
+        {{ $t('employee') }}: {{ getEmployeeName(item.employeeSSN) }}<br/>
+        {{ $t('from') }}: {{ formatDate(item.from_time) }}<br/>
+        {{ $t('to') }}: {{ formatDate(item.to_time) }}<br/>
       </span>
     </template>
     <template #filters="{ filters }">
@@ -22,7 +24,8 @@
         <div class="flex flex-col space-y-1">
           <label for="employee">{{ $t('employee') }}</label>
           <!-- Geänderte Komponente von MultiSelect zu Select und Anpassung des v-model -->
-          <Select id="employee" v-model="filters.employeeSSN" :options="employees" optionLabel="username" optionValue="ssn" :placeholder="$t('selectPlaceholder')" filter showClear/>
+          <Select id="employee" v-model="filters.employeeSSN" :options="employees" :optionLabel="getEmployeeDisplayName"
+                  optionValue="ssn" :placeholder="$t('selectPlaceholder')" filter showClear/>
         </div>
 
         <div class="flex flex-col space-y-1">
@@ -52,27 +55,36 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useMaintenanceStore } from '@/stores/maintenance'
-import { useTrainStore } from '@/stores/train' // Import des trainStore
-import { useEmployeeStore } from '@/stores/employee' // Import des employeeStore
+import { useTrainStore } from '@/stores/train'
+import { useEmployeeStore } from '@/stores/employee'
 import { useToast } from 'primevue/usetoast'
 
 const toast = useToast()
 const createDialogVisible = ref(false)
 const editDialogVisible = ref(false)
 const maintenanceStore = useMaintenanceStore()
-const trainStore = useTrainStore() // Nutzung des trainStore
-const employeeStore = useEmployeeStore() // Nutzung des employeeStore
+const trainStore = useTrainStore()
+const employeeStore = useEmployeeStore()
 const maintenances = computed(() => maintenanceStore.maintenances)
 const maintenance = ref(null)
 const disableAction = ref(false)
 const trains = computed(() => trainStore.trains)
 const employees = computed(() => employeeStore.employees)
 
+function showToast(type, message) {
+  toast.add({
+    severity: type,
+    summary: type === 'success' ? 'Erfolgreich' : 'Fehler',
+    detail: message,
+    life: 3000
+  })
+}
+
 function initializeFilters(filters) {
   if (!filters.trainID) {
     filters.trainID = null
   }
-  if (!filters.employeeSSN) { // Geändertes Feld
+  if (!filters.employeeSSN) {
     filters.employeeSSN = null
   }
   if (!filters.from_time) {
@@ -94,6 +106,15 @@ function getTrainName(trainID) {
   return train ? train.name : 'Unbekannt'
 }
 
+function getEmployeeName(ssn) {
+  const employee = employees.value.find(e => e.ssn === ssn)
+  return employee ? `${employee.firstName} ${employee.lastName}` : 'Unbekannt'
+}
+
+function getEmployeeDisplayName(employee) {
+  return `${employee.firstName} ${employee.lastName}`
+}
+
 function updateMaintenance(currentMaintenance) {
   maintenance.value = currentMaintenance
   disableAction.value = maintenance.value === null
@@ -108,10 +129,12 @@ function createMaintenance() {
   maintenanceStore.createMaintenance(maintenance.value)
       .then(() => {
         toggleCreateDialog()
-        toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Wartung wurde erstellt', life: 3000 })
+        showToast('success', 'Wartung wurde erstellt')
       })
       .catch(error => {
-        toast.add({ severity: 'error', summary: 'Fehler', detail: error.response?.data?.message || 'Wartung konnte nicht erstellt werden', life: 3000 })
+        toggleCreateDialog()
+        const errorMessage = error.message || 'Wartung konnte nicht erstellt werden'
+        showToast('error', errorMessage)
       })
 }
 
@@ -125,20 +148,23 @@ function editMaintenance() {
   maintenanceStore.editMaintenance(maintenance.value)
       .then(() => {
         toggleEditDialog(null)
-        toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Wartung wurde aktualisiert', life: 3000 })
+        showToast('success', 'Wartung wurde aktualisiert')
       })
       .catch(error => {
-        toast.add({ severity: 'error', summary: 'Fehler', detail: error.response?.data?.message || 'Wartung konnte nicht aktualisiert werden', life: 3000 })
+        toggleEditDialog()
+        const errorMessage = error.message || 'Wartung konnte nicht aktualisiert werden'
+        showToast('error', errorMessage)
       })
 }
 
 function deleteMaintenance(currentMaintenance) {
   maintenanceStore.deleteMaintenance(currentMaintenance.maintenanceID)
       .then(() => {
-        toast.add({ severity: 'success', summary: 'Erfolgreich', detail: 'Wartung wurde gelöscht', life: 3000 })
+        showToast('success', 'Wartung wurde gelöscht')
       })
       .catch(error => {
-        toast.add({ severity: 'error', summary: 'Fehler', detail: error.response?.data?.message || 'Wartung konnte nicht gelöscht werden', life: 3000 })
+        const errorMessage = error.message || 'Wartung konnte nicht gelöscht werden'
+        showToast('error', errorMessage)
       })
 }
 
