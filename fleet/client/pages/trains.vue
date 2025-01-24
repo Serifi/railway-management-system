@@ -103,7 +103,8 @@ function initializeFilters(filters) {
 
 function updateTrain(currentTrain) {
   train.value = currentTrain
-  disableAction.value = train.value === null
+  console.log("TEST")
+  console.log(currentTrain)
 }
 
 function toggleCreateDialog() {
@@ -164,14 +165,19 @@ function getTrainKey(train) {
   return train.trainID
 }
 
-watch(train, (newVal) => {
-  if (originalTrain.value)
-    disableAction.value = JSON.stringify(newVal) === JSON.stringify(originalTrain.value)
-}, { deep: true })
+watch(() => train.value, (newVal) => {
+    if (createDialogVisible.value) {
+      disableAction.value = (newVal === null)
+      return
+    }
+    if (editDialogVisible.value && originalTrain.value) {
+      disableAction.value = newVal === null || JSON.stringify(newVal) === JSON.stringify(originalTrain.value)
+    }
+  }, { deep: true}
+)
 
 onMounted(async () => {
   await trainStore.getCarriagesByType()
   await trainStore.getTrains()
-  console.log(trains.value)
 });
 </script>

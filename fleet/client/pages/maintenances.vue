@@ -27,12 +27,12 @@
 
         <div class="flex flex-col space-y-1">
           <label for="from_time">{{ $t('from') }}</label>
-          <Calendar id="from_time" v-model="filters.from_time" showTime showSeconds :placeholder="$t('selectPlaceholder')"/>
+          <DatePicker id="from_time" v-model="filters.from_time" showTime showSeconds :placeholder="$t('selectPlaceholder')"/>
         </div>
 
         <div class="flex flex-col space-y-1">
           <label for="to_time">{{ $t('to') }}</label>
-          <Calendar id="to_time" v-model="filters.to_time" showTime showSeconds :placeholder="$t('selectPlaceholder')"/>
+          <DatePicker id="to_time" v-model="filters.to_time" showTime showSeconds :placeholder="$t('selectPlaceholder')"/>
         </div>
       </div>
     </template>
