@@ -28,6 +28,7 @@ export const useTrainStore = defineStore('train', {
                 const data = await this.handleRequest(apiClient.get(BASE_PATH))
                 this.trains = data.map(train => ({
                     ...train,
+                    railcarID: train.railcar.carriageID,
                     totalWeight: train.passenger_cars.reduce((sum, pc) => sum + (pc.maxWeight || 0), 0),
                     totalSeats: train.passenger_cars.reduce((sum, pc) => sum + (pc.numberOfSeats || 0), 0)
                 }))

@@ -3,7 +3,7 @@
             @create="toggleCreateDialog" @edit="toggleEditDialog" @delete="deleteTrain">
     <template #title="{ item }">
       {{ item.name }}
-      <Tag :severity="item.available ? 'success' : 'danger'" :value="$t(item.active ? 'active' : 'inactive')" class="ml-2 !py-[0px]"/>
+      <Tag :severity="item.active ? 'success' : 'danger'" :value="$t(item.active ? 'active' : 'inactive')" class="ml-2 !py-[0px]"/>
     </template>
     <template #description="{ item }">
       ID: {{ item.trainID }} <br>
@@ -103,8 +103,6 @@ function initializeFilters(filters) {
 
 function updateTrain(currentTrain) {
   train.value = currentTrain
-  console.log("TEST")
-  console.log(currentTrain)
 }
 
 function toggleCreateDialog() {

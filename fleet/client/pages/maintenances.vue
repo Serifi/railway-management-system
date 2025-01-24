@@ -16,13 +16,13 @@
       <div class="p-4 space-y-4">
         <div class="flex flex-col space-y-1">
           <label for="train">{{ $t('train') }}</label>
-          <Select id="train" v-model="filters.trainID" :options="trains" optionLabel="name" optionValue="trainID" :placeholder="$t('selectPlaceholder')" showClear/>
+          <Select id="train" v-model="filters.trainID" :options="trains" optionLabel="name" optionValue="trainID" :placeholder="$t('selectPlaceholder')" filter showClear/>
         </div>
 
         <div class="flex flex-col space-y-1">
           <label for="employee">{{ $t('employee') }}</label>
           <!-- Geänderte Komponente von MultiSelect zu Select und Anpassung des v-model -->
-          <Select id="employee" v-model="filters.employeeSSN" :options="employees" optionLabel="username" optionValue="ssn" :placeholder="$t('selectPlaceholder')" showClear/>
+          <Select id="employee" v-model="filters.employeeSSN" :options="employees" optionLabel="username" optionValue="ssn" :placeholder="$t('selectPlaceholder')" filter showClear/>
         </div>
 
         <div class="flex flex-col space-y-1">

@@ -32,9 +32,9 @@ def serialize_train(train):
         for assoc in train.passenger_cars_associations
     ]
 
-    # Determine if the train is available (no ongoing maintenance)
+    # Determine if the train is active (no ongoing maintenance)
     now = datetime.utcnow()
-    available = not any(
+    active = not any(
         m.from_time <= now <= m.to_time for m in train.maintenances
     )
 
@@ -43,7 +43,7 @@ def serialize_train(train):
         "name": train.name,
         "railcar": railcar_data,
         "passenger_cars": passenger_cars,
-        "available": available
+        "active": active
     }
 
 

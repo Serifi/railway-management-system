@@ -12,12 +12,12 @@
       <div class="p-4 space-y-4">
         <div class="flex flex-col space-y-1">
           <label for="department">{{ $t('department') }}</label>
-          <Select id="department" v-model="filters.department" :options="departments" optionLabel="label" optionValue="value" :placeholder="$t('selectPlaceholder')" showClear/>
+          <Select id="department" v-model="filters.department" :options="departments" optionLabel="label" optionValue="value" :placeholder="$t('selectPlaceholder')" filter showClear/>
         </div>
 
         <div class="flex flex-col space-y-1">
           <label for="role">{{ $t('role') }}</label>
-          <Select id="role" v-model="filters.role" :options="roles" optionLabel="label" optionValue="value" :placeholder="$t('selectPlaceholder')" showClear/>
+          <Select id="role" v-model="filters.role" :options="roles" optionLabel="label" optionValue="value" :placeholder="$t('selectPlaceholder')" filter showClear/>
         </div>
       </div>
     </template>
