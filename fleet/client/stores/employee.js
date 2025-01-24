@@ -30,6 +30,16 @@ export const useEmployeeStore = defineStore('employee', {
             this.employees = data
         },
 
+        async getEmployeeByUsername(username) {
+            try {
+                const data = await this.handleRequest(apiClient.get(`${BASE_PATH}/${username}`))
+                return data
+            } catch (error) {
+                console.error('Error fetching employee by username:', error)
+                throw error
+            }
+        },
+
         async createEmployee(employee) {
             try {
                 const data = await this.handleRequest(apiClient.post(BASE_PATH, employee))

@@ -3,19 +3,19 @@
     <div class="flex flex-col space-y-1 col-span-2">
       <label for="ssn">{{ $t('socialSecurityNumber') }}</label>
       <div class="flex flex-col lg:flex-row justify-between space-y-2 lg:space-y-0">
-        <InputOtp id="ssn1" v-model="ssn1" :length="4" integerOnly :disabled="isDisabled('ssn')"/>
-        <InputOtp id="ssn2" v-model="ssn2" :length="6" integerOnly :disabled="isDisabled('ssn')"/>
+        <InputOtp id="ssn1" v-model="ssn1" :length="4" integerOnly :class="{ 'input-disabled': isDisabled('ssn') }"/>
+        <InputOtp id="ssn2" v-model="ssn2" :length="6" integerOnly :class="{ 'input-disabled': isDisabled('ssn') }"/>
       </div>
     </div>
 
     <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
       <label for="firstName">{{ $t('firstName') }}</label>
-      <InputText id="firstName" v-model="employee.firstName" :placeholder="$t('textPlaceholder')" :disabled="isDisabled('firstName')"/>
+      <InputText id="firstName" v-model="employee.firstName" :placeholder="$t('textPlaceholder')" :class="{ 'input-disabled': isDisabled('firstName') }"/>
     </div>
 
     <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
       <label for="lastName">{{ $t('lastName') }}</label>
-      <InputText id="lastName" v-model="employee.lastName" :placeholder="$t('textPlaceholder')" :disabled="isDisabled('lastName')"/>
+      <InputText id="lastName" v-model="employee.lastName" :placeholder="$t('textPlaceholder')" :class="{ 'input-disabled': isDisabled('lastName') }"/>
     </div>
 
     <div class="flex flex-col space-y-1 col-span-2">
@@ -51,6 +51,8 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue'
+import { useEmployeeStore } from '@/stores/employee'
+
 const employeeStore = useEmployeeStore()
 
 const emits = defineEmits(['update:employee']);
@@ -92,7 +94,7 @@ watch(
              () => employee.value.password, () => employee.value.role, () => employee.value.department],
          ([newSsn1, newSsn2, firstName, lastName, password, role, department]) => {
 
-      if (newSsn1 && newSsn2 && firstName && lastName && password && role && department &&  isDate(newSsn2))
+      if (newSsn1 && newSsn2 && firstName && lastName && password && role && department)
         emits('update:employee', {...employee.value, ssn: `${newSsn1}${newSsn2}`})
       else
         emits('update:employee', null)
@@ -106,4 +108,18 @@ function generatePassword () {
   for (let i = 0; i < length; i++) password += charset[Math.floor(Math.random() * charset.length)]
   employee.value.password = password
 }
+
+watch(() => props.employee, (newEmp) => {
+  if (newEmp) {
+    employee.value.password = newEmp.password || ''
+  }
+})
 </script>
+
+<style scoped>
+.input-disabled {
+  color: #A0A0A0;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+</style>

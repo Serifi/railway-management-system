@@ -8,9 +8,9 @@ from auth import login_user, logout_user, authenticate, authorize
 
 employee_blueprint = Blueprint('employee_routes', __name__)
 
-def serialize_employee(emp):
+def serialize_employee(emp, include_password=False):
     """Serialize an Employee object into a dictionary."""
-    return {
+    serialized = {
         "ssn": emp.ssn,
         "firstName": emp.firstName,
         "lastName": emp.lastName,
@@ -18,6 +18,9 @@ def serialize_employee(emp):
         "role": emp.role.value if emp.role else None,
         "username": emp.username
     }
+    if include_password:
+        serialized["password"] = emp.password
+    return serialized
 
 @employee_blueprint.route('/login', methods=['POST'])
 def login_employee():
@@ -63,7 +66,7 @@ def get_employee_by_username(username):
         emp = session.query(Employee).filter_by(username=username).first()
         if not emp:
             return jsonify({"message": f"Employee '{username}' not found"}), 404
-        return jsonify(serialize_employee(emp)), 200
+        return jsonify(serialize_employee(emp, include_password=True)), 200
 
 @employee_blueprint.route('/', methods=['POST'])
 @authenticate
@@ -79,11 +82,23 @@ def create_employee():
 
     with SessionLocal() as session:
         try:
+            # Check if SSN is already taken
+            if session.query(Employee).filter_by(ssn=data['ssn']).first():
+                return jsonify({"message": "SSN is already taken"}), 400
+
             # Validate and assign department and role
             department = Department[data['department']]
             role = Role[data['role']]
 
-            # Create Employee db
+            # Generate a unique username
+            base_username = data.get('username') or f"{data['firstName']}.{data['lastName']}".lower()
+            username = base_username
+            counter = 1
+            while session.query(Employee).filter_by(username=username).first():
+                username = f"{base_username}{counter}"
+                counter += 1
+
+            # Create Employee object
             emp = Employee(
                 ssn=data['ssn'],
                 firstName=data['firstName'],
@@ -91,11 +106,12 @@ def create_employee():
                 password=data['password'],
                 department=department,
                 role=role,
-                username=data.get('username')  # Auto-generated if None
+                username=username
             )
             session.add(emp)
             session.commit()
-            return jsonify({"message": "Employee created successfully"}), 201
+            return jsonify({"message": f"Employee '{emp.username}' created successfully"}), 201
+
         except KeyError:
             session.rollback()
             return jsonify({"message": "Invalid department or role"}), 400
@@ -105,6 +121,7 @@ def create_employee():
         except IntegrityError:
             session.rollback()
             return jsonify({"message": "SSN or username must be unique"}), 400
+
 
 @employee_blueprint.route('/<string:ssn>', methods=['PUT'])
 @authenticate
@@ -121,10 +138,9 @@ def update_employee(ssn):
             if not emp:
                 return jsonify({"message": f"Employee with SSN '{ssn}' not found"}), 404
 
-            # Update general fields
-            for field in ['firstName', 'lastName', 'password', 'username']:
-                if field in data:
-                    setattr(emp, field, data[field])
+            # Update password if provided
+            if 'password' in data:
+                emp.password = data['password']
 
             # Update department if provided
             if 'department' in data:
@@ -141,13 +157,16 @@ def update_employee(ssn):
                     return jsonify({"message": "Invalid role"}), 400
 
             session.commit()
-            return jsonify({"message": "Employee updated successfully"}), 200
-        except IntegrityError:
+            return jsonify({"message": "Employee updated successfully", "username": emp.username}), 200
+        except IntegrityError as e:
             session.rollback()
+            if 'username' in str(e.orig):
+                return jsonify({"message": "Username already taken"}), 400
             return jsonify({"message": "Username must be unique"}), 400
         except ValueError as ve:
             session.rollback()
             return jsonify({"message": str(ve)}), 400
+
 
 @employee_blueprint.route('/<string:ssn>', methods=['DELETE'])
 @authenticate
@@ -159,9 +178,15 @@ def delete_employee(ssn):
         if not emp:
             return jsonify({"message": f"Employee with SSN '{ssn}' not found"}), 404
 
-        # Check for existing maintenances
-        if emp.maintenances:
-            return jsonify({"message": "Cannot delete employee with existing maintenances"}), 400
+        # Sicherstellen, dass Wartungsobjekte korrekt verarbeitet werden
+        from datetime import datetime
+        now = datetime.utcnow()
+        active_maintenances = [
+            m for m in emp.maintenances if hasattr(m, 'start_date') and m.start_date >= now
+        ]
+
+        if active_maintenances:
+            return jsonify({"message": "Cannot delete employee with current or future maintenances"}), 400
 
         try:
             session.delete(emp)
