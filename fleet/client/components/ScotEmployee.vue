@@ -46,6 +46,12 @@
       <label for="department">{{ $t('department') }}</label>
       <Select id="department" v-model="employee.department" :options="departments" optionLabel="label" optionValue="value" :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('department')"/>
     </div>
+
+    <div class="col-span-2 flex flex-col space-y-2">
+      <Message v-if="validationError" severity="error" icon="pi pi-exclamation-circle">
+        {{ $t('ssnWarning') }}
+      </Message>
+    </div>
   </div>
 </template>
 
@@ -81,12 +87,17 @@ const roles = computed(() => employeeStore.roles)
 const departments = computed(() => employeeStore.departments)
 const isDisabled = (field) => props.disabledFields.includes(field)
 
-const isDate = (date) => {
-  if (!/^\d{6}$/.test(date)) return false
-  const day = parseInt(date.slice(0, 2), 10)
-  const month = parseInt(date.slice(2, 4), 10)
+const validationError = ref(false) // Für Fehlermeldungen
 
-  return day >= 1 && day <= 31 && month >= 1 && month <= 12
+function validateSsn() {
+  const ssn = `${ssn1.value || ''}${ssn2.value || ''}`
+  const pattern = /^\d{4}(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])\d{2}$/
+  if (!pattern.test(ssn)) {
+    validationError.value = true
+    return true
+  }
+  validationError.value = false
+  return false
 }
 
 watch(
@@ -94,7 +105,7 @@ watch(
              () => employee.value.password, () => employee.value.role, () => employee.value.department],
          ([newSsn1, newSsn2, firstName, lastName, password, role, department]) => {
 
-      if (newSsn1 && newSsn2 && firstName && lastName && password && role && department)
+      if (newSsn1 && newSsn2 && firstName && lastName && password && role && department && !validateSsn())
         emits('update:employee', {...employee.value, ssn: `${newSsn1}${newSsn2}`})
       else
         emits('update:employee', null)

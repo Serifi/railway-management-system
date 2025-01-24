@@ -74,5 +74,6 @@
   "trackGaugeWarning": "Track gauge of the carriages must match",
   "weightWarning": "Tractive force is insufficient for the total weight",
   "railcarAssignmentWarning": "The selected railcar is already assigned to another train.",
-  "passengerCarAssignmentWarning": "One or more selected passenger cars are already assigned to another train."
+  "passengerCarAssignmentWarning": "One or more selected passenger cars are already assigned to another train.",
+  "ssnWarning": "SSN does not match Austrian guidelines"
 }

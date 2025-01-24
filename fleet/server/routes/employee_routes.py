@@ -176,22 +176,22 @@ def delete_employee(ssn):
     with SessionLocal() as session:
         emp = session.query(Employee).options(joinedload(Employee.maintenances)).filter_by(ssn=ssn).first()
         if not emp:
-            return jsonify({"message": f"Employee with SSN '{ssn}' not found"}), 404
+            return jsonify({"message": f"Mitarbeiter mit SSN '{ssn}' nicht gefunden"}), 404
 
         # Sicherstellen, dass Wartungsobjekte korrekt verarbeitet werden
         from datetime import datetime
         now = datetime.utcnow()
         active_maintenances = [
-            m for m in emp.maintenances if hasattr(m, 'start_date') and m.start_date >= now
+            m for m in emp.maintenances if hasattr(m, 'to_time') and m.to_time >= now
         ]
 
         if active_maintenances:
-            return jsonify({"message": "Cannot delete employee with current or future maintenances"}), 400
+            return jsonify({"message": "Kann Mitarbeiter nicht löschen, da er derzeit oder zukünftig Wartungen hat"}), 400
 
         try:
             session.delete(emp)
             session.commit()
-            return jsonify({"message": "Employee deleted successfully"}), 200
+            return jsonify({"message": "Mitarbeiter erfolgreich gelöscht"}), 200
         except IntegrityError:
             session.rollback()
-            return jsonify({"message": "Integrity error occurred while deleting the employee"}), 400
+            return jsonify({"message": "Integritätsfehler beim Löschen des Mitarbeiters"}), 400

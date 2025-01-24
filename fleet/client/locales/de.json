@@ -74,5 +74,6 @@
   "trackGaugeWarning": "Spurbreite der Wägen muss übereinstimmen",
   "weightWarning": "Zugkraft reicht für das Gewicht nicht aus",
   "railcarAssignmentWarning": "Der ausgewählte Triebwagen ist bereits einem anderen Zug zugeordnet.",
-  "passengerCarAssignmentWarning": "Einer oder mehrere ausgewählte Personenwagen sind bereits einem anderen Zug zugeordnet."
+  "passengerCarAssignmentWarning": "Einer oder mehrere ausgewählte Personenwagen sind bereits einem anderen Zug zugeordnet.",
+  "ssnWarning": "Sozialversicherungsnummer entspricht nicht den österreichischen Richtlinie."
 }
