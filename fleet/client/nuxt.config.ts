@@ -49,5 +49,5 @@ export default defineNuxtConfig({
       '~/plugins/i18n.config.js',
   ],
 
-  compatibilityDate: '2025-01-17'
+  compatibilityDate: '2025-01-24'
 })

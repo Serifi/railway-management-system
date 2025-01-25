@@ -1,18 +1,19 @@
 from flask import Blueprint, request, jsonify
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
+from datetime import datetime
+from math import fsum
+
 from . import SessionLocal
 from models.train import Train, TrainPassengerCar
 from models.carriage import Railcar, PassengerCar
 from models.maintenance import Maintenance
 from auth import authenticate, authorize
-from datetime import datetime
-from math import fsum
 
 train_blueprint = Blueprint('train_routes', __name__)
 
 def serialize_train(train):
-    """Serialize a Train including its Railcar and associated PassengerCars."""
+    """ Serialize a Train including its Railcar and associated PassengerCars """
     railcar_data = None
     if train.railcar:
         railcar_data = {
@@ -48,7 +49,7 @@ def serialize_train(train):
 
 
 def validate_track_gauge(railcar, passenger_cars):
-    """Ensure all carriages in the train have the same trackGauge."""
+    """ Ensure all carriages in the train have the same trackGauge """
     railcar_gauge = railcar.carriage.trackGauge
     for pc in passenger_cars:
         if pc.carriage.trackGauge != railcar_gauge:
@@ -57,12 +58,12 @@ def validate_track_gauge(railcar, passenger_cars):
 
 
 def calculate_total_weight(passenger_cars):
-    """Calculate the total maxWeight of all passenger cars."""
+    """ Calculate the total maxWeight of all passenger cars """
     return fsum(pc.maxWeight for pc in passenger_cars)
 
 
 def is_railcar_assigned(session, railcar_id, current_train_id=None):
-    """ Check if the railcar is already assigned to another train. """
+    """ Check if the railcar is already assigned to another train """
     query = session.query(Train).filter_by(railcarID=railcar_id)
     if current_train_id:
         query = query.filter(Train.trainID != current_train_id)
@@ -71,7 +72,7 @@ def is_railcar_assigned(session, railcar_id, current_train_id=None):
 
 
 def is_passenger_car_assigned(session, passenger_car_id, current_train_id=None):
-    """ Check if the passenger car is already assigned to another train. """
+    """ Check if the passenger car is already assigned to another train """
     query = session.query(TrainPassengerCar).filter_by(passengerCarID=passenger_car_id)
     if current_train_id:
         query = query.filter(TrainPassengerCar.trainID != current_train_id)
@@ -80,10 +81,11 @@ def is_passenger_car_assigned(session, passenger_car_id, current_train_id=None):
 
 
 @train_blueprint.route('/', methods=['GET'])
-# @authenticate       Für Integration mit schedule
+# Disabled for integration with schedule
+# @authenticate
 # @authorize(roles=['Employee', 'Admin'])
 def get_trains():
-    """Retrieve all trains."""
+    """ Retrieve all trains """
     with SessionLocal() as session:
         trains = session.query(Train).options(
             joinedload(Train.railcar).joinedload(Railcar.carriage),
@@ -95,10 +97,11 @@ def get_trains():
 
 
 @train_blueprint.route('/<int:train_id>', methods=['GET'])
-# @authenticate       Für Integration mit schedule
+# Disabled for integration with schedule
+# @authenticate
 # @authorize(roles=['Employee', 'Admin'])
 def get_train_by_id(train_id):
-    """Retrieve a specific train by ID."""
+    """ Retrieve a specific train by ID """
     with SessionLocal() as session:
         train = session.query(Train).options(
             joinedload(Train.railcar).joinedload(Railcar.carriage),
@@ -117,10 +120,11 @@ def get_train_by_id(train_id):
 @authenticate
 @authorize(roles=['Admin'])
 def create_train():
-    """Create a new train, ensuring all carriages have the same trackGauge and weight constraints are met."""
+    """ Create a new train, ensuring all constraints are met """
     data = request.get_json()
     required_fields = {'name', 'railcarID'}
 
+    # Check missing fields
     if not data or not required_fields.issubset(data):
         missing = required_fields - data.keys()
         return jsonify({"message": f"Missing required fields: {', '.join(missing)}"}), 400
@@ -131,7 +135,7 @@ def create_train():
 
     with SessionLocal() as session:
         try:
-            # Validate the chosen Railcar
+            # Check if the chosen Railcar exists
             railcar = session.query(Railcar).filter_by(carriageID=railcar_id).first()
             if not railcar:
                 return jsonify({"message": f"Railcar {railcar_id} not found"}), 404
@@ -156,9 +160,10 @@ def create_train():
                         existing_assoc = session.query(TrainPassengerCar).filter_by(passengerCarID=pc_id).first()
                         return jsonify({"message": f"PassengerCar {pc_id} is already assigned to Train {existing_assoc.trainID}"}), 400
 
-                # Fetch PassengerCar objects
+                # Fetch PassengerCar
                 passenger_cars = session.query(PassengerCar).filter(PassengerCar.carriageID.in_(pc_ids)).all()
 
+                # Check if the chosen PassengerCars exist
                 if len(passenger_cars) != len(pc_ids):
                     return jsonify({"message": "Some PassengerCar IDs are invalid"}), 404
 
@@ -166,7 +171,7 @@ def create_train():
                 if not validate_track_gauge(railcar, passenger_cars):
                     return jsonify({"message": "All carriages must have the same trackGauge"}), 400
 
-                # Check tractive force
+                # Check if total weight < tractive force
                 total_weight = calculate_total_weight(passenger_cars)
                 if total_weight > railcar.maxTractiveForce:
                     return jsonify({"message": "Railcar's max tractive force exceeded by passenger cars' total weight"}), 400
@@ -196,7 +201,7 @@ def create_train():
 @authenticate
 @authorize(roles=['Admin'])
 def update_train(train_id):
-    """Update an existing train, ensuring trackGauge consistency and weight constraints when railcar or passenger cars change."""
+    """ Update an existing train, ensuring all constraints are met """
     data = request.get_json()
     if not data:
         return jsonify({"message": "No data provided for update"}), 400
@@ -208,14 +213,15 @@ def update_train(train_id):
                 joinedload(Train.passenger_cars_associations).joinedload(TrainPassengerCar.passenger_car).joinedload(PassengerCar.carriage)
             ).filter_by(trainID=train_id).first()
 
+            # Check if Train exists
             if not train:
                 return jsonify({"message": f"Train {train_id} not found"}), 404
 
-            # Update name if provided
+            # Update name
             if 'name' in data:
                 train.name = data['name'].strip()
 
-            # Handle railcar update
+            # Update Railcar
             if 'railcarID' in data and data['railcarID'] != train.railcarID:
                 new_railcar_id = data['railcarID']
                 new_railcar = session.query(Railcar).filter_by(carriageID=new_railcar_id).first()
@@ -240,7 +246,7 @@ def update_train(train_id):
                 # Update railcarID
                 train.railcarID = new_railcar_id
 
-            # Handle passenger cars update
+            # Update PassengerCars
             if 'passenger_cars' in data:
                 passenger_cars_data = data['passenger_cars']
                 pc_ids = [pc_data['carriageID'] for pc_data in passenger_cars_data]
@@ -251,7 +257,7 @@ def update_train(train_id):
                         existing_assoc = session.query(TrainPassengerCar).filter_by(passengerCarID=pc_id).first()
                         return jsonify({"message": f"PassengerCar {pc_id} is already assigned to Train {existing_assoc.trainID}"}), 400
 
-                # Fetch PassengerCar objects
+                # Fetch PassengerCars
                 passenger_cars = session.query(PassengerCar).filter(PassengerCar.carriageID.in_(pc_ids)).all()
 
                 if len(passenger_cars) != len(pc_ids):
@@ -299,7 +305,7 @@ def update_train(train_id):
 @authenticate
 @authorize(roles=['Admin'])
 def delete_train(train_id):
-    """Delete a train, disallowing deletion if it has ongoing or upcoming maintenance records."""
+    """ Delete a train, disallowing deletion if it has ongoing or upcoming maintenances """
     with SessionLocal() as session:
         try:
             # Fetch the train
@@ -316,7 +322,7 @@ def delete_train(train_id):
             ).first()
 
             if maintenance_exists:
-                return jsonify({"message": "Cannot delete train with ongoing or upcoming maintenance records"}), 400
+                return jsonify({"message": "Cannot delete train with ongoing or upcoming maintenances"}), 400
 
             # Delete the train
             session.delete(train)

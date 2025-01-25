@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-// Axios instance with a base URL and Headers
+// Axios instance with base URL and Headers
 const apiClient = axios.create({
     baseURL: 'http://127.0.0.1:5002',
     headers: {
@@ -12,10 +12,8 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
     (config) => {
         if (typeof window !== 'undefined') {
-            // Get token from local storage
-            const token = localStorage.getItem('auth_token')
-            // Attach token to headers
-            if (token) config.headers['Authorization'] = `Bearer ${token}`
+            const token = localStorage.getItem('auth_token') // Get token from local storage
+            if (token) config.headers['Authorization'] = `Bearer ${token}` // Attach token to headers
         }
         return config
     },

@@ -1,4 +1,3 @@
-# train.py
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship, validates
 from . import Base
@@ -10,7 +9,7 @@ class TrainPassengerCar(Base):
     passengerCarID = Column(Integer, ForeignKey('passenger_car.carriageID'), primary_key=True)
     position = Column(Integer, nullable=False)
 
-    # Many-to-One relationships to Train and PassengerCar
+    # Many-to-one relationships to Train and PassengerCar
     train = relationship("Train", back_populates="passenger_cars_associations")
     passenger_car = relationship("PassengerCar", back_populates="train_passenger_cars_associations")
 
@@ -24,7 +23,7 @@ class Train(Base):
     # One-to-one with Railcar
     railcar = relationship("Railcar", back_populates="train", uselist=False)
 
-    # One-to-many with the association class
+    # One-to-many with the PassengerCars
     passenger_cars_associations = relationship(
         "TrainPassengerCar",
         back_populates="train",

@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import apiClient from '@/utils/api'
 
 const BASE_PATH = '/employees'
-
 export const useUserStore = defineStore('user', {
     state: () => ({
         user: null,
@@ -47,9 +46,8 @@ export const useUserStore = defineStore('user', {
                     this.token = response.data.token
                     if (process.client) {
                         localStorage.setItem('auth_token', this.token)
-                        localStorage.setItem('username', username) // Username speichern
+                        localStorage.setItem('username', username)
                     }
-                    // Laden der Benutzerdaten
                     this.user = await this.getEmployee(username)
                     return true
                 }

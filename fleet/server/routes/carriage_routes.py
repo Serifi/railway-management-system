@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
+
 from . import SessionLocal
 from models.carriage import Carriage, Railcar, PassengerCar
 from models.train import TrainPassengerCar, Train
@@ -9,13 +10,13 @@ from auth import authenticate, authorize
 carriage_blueprint = Blueprint('carriage_routes', __name__)
 
 def is_carriage_assigned(session, carriage_id):
-    """ Check if a carriage is already assigned to a train """
+    """ Check if a Carriage is already assigned to a train """
     return session.query(
         session.query(Train).filter(Train.railcarID == carriage_id).exists()
     ).scalar()
 
 def serialize_carriage(carriage):
-    """ Serialize a carriage object based on its type """
+    """ Serialize a Carriage object based on its type """
     serialized = {
         "carriageID": carriage.carriageID,
         "trackGauge": carriage.trackGauge,
@@ -39,7 +40,7 @@ def serialize_carriage(carriage):
 @authenticate
 @authorize(roles=['Employee', 'Admin'])
 def get_all_carriages():
-    """ Retrieve all carriages """
+    """ Retrieve all Carriages """
     with SessionLocal() as session:
         carriages = session.query(Carriage).outerjoin(Railcar).outerjoin(PassengerCar).all()
         serialized = [serialize_carriage(c) for c in carriages]
@@ -56,6 +57,7 @@ def get_carriage_by_id(carriage_id):
             joinedload(Carriage.passenger_car_detail)
         ).filter_by(carriageID=carriage_id).first()
 
+        # Check if Carriage exists
         if not carriage:
             return jsonify({"message": f"Carriage {carriage_id} not found"}), 404
 
@@ -69,10 +71,11 @@ def get_carriage_by_id(carriage_id):
 @authenticate
 @authorize(roles=['Admin'])
 def create_carriage():
-    """ Create a new carriage """
+    """ Create a new Carriage """
     data = request.get_json()
     required_fields = {'trackGauge', 'type'}
 
+    # Check missing fields
     if not data or not required_fields.issubset(data):
         return jsonify({"message": "Missing trackGauge or type"}), 400
 
@@ -117,7 +120,7 @@ def create_carriage():
 @authenticate
 @authorize(roles=['Admin'])
 def update_carriage(carriage_id):
-    """ Update an existing carriage and switch type if necessary. """
+    """ Update an existing Carriage and switch type if necessary """
     data = request.get_json()
     if not data:
         return jsonify({"message": "No data provided for update"}), 400
@@ -130,6 +133,7 @@ def update_carriage(carriage_id):
                 joinedload(Carriage.passenger_car_detail)
             ).filter_by(carriageID=carriage_id).first()
 
+            # Check if Carriage exists
             if not carriage:
                 return jsonify({"message": f"Carriage #{carriage_id} not found"}), 404
 
@@ -149,7 +153,7 @@ def update_carriage(carriage_id):
 
             # If the type changed, remove old type-specific row, then insert the new one
             if old_type != new_type:
-                # Delete the old type-specific row, if any ---
+                # Delete the old type-specific row, if any
                 if carriage.railcar_detail:
                     session.delete(carriage.railcar_detail)
                 if carriage.passenger_car_detail:
@@ -220,7 +224,7 @@ def update_carriage(carriage_id):
 @authenticate
 @authorize(roles=['Admin'])
 def delete_carriage(carriage_id):
-    """Delete a carriage"""
+    """ Delete a carriage """
     with SessionLocal() as session:
         try:
             carriage = session.query(Carriage).options(
@@ -228,6 +232,7 @@ def delete_carriage(carriage_id):
                 joinedload(Carriage.passenger_car_detail)
             ).filter_by(carriageID=carriage_id).first()
 
+            # Check if Carriage exists
             if not carriage:
                 return jsonify({"message": f"Carriage {carriage_id} not found"}), 404
 

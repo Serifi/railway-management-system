@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import apiClient from '@/utils/api'
 
 const BASE_PATH = '/employees'
-
 export const useEmployeeStore = defineStore('employee', {
     state: () => ({
         employees: [],

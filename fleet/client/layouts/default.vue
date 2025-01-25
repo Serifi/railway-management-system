@@ -71,7 +71,7 @@ function logout(){
 
 const languagePopover = ref(null);
 function toggleLanguagePopover(event) {
-  languagePopover.value.toggle(event);
+  languagePopover.value.toggle(event)
 }
 
 const languages = [
@@ -92,7 +92,7 @@ function setLanguage(language) {
 
 const themePopover = ref(null);
 function toggleThemePopover(event) {
-  themePopover.value.toggle(event);
+  themePopover.value.toggle(event)
 }
 
 const themes = [
@@ -110,31 +110,31 @@ const themeItems = themes.map(theme => ({
 
 function setTheme(theme) {
   if (theme.name === 'Dark') {
-    document.documentElement.classList.add('dark');
-    document.documentElement.setAttribute('data-theme', 'dark');
-    localStorage.setItem('theme', 'dark');
+    document.documentElement.classList.add('dark')
+    document.documentElement.setAttribute('data-theme', 'dark')
+    localStorage.setItem('theme', 'dark')
   } else if (theme.name === 'Light') {
-    document.documentElement.classList.remove('dark');
-    document.documentElement.setAttribute('data-theme', 'light');
-    localStorage.setItem('theme', 'light');
+    document.documentElement.classList.remove('dark')
+    document.documentElement.setAttribute('data-theme', 'light')
+    localStorage.setItem('theme', 'light')
   } else if (theme.name === 'System') {
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    document.documentElement.classList.toggle('dark', systemTheme === 'dark');
-    document.documentElement.setAttribute('data-theme', systemTheme);
-    localStorage.setItem('theme', systemTheme);
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    document.documentElement.classList.toggle('dark', systemTheme === 'dark')
+    document.documentElement.setAttribute('data-theme', systemTheme)
+    localStorage.setItem('theme', systemTheme)
   }
 }
 
 onMounted(() => {
-  const savedTheme = localStorage.getItem('theme');
+  const savedTheme = localStorage.getItem('theme')
   if (savedTheme) {
-    setTheme({name: savedTheme.charAt(0).toUpperCase() + savedTheme.slice(1)});
+    setTheme({name: savedTheme.charAt(0).toUpperCase() + savedTheme.slice(1)})
   } else {
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    setTheme({name: systemTheme.charAt(0).toUpperCase() + systemTheme.slice(1)});
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    setTheme({name: systemTheme.charAt(0).toUpperCase() + systemTheme.slice(1)})
   }
 
-  const savedLanguage = localStorage.getItem('language');
-  if (savedLanguage) setLanguage({locale: savedLanguage});
-});
+  const savedLanguage = localStorage.getItem('language')
+  if (savedLanguage) setLanguage({locale: savedLanguage})
+})
 </script>

@@ -1,45 +1,23 @@
 <template>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <!-- Train Name -->
+    <!-- Name -->
     <div class="flex flex-col space-y-1 col-span-2">
       <label for="name">{{ $t('name') }}</label>
-      <InputText
-          id="name"
-          v-model="train.name"
-          :placeholder="$t('textPlaceholder')"
-          :disabled="isDisabled('name')"
-      />
+      <InputText id="name" v-model="train.name" :placeholder="$t('textPlaceholder')" :disabled="isDisabled('name')"/>
     </div>
 
-    <!-- Railcar Select -->
+    <!-- Railcar -->
     <div class="flex flex-col space-y-1 col-span-2">
       <label for="railcar">{{ $t('railcar') }}</label>
-      <Select
-          id="railcar"
-          v-model="train.railcarID"
-          :options="railcars"
-          :optionLabel="formatRailcarOption"
-          optionValue="carriageID"
-          :placeholder="$t('selectPlaceholder')"
-          :disabled="isDisabled('railcarID')"
-          filter
-      />
+      <Select id="railcar" v-model="train.railcarID" :placeholder="$t('selectPlaceholder')" :options="availableRailcars"
+              :optionLabel="formatRailcarOption" optionValue="carriageID" :disabled="isDisabled('railcarID')" filter/>
     </div>
 
-    <!-- Passenger Cars MultiSelect -->
+    <!-- Passenger Cars -->
     <div class="flex flex-col space-y-1 col-span-2">
       <label for="passengerCars">{{ $t('passengerCar') }}</label>
-      <MultiSelect
-          id="passengerCars"
-          v-model="train.passengerCarIDs"
-          :options="formatPassengerCarOption"
-          optionLabel="label"
-          optionValue="carriageID"
-          :placeholder="$t('selectPlaceholder')"
-          :disabled="isDisabled('passengerCarIDs')"
-          filter
-          display="comma"
-      >
+      <MultiSelect id="passengerCars" v-model="train.passengerCarIDs" :placeholder="$t('selectPlaceholder')" :options="availablePassengerCars.map(formatPassengerCarOption)"
+                   optionLabel="label" optionValue="carriageID" :disabled="isDisabled('passengerCarIDs')" filter display="comma">
         <template #value="{ value }">
           ID: {{ value }}
         </template>
@@ -49,49 +27,35 @@
       </MultiSelect>
     </div>
 
-    <!-- Stats -->
+    <!-- Details -->
     <div class="flex justify-between col-span-2 mt-4 flex-wrap gap-4">
-      <div>
-        {{ $t('trackGauge') }}: {{ calculatedTrackGauge }}
-      </div>
-      <div>
-        {{ $t('maxTractiveForce') }}: {{ maxTractiveForce }}kN
-      </div>
-      <div>
-        {{ $t('weight') }}: {{ totalWeight }}kg
-      </div>
-      <div>
-        {{ $t('numberOfSeats') }}: {{ totalSeats }}
-      </div>
+      <div> {{ $t('trackGauge') }}: {{ calculatedTrackGauge }}</div>
+      <div> {{ $t('maxTractiveForce') }}: {{ maxTractiveForce }}kN</div>
+      <div> {{ $t('weight') }}: {{ totalWeight }}kg</div>
+      <div> {{ $t('numberOfSeats') }}: {{ totalSeats }}</div>
     </div>
 
-    <!-- Live Preview mit Drag-and-Drop -->
+    <!-- Carriages with drag-and-drop -->
     <div v-if="selectedRailcar || orderedPassengerCars.length" class="flex flex-wrap col-span-2 my-6 cursor-pointer">
-      <!-- Railcar Preview -->
+      <!-- Railcar -->
       <div v-if="selectedRailcar" class="wagon">
-        <img :src="railcarImage" :alt="$t('railcar')" class="wagon-image" />
+        <img :src="railcarImage" :alt="$t('railcar')" class="wagon-image"/>
         <div class="wagon-id">{{ selectedRailcar.carriageID }}</div>
       </div>
 
-      <!-- Passenger Cars Drag-and-Drop -->
-      <draggable
-          v-if="orderedPassengerCars.length"
-          v-model="orderedPassengerCars"
-          group="passengerCars"
-          item-key="carriageID"
-          class="flex flex-wrap"
-          @update:modelValue="updatePassengerCarOrder"
-      >
+      <!-- Passenger Cars -->
+      <draggable v-if="orderedPassengerCars.length" v-model="orderedPassengerCars" group="passengerCars"
+                 item-key="carriageID" @update:modelValue="updatePassengerCarOrder" class="flex flex-wrap">
         <template #item="{ element }">
           <div class="wagon">
-            <img :src="passengerCarImage" :alt="$t('passengerCar')" class="wagon-image" />
+            <img :src="passengerCarImage" :alt="$t('passengerCar')" class="wagon-image"/>
             <div class="wagon-id">{{ element.carriageID }}</div>
           </div>
         </template>
       </draggable>
     </div>
 
-    <!-- Validation/Warnungen -->
+    <!-- Warnings -->
     <div class="col-span-2 flex flex-col space-y-2">
       <Message v-if="trackGaugeMismatch" severity="error" icon="pi pi-exclamation-circle">
         {{ $t('trackGaugeWarning') }}
@@ -110,17 +74,16 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { useTrainStore } from '@/stores/train'
-import { useI18n } from 'vue-i18n'
+import {ref, computed, watch} from 'vue'
+import {useTrainStore} from '@/stores/train'
+import {useI18n} from 'vue-i18n'
 import draggable from 'vuedraggable'
 
 import railcarImage from '@/assets/images/railcar.png'
 import passengerCarImage from '@/assets/images/passenger_car.png'
 
-const { t } = useI18n()
+const {t} = useI18n()
 const emits = defineEmits(['update:train'])
-
 const props = defineProps({
   train: {
     type: Object,
@@ -140,12 +103,22 @@ const props = defineProps({
   }
 })
 
-// Lokales Zugobjekt
+const trainStore = useTrainStore()
+
+// All rail- and passenger cars
+const railcars = computed(() => trainStore.railcars)
+const passengerCars = computed(() => trainStore.passengerCars)
+
+// List for the preview of carriages, sorted by position inside the train
+const orderedPassengerCars = ref([])
+
+// Local train that adapts depending on isEdit
 const train = ref({
   name: props.train.name || '',
   trainID: props.train.trainID || -1,
-  // falls Bearbeiten, übernehmen wir vorhandene
-  railcarID: props.isEdit && props.train.railcar ? props.train.railcar.carriageID : null,
+  railcarID: props.isEdit && props.train.railcar
+      ? props.train.railcar.carriageID
+      : null,
   passengerCarIDs:
       props.isEdit && props.train.passenger_cars
           ? props.train.passenger_cars
@@ -155,89 +128,101 @@ const train = ref({
           : []
 })
 
-const trainStore = useTrainStore()
-const railcars = computed(() => trainStore.railcars)
-const passengerCars = computed(() => trainStore.passengerCars)
+// Compute the list of available railcars for selection
+const availableRailcars = computed(() =>
+    railcars.value.filter(rc =>
+        !otherTrains.value.some(t => t.railcar?.carriageID === rc.carriageID)
+    )
+)
 
-// Dieses Array steuert das Live-Preview + Drag&Drop
-const orderedPassengerCars = ref([])
+// Compute the list of available passenger cars for selection
+const availablePassengerCars = computed(() =>
+    passengerCars.value.filter(pc =>
+        !otherTrains.value.some(t =>
+            t.passenger_cars.some(assignedPc => assignedPc.carriageID === pc.carriageID)
+        )
+    )
+)
 
-/**
- * Sobald passengerCarIDs sich ändern, erzeugen wir ein Array in genau DER Reihenfolge,
- * in der die IDs in train.value.passengerCarIDs liegen (also KEINE Sortierung nach position).
- */
-watch(
-    () => train.value.passengerCarIDs,
+// Format railcar options for the selection
+const formatRailcarOption = (option) => {
+  if (!option) return ''
+  return `ID: ${option.carriageID} - ${t('trackGauge')}: ${option.trackGauge}mm - ${t('maxTractiveForce')}: ${option.maxTractiveForce}kN`
+}
+
+// Format passenger car options for the selection
+const formatPassengerCarOption = (pc) => ({
+  carriageID: pc.carriageID,
+  label: `ID: ${pc.carriageID} - ${t('trackGauge')}: ${pc.trackGauge} - ${t('numberOfSeats')}: ${pc.numberOfSeats} - ${t('maxWeight')}: ${pc.maxWeight}kg`
+})
+
+// Watch for changes in the passenger cars and update their order
+watch(() => train.value.passengerCarIDs,
     (newIDs) => {
       const selectedInOrder = []
       newIDs.forEach(carID => {
         const foundCar = passengerCars.value.find(pc => pc.carriageID === carID)
-        if (foundCar) {
-          // Kopie, um reaktive Probleme zu vermeiden
-          selectedInOrder.push({ ...foundCar })
-        }
+        if (foundCar) selectedInOrder.push({...foundCar})
       })
       orderedPassengerCars.value = selectedInOrder
     },
-    { immediate: true }
+    {immediate: true}
 )
 
-/**
- * Drag&Drop: nach Umsortieren aktualisieren wir train.value.passengerCarIDs,
- * sodass die Reihenfolge permanent übernommen wird.
- */
+// Function to update the order of passenger cars after drag-and-drop
 const updatePassengerCarOrder = () => {
-  // OPTIONAL: Wenn du position bei den Wagen aktualisieren willst
   orderedPassengerCars.value.forEach((car, index) => {
-    // position = index+1
     car.position = index + 1
   })
-  // IDs zurückschreiben
   train.value.passengerCarIDs = orderedPassengerCars.value.map(car => car.carriageID)
 }
 
-/**
- * Computed: selectedRailcar, selectedPassengerCars
- */
+// Compute the currently selected rail- and passenger cars
 const selectedRailcar = computed(() =>
     railcars.value.find(r => r.carriageID === train.value.railcarID)
 )
 const selectedPassengerCars = computed(() => orderedPassengerCars.value)
 
-/**
- * Berechne Stats (Gewicht, Sitze, etc.)
- */
+// Compute the total weight of the train by summing weights of passenger cars
 const totalWeight = computed(() =>
     selectedPassengerCars.value.reduce((sum, car) => sum + (car?.maxWeight || 0), 0)
 )
+
+// Compute the total number of seats in the train by summing seats of passenger cars
 const totalSeats = computed(() =>
     selectedPassengerCars.value.reduce((sum, car) => sum + (car?.numberOfSeats || 0), 0)
 )
+
+// Get the track gauge and tractive force of the selected railcar
 const calculatedTrackGauge = computed(() => selectedRailcar.value?.trackGauge || '-')
 const maxTractiveForce = computed(() => selectedRailcar.value?.maxTractiveForce || 0)
 
-/**
- * Warnungen/Validierungen
- */
+// Compute whether there is a mismatch in track gauge
 const trackGaugeMismatch = computed(() =>
     selectedRailcar.value &&
     selectedPassengerCars.value.some(car => car.trackGauge !== selectedRailcar.value.trackGauge)
 )
+
+// Compute whether the total weight exceeds the tractive force
 const tractiveForceInsufficient = computed(() =>
     selectedRailcar.value && totalWeight.value > selectedRailcar.value.maxTractiveForce
 )
 
-// Prüfen, ob Wagen/Lok schon woanders zugewiesen
+// List other trains, excluding the current one if in edit mode
 const otherTrains = computed(() => {
   if (!props.isEdit || !train.value.trainID) {
     return trainStore.trains
   }
   return trainStore.trains.filter(t => t.trainID !== train.value.trainID)
 })
+
+// Check if the railcar is already assigned to another train
 const isRailcarAssigned = computed(() => {
   if (!train.value.railcarID) return false
   return otherTrains.value.some(t => t.railcar && t.railcar.carriageID === train.value.railcarID)
 })
+
+// Check if any of the passenger cars are assigned to other trains
 const arePassengerCarsAssigned = computed(() => {
   if (train.value.passengerCarIDs.length === 0) return false
   return otherTrains.value.some(t =>
@@ -245,44 +230,30 @@ const arePassengerCarsAssigned = computed(() => {
   )
 })
 
-  watch(
-      [
-        () => train.value.name,
-        () => train.value.railcarID,
-        () => train.value.passengerCarIDs
-      ],
-      () => {
-        // Blockier-Logik:
-        if (
-            !train.value.name ||
-            !train.value.railcarID ||
-            train.value.passengerCarIDs.length === 0 ||
-            trackGaugeMismatch.value ||
-            tractiveForceInsufficient.value ||
-            isRailcarAssigned.value ||
-            arePassengerCarsAssigned.value
-        ) {
-          emits('update:train', null)
-          return
-        }
-        // Andernfalls => valid
-        emits('update:train', train.value)
-      },
-      { deep: true }
-  )
+// Watch for train changes and emit updates
+watch([
+      () => train.value.name,
+      () => train.value.railcarID,
+      () => train.value.passengerCarIDs
+    ],
+    () => {
+      if (
+          !train.value.name ||
+          !train.value.railcarID ||
+          train.value.passengerCarIDs.length === 0 ||
+          trackGaugeMismatch.value ||
+          tractiveForceInsufficient.value ||
+          isRailcarAssigned.value ||
+          arePassengerCarsAssigned.value
+      ) {
+        emits('update:train', null) // Emit null if invalid
+        return
+      }
+      emits('update:train', train.value) // Emit train if valid
+    },
+    {deep: true}
+)
 
-  /**
-   * Hilfsfunktionen
-   */
-  const isDisabled = (field) => props.disabledFields.includes(field)
-  const formatRailcarOption = (option) => {
-    if (!option) return ''
-    return `ID: ${option.carriageID} - ${t('trackGauge')}: ${option.trackGauge}mm - ${t('maxTractiveForce')}: ${option.maxTractiveForce}kN`
-  }
-  const formatPassengerCarOption = computed(() =>
-      passengerCars.value.map(pc => ({
-        carriageID: pc.carriageID,
-        label: `ID: ${pc.carriageID} - ${t('trackGauge')}: ${pc.trackGauge} - ${t('numberOfSeats')}: ${pc.numberOfSeats} - ${t('maxWeight')}: ${pc.maxWeight}kg`
-      }))
-  )
+// Check if a field should be disabled
+const isDisabled = (field) => props.disabledFields.includes(field)
 </script>

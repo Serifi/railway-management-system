@@ -63,3 +63,9 @@ body, input::placeholder, .p-paginator, .p-dialog, .p-popover, .p-drawer, .p-tog
     font-weight: bold;
     pointer-events: none;
 }
+
+.input-disabled {
+    color: #A0A0A0;
+    cursor: not-allowed;
+    opacity: 0.5;
+}

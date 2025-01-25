@@ -1,23 +1,26 @@
-<!-- components/ScotMaintenance.vue -->
 <template>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Train -->
     <div class="flex flex-col space-y-1">
       <label for="train">{{ $t('train') }}</label>
-      <Select id="train" v-model="maintenance.trainID" :options="trains" optionLabel="name" optionValue="trainID" :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('trainID')"/>
+      <Select id="train" v-model="maintenance.trainID" :options="trains" optionLabel="name" optionValue="trainID"
+              :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('trainID')"/>
     </div>
 
+    <!-- Employee -->
     <div class="flex flex-col space-y-1">
       <label for="employee">{{ $t('employee') }}</label>
-      <!-- Geänderte Komponente von MultiSelect zu Select und Anpassung des v-model -->
-      <Select id="employee" v-model="maintenance.employeeSSN" :options="employees" :optionLabel="getEmployeeDisplayName"
-              optionValue="ssn" :placeholder="$t('selectPlaceholder')" filter showClear/>
+      <Select id="employee" v-model="maintenance.employeeSSN" :options="filteredEmployees" :optionLabel="getEmployeeDisplayName"
+              optionValue="ssn" :placeholder="$t('selectPlaceholder')" filter/>
     </div>
 
+    <!-- From -->
     <div class="flex flex-col space-y-1">
       <label for="from_time">{{ $t('from') }}</label>
       <DatePicker id="from_time" v-model="maintenance.from_time" showTime showSeconds :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('from_time')"/>
     </div>
 
+    <!-- To -->
     <div class="flex flex-col space-y-1">
       <label for="to_time">{{ $t('to') }}</label>
       <DatePicker id="to_time" v-model="maintenance.to_time" showTime showSeconds :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('to_time')"/>
@@ -27,8 +30,8 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { useTrainStore } from '@/stores/train' // Import des trainStore
-import { useEmployeeStore } from '@/stores/employee' // Import des employeeStore
+import { useTrainStore } from '@/stores/train'
+import { useEmployeeStore } from '@/stores/employee'
 import { useMaintenanceStore } from '@/stores/maintenance'
 
 const emits = defineEmits(['update:maintenance'])
@@ -37,7 +40,7 @@ const props = defineProps({
     type: Object,
     default: () => ({
       trainID: null,
-      employeeSSN: null, // Geändertes Feld
+      employeeSSN: null,
       from_time: '',
       to_time: ''
     })
@@ -50,38 +53,49 @@ const props = defineProps({
 
 const maintenance = ref({ ...props.maintenance })
 const maintenanceStore = useMaintenanceStore()
-const trainStore = useTrainStore() // Nutzung des trainStore
-const employeeStore = useEmployeeStore() // Nutzung des employeeStore
+const trainStore = useTrainStore()
+const employeeStore = useEmployeeStore()
 const trains = computed(() => trainStore.trains)
 const employees = computed(() => employeeStore.employees)
 
-const isDisabled = (field) => props.disabledFields.includes(field)
+// Filter employees to include only those in the 'Maintenance' department
+const filteredEmployees = computed(() => employees.value.filter(employee => employee.department === 'Maintenance'))
 
 function getEmployeeDisplayName(employee) {
   return `${employee.firstName} ${employee.lastName}`
 }
 
+// Watch for maintenance changes and emit updates
 watch(
     [
       () => maintenance.value.trainID,
-      () => maintenance.value.employeeSSN, // Geändertes Feld
+      () => maintenance.value.employeeSSN,
       () => maintenance.value.from_time,
       () => maintenance.value.to_time
     ],
     ([trainID, employeeSSN, from_time, to_time]) => {
-      let allFieldsFilled = false
-
+      // Emit an update if all fields are valid, otherwise emit null
       if (trainID && employeeSSN && from_time && to_time) {
-        allFieldsFilled = true
+        emits('update:maintenance', {
+          ...maintenance.value,
+          from_time: from_time.toISOString(),
+          to_time: to_time.toISOString(),
+        });
+      } else {
+        emits('update:maintenance', null)
       }
-
-      emits('update:maintenance', allFieldsFilled ? maintenance.value : null)
     },
     { deep: true }
 )
 
+// Check if a field should be disabled
+const isDisabled = (field) => props.disabledFields.includes(field)
+
 onMounted(async () => {
   await trainStore.getTrains()
   await employeeStore.getEmployees()
+
+  if (maintenance.value.from_time) maintenance.value.from_time = new Date(maintenance.value.from_time)
+  if (maintenance.value.to_time) maintenance.value.to_time = new Date(maintenance.value.to_time)
 })
 </script>

@@ -1,7 +1,7 @@
 import re
+import enum
 from sqlalchemy import Column, String, Enum, UniqueConstraint
 from sqlalchemy.orm import relationship, validates
-import enum
 from . import Base
 
 class Role(enum.Enum):
@@ -23,8 +23,10 @@ class Employee(Base):
     role = Column(Enum(Role), nullable=False)
     username = Column(String, unique=True, nullable=False)
 
+    # One-to-many relationships to Maintenance
     maintenances = relationship("Maintenance", back_populates="employee")
 
+    # Unique constraint for username
     __table_args__ = (
         UniqueConstraint('username', name='unique_username'),
     )

@@ -1,5 +1,6 @@
 <template>
   <div class="grid grid-cols-2 gap-4">
+    <!-- Social Security Number -->
     <div class="flex flex-col space-y-1 col-span-2">
       <label for="ssn">{{ $t('socialSecurityNumber') }}</label>
       <div class="flex flex-col lg:flex-row justify-between space-y-2 lg:space-y-0">
@@ -8,6 +9,7 @@
       </div>
     </div>
 
+    <!-- First & Last Name -->
     <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
       <label for="firstName">{{ $t('firstName') }}</label>
       <InputText id="firstName" v-model="employee.firstName" :placeholder="$t('textPlaceholder')" :class="{ 'input-disabled': isDisabled('firstName') }"/>
@@ -18,6 +20,7 @@
       <InputText id="lastName" v-model="employee.lastName" :placeholder="$t('textPlaceholder')" :class="{ 'input-disabled': isDisabled('lastName') }"/>
     </div>
 
+    <!-- Password with Recommendations -->
     <div class="flex flex-col space-y-1 col-span-2">
       <label for="password">{{ $t('password') }}</label>
       <div class="flex items-center space-x-2">
@@ -37,6 +40,7 @@
       </div>
     </div>
 
+    <!-- Role & Department -->
     <div class="flex flex-col space-y-1 col-span-2 lg:col-span-1">
       <label for="role">{{ $t('role') }}</label>
       <Select id="role" v-model="employee.role" :options="roles" optionLabel="label" optionValue="value" :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('role')"/>
@@ -47,6 +51,7 @@
       <Select id="department" v-model="employee.department" :options="departments" optionLabel="label" optionValue="value" :placeholder="$t('selectPlaceholder')" :disabled="isDisabled('department')"/>
     </div>
 
+    <!-- Warning if Social Security Number doesn't match pattern -->
     <div class="col-span-2 flex flex-col space-y-2">
       <Message v-if="validationError" severity="error" icon="pi pi-exclamation-circle">
         {{ $t('ssnWarning') }}
@@ -80,15 +85,15 @@ const props = defineProps({
   }
 });
 
+// Employee at its options
 const employee = ref({ ...props.employee })
 const ssn1 = ref(props.employee.ssn ? props.employee.ssn.slice(0, 4) : null)
 const ssn2 = ref(props.employee.ssn ? props.employee.ssn.slice(4) : null)
 const roles = computed(() => employeeStore.roles)
 const departments = computed(() => employeeStore.departments)
-const isDisabled = (field) => props.disabledFields.includes(field)
 
-const validationError = ref(false) // Für Fehlermeldungen
-
+// Check pattern for social security number
+const validationError = ref(false)
 function validateSsn() {
   const ssn = `${ssn1.value || ''}${ssn2.value || ''}`
   const pattern = /^\d{4}(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])\d{2}$/
@@ -100,18 +105,7 @@ function validateSsn() {
   return false
 }
 
-watch(
-    [() => ssn1.value, () => ssn2.value, () => employee.value.firstName, () => employee.value.lastName,
-             () => employee.value.password, () => employee.value.role, () => employee.value.department],
-         ([newSsn1, newSsn2, firstName, lastName, password, role, department]) => {
-
-      if (newSsn1 && newSsn2 && firstName && lastName && password && role && department && !validateSsn())
-        emits('update:employee', {...employee.value, ssn: `${newSsn1}${newSsn2}`})
-      else
-        emits('update:employee', null)
-    }
-)
-
+// Random password generation
 function generatePassword () {
   const length = 16
   const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+[]{}|;:,.<>?'
@@ -120,17 +114,18 @@ function generatePassword () {
   employee.value.password = password
 }
 
-watch(() => props.employee, (newEmp) => {
-  if (newEmp) {
-    employee.value.password = newEmp.password || ''
-  }
-})
-</script>
+// Watches for employee and emit updates
+watch([() => ssn1.value, () => ssn2.value, () => employee.value.firstName, () => employee.value.lastName,
+             () => employee.value.password, () => employee.value.role, () => employee.value.department],
+         ([newSsn1, newSsn2, firstName, lastName, password, role, department]) => {
 
-<style scoped>
-.input-disabled {
-  color: #A0A0A0;
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-</style>
+      if (newSsn1 && newSsn2 && firstName && lastName && password && role && department && !validateSsn())
+        emits('update:employee', {...employee.value, ssn: `${newSsn1}${newSsn2}`}) // Emit employee if valid
+      else
+        emits('update:employee', null) // Emit null if invalid
+    }
+)
+
+// Determines if a field is disabled
+const isDisabled = (field) => props.disabledFields.includes(field)
+</script>

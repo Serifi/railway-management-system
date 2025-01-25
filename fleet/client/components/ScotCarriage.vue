@@ -66,9 +66,8 @@ const carriageTypes = computed(() => carriageStore.carriageTypes)
 // Determines if a field is disabled
 const isDisabled = (field) => props.disabledFields.includes(field)
 
-// Watches for changes in carriage fields and emits updates
-watch(
-    [
+// Watches for carriage changes and emit updates
+watch([
       () => carriage.value.trackGauge,
       () => carriage.value.type,
       () => carriage.value.maxTractiveForce,
@@ -79,11 +78,8 @@ watch(
       let allFieldsFilled = false
 
       // Check if all required fields are filled based on carriage type
-      if (type === 'Railcar') {
-        allFieldsFilled = trackGauge && type && maxTractiveForce !== null
-      } else if (type === 'PassengerCar') {
-        allFieldsFilled = trackGauge && type && numberOfSeats !== null && maxWeight !== null
-      }
+      if (type === 'Railcar') allFieldsFilled = trackGauge && type && maxTractiveForce !== null
+      else if (type === 'PassengerCar') allFieldsFilled = trackGauge && type && numberOfSeats !== null && maxWeight !== null
 
       // Emit an update if all fields are valid, otherwise emit null
       emits('update:carriage', allFieldsFilled ? carriage.value : null)

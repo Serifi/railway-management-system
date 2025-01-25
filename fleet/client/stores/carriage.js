@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import apiClient from '@/utils/api'
 import { useTrainStore } from '@/stores/train'
+import apiClient from '@/utils/api'
 
 const BASE_PATH = '/fleet/carriages'
 export const useCarriageStore = defineStore('carriage', {

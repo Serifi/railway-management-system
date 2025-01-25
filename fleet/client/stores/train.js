@@ -1,10 +1,8 @@
-// stores/train.js
 import { defineStore } from 'pinia'
-import apiClient from '@/utils/api'
 import { useCarriageStore } from '@/stores/carriage'
+import apiClient from '@/utils/api'
 
 const BASE_PATH = '/fleet/trains'
-
 export const useTrainStore = defineStore('train', {
     state: () => ({
         trains: [],

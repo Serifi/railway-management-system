@@ -1,12 +1,17 @@
 <template>
   <div class="flex items-center justify-center min-h-screen">
+    <!-- Left half of the screen -->
     <img src="@/assets/images/login.png" class="min-h-screen w-1/2 object-cover hidden lg:block brightness-75" alt="Scotty">
+
+    <!-- Right half of the screen -->
     <div class="flex flex-col items-center space-y-8 lg:w-1/2">
+      <!-- Icon with title -->
       <div class="flex items-center text-3xl font-bold text-center">
         <img src="@/assets/images/icon.png" class="me-4 w-16 h-16" alt="Icon"> Scotty
       </div>
       <div class="w-full lg:w-1/2">
         <div class="flex-col space-y-8">
+          <!-- Login form -->
           <div class="flex flex-col space-y-2">
             <label for="username" class="font-bold">{{ $t('username') }}</label>
             <InputText id="username" v-model="username" :placeholder="$t('textPlaceholder')"/>

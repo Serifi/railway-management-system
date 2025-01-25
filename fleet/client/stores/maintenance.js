@@ -1,9 +1,7 @@
-// stores/maintenance.js
 import { defineStore } from 'pinia'
 import apiClient from '@/utils/api'
 
 const BASE_PATH = '/fleet/maintenances'
-
 export const useMaintenanceStore = defineStore('maintenance', {
     state: () => ({
         maintenances: [],
@@ -43,7 +41,7 @@ export const useMaintenanceStore = defineStore('maintenance', {
         async createMaintenance(maintenance) {
             try {
                 const payload = {
-                    employeeSSN: maintenance.employeeSSN, // Geändertes Feld
+                    employeeSSN: maintenance.employeeSSN,
                     trainID: maintenance.trainID,
                     from_time: maintenance.from_time,
                     to_time: maintenance.to_time
@@ -60,13 +58,13 @@ export const useMaintenanceStore = defineStore('maintenance', {
         async editMaintenance(maintenance) {
             try {
                 const payload = {
-                    employeeSSN: maintenance.employeeSSN, // Geändertes Feld
+                    employeeSSN: maintenance.employeeSSN,
                     trainID: maintenance.trainID,
-                    from_time: maintenance.from_time,
-                    to_time: maintenance.to_time
-                }
+                    from_time: new Date(maintenance.from_time).toISOString(),
+                    to_time: new Date(maintenance.to_time).toISOString()
+                };
                 const data = await this.handleRequest(apiClient.put(`${BASE_PATH}/${maintenance.maintenanceID}`, payload))
-                await this.getMaintenances()
+                await this.getMaintenances();
                 return data
             } catch (error) {
                 console.error('Error editing maintenance:', error)

@@ -1,12 +1,8 @@
 <template>
   <!-- Desktop -->
   <nav class="hidden lg:flex space-x-8">
-    <NuxtLink
-        v-for="item in translatedNavItems"
-        :key="item.page"
-        :to="`/${item.page}`"
-        class="nav-link desktop"
-        :class="{ 'nav-active': isActive(item.page), 'nav-hover': !isActive(item.page) }">
+    <NuxtLink v-for="item in translatedNavItems" :key="item.page" :to="`/${item.page}`"
+        class="nav-link desktop" :class="{ 'nav-active': isActive(item.page), 'nav-hover': !isActive(item.page) }">
       <span>{{ item.translatedName }}</span>
     </NuxtLink>
   </nav>
@@ -14,12 +10,8 @@
   <!-- Mobile -->
   <nav class="fixed bottom-0 left-0 right-0 h-12 border-t bg-white z-10 lg:hidden">
     <div class="flex justify-around">
-      <NuxtLink
-          v-for="item in translatedNavItems"
-          :key="item.page"
-          :to="`/${item.page}`"
-          class="nav-link mobile"
-          :class="{ 'text-color': isActive(item.page) }">
+      <NuxtLink v-for="item in translatedNavItems" :key="item.page" :to="`/${item.page}`"
+          class="nav-link mobile" :class="{ 'text-color': isActive(item.page) }">
         <FontAwesomeIcon :icon="item.icon" />
       </NuxtLink>
     </div>
@@ -36,7 +28,7 @@ const navigationStore = useNavigationStore()
 const { t } = useI18n()
 const route = useRoute()
 
-// Übersetzte Navigationspunkte berechnen
+// Translation of the navigation
 const translatedNavItems = computed(() =>
     navigationStore.getFilteredNavItems.map((item) => ({
       ...item,

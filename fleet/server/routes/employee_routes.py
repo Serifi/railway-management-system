@@ -1,7 +1,7 @@
-# employee_routes.py
 from flask import Blueprint, jsonify, request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
+
 from . import SessionLocal
 from models.employee import Employee, Department, Role
 from auth import login_user, logout_user, authenticate, authorize
@@ -9,7 +9,7 @@ from auth import login_user, logout_user, authenticate, authorize
 employee_blueprint = Blueprint('employee_routes', __name__)
 
 def serialize_employee(emp, include_password=False):
-    """Serialize an Employee object into a dictionary."""
+    """ Serialize an Employee object into a dictionary """
     serialized = {
         "ssn": emp.ssn,
         "firstName": emp.firstName,
@@ -22,9 +22,10 @@ def serialize_employee(emp, include_password=False):
         serialized["password"] = emp.password
     return serialized
 
+
 @employee_blueprint.route('/login', methods=['POST'])
 def login_employee():
-    """Authenticate an employee and return a token."""
+    """ Login an employee by generating their token """
     data = request.get_json()
     if not data or not data.get('username') or not data.get('password'):
         return jsonify({"message": "Username and password are required"}), 400
@@ -37,45 +38,50 @@ def login_employee():
         token = login_user(emp)
         return jsonify({"message": "Logged in successfully", "token": token}), 200
 
+
 @employee_blueprint.route('/logout', methods=['POST'])
 @authenticate
 @authorize(roles=['Employee', 'Admin'])
 def logout_employee():
-    """Logout an employee."""
+    """ Logout an employee by invalidating their token """
     auth_header = request.headers.get('Authorization')
     token = auth_header.split(" ")[1] if " " in auth_header else auth_header
     logout_user(token)
     return jsonify({"message": "Logged out successfully"}), 200
 
+
 @employee_blueprint.route('/', methods=['GET'])
 @authenticate
 @authorize(roles=['Employee', 'Admin'])
 def get_employees():
-    """Retrieve all employees."""
+    """ Retrieve all employees """
     with SessionLocal() as session:
         emps = session.query(Employee).all()
         serialized = [serialize_employee(emp) for emp in emps]
         return jsonify(serialized), 200
 
+
 @employee_blueprint.route('/<string:username>', methods=['GET'])
 @authenticate
 @authorize(roles=['Employee', 'Admin'])
 def get_employee_by_username(username):
-    """Retrieve an employee by username."""
+    """ Retrieve an employee by username with password """
     with SessionLocal() as session:
         emp = session.query(Employee).filter_by(username=username).first()
         if not emp:
             return jsonify({"message": f"Employee '{username}' not found"}), 404
         return jsonify(serialize_employee(emp, include_password=True)), 200
 
+
 @employee_blueprint.route('/', methods=['POST'])
 @authenticate
 @authorize(roles=['Admin'])
 def create_employee():
-    """Create a new employee."""
+    """ Create a new employee """
     data = request.get_json()
     required_fields = {'ssn', 'firstName', 'lastName', 'password', 'department', 'role'}
 
+    # Check missing fields
     if not data or not required_fields.issubset(data):
         missing = required_fields - data.keys()
         return jsonify({"message": f"Missing required fields: {', '.join(missing)}"}), 400
@@ -95,10 +101,10 @@ def create_employee():
             username = base_username
             counter = 1
             while session.query(Employee).filter_by(username=username).first():
-                username = f"{base_username}{counter}"
+                username = f"{base_username}{counter}" # Append counter if username exists: test.test1, test.test2, ...
                 counter += 1
 
-            # Create Employee object
+            # Create Employee
             emp = Employee(
                 ssn=data['ssn'],
                 firstName=data['firstName'],
@@ -127,14 +133,19 @@ def create_employee():
 @authenticate
 @authorize(roles=['Admin'])
 def update_employee(ssn):
-    """Update an existing employee."""
+    """ Update an existing employee """
     data = request.get_json()
+
+    # Check if there is data to update
     if not data:
         return jsonify({"message": "No data provided for update"}), 400
 
     with SessionLocal() as session:
         try:
+            # Fetch employee by SSN
             emp = session.query(Employee).filter_by(ssn=ssn).first()
+
+            # Check if employee exists
             if not emp:
                 return jsonify({"message": f"Employee with SSN '{ssn}' not found"}), 404
 
@@ -172,13 +183,13 @@ def update_employee(ssn):
 @authenticate
 @authorize(roles=['Admin'])
 def delete_employee(ssn):
-    """Delete an employee."""
+    """ Delete an employee """
     with SessionLocal() as session:
         emp = session.query(Employee).options(joinedload(Employee.maintenances)).filter_by(ssn=ssn).first()
         if not emp:
-            return jsonify({"message": f"Mitarbeiter mit SSN '{ssn}' nicht gefunden"}), 404
+            return jsonify({"message": f"Employee with SSN '{ssn}' not found"}), 404
 
-        # Sicherstellen, dass Wartungsobjekte korrekt verarbeitet werden
+        # Check if employee has maintenances
         from datetime import datetime
         now = datetime.utcnow()
         active_maintenances = [
@@ -186,12 +197,12 @@ def delete_employee(ssn):
         ]
 
         if active_maintenances:
-            return jsonify({"message": "Kann Mitarbeiter nicht löschen, da er derzeit oder zukünftig Wartungen hat"}), 400
+            return jsonify({"message": "Cannot delete employee with current or future maintenances"}), 400
 
         try:
             session.delete(emp)
             session.commit()
-            return jsonify({"message": "Mitarbeiter erfolgreich gelöscht"}), 200
+            return jsonify({"message": "Employee deleted successfully"}), 200
         except IntegrityError:
             session.rollback()
-            return jsonify({"message": "Integritätsfehler beim Löschen des Mitarbeiters"}), 400
+            return jsonify({"message": "Integrity error while deleting employee"}), 400
