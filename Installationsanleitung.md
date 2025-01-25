@@ -1,6 +1,5 @@
 # Installationsanleitung
 Anfangs muss die jeweilige Applikation im Terminal geöffnet werden, um die notwendigen Befehle ausführen zu können.
-
 > [!NOTE]  
 > Voraussetzung für die Ausführung ist eine, vorzugsweise globale, Installation von **Python 3.13** und **Node 23.1.0**
 > 
