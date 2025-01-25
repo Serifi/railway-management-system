@@ -396,10 +396,6 @@ def get_available_trains():
 
         local_timezone = ZoneInfo('Europe/Berlin')
         utc_time = datetime.strptime(data['startTime'], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=ZoneInfo("UTC"))
-        # local_start_datetime = utc_time.astimezone(local_timezone).replace(microsecond=0)
-        # if data['endTime']:
-        #     utc_time2 = datetime.strptime(data['endTime'], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=ZoneInfo("UTC"))
-        #     local_end_datetime = utc_time2.astimezone(local_timezone).replace(microsecond=0)
         local_start_datetime = utc_time.astimezone(local_timezone).replace(second=0, microsecond=0)
         if data['endTime']:
             utc_time2 = datetime.strptime(data['endTime'], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=ZoneInfo("UTC"))
@@ -480,8 +476,7 @@ def get_available_trains():
         traceback.print_exc()
         return jsonify({'message': f'Fehler beim Abrufen der verfügbaren Züge: {str(e)}'}), 500
 
-    # Fallback: Standardantwort, falls keine Ausnahme auftritt, aber kein Return ausgeführt wurde
-    return jsonify({'message': 'Unbekannter Fehler, keine Daten verfügbar.'}), 500
+
 
 
 def get_all_trains():
